@@ -57,7 +57,7 @@ def _resolve_pdf_path(path: str) -> str:
 
 def initialize_vector_db():
     """
-    Initializes a local ChromaDB client and chunks/embeds ASHRAE 55 and IECC 2021 PDF documents.
+    Initializes a local ChromaDB client and chunks/embeds ASHRAE 55, IECC 2021, and ASHRAE 90.1-2019 PDF documents.
     """
     global _collection
     client = chromadb.Client()
@@ -70,67 +70,99 @@ def initialize_vector_db():
         _collection = collection
         return _collection
 
-    ashrae_pdf_path = _resolve_pdf_path("backend/data/ashrae_55.pdf")
-    iecc_pdf_path = _resolve_pdf_path("backend/data/iecc_2021.pdf")
+    ashrae55_path = _resolve_pdf_path("backend/data/ASHRAE-Standard-55.pdf")
+    iecc_path = _resolve_pdf_path("backend/data/IECC 2021.pdf")
+    ashrae901_path = _resolve_pdf_path("backend/data/ASHRAE 90.1-2019.pdf")
 
     documents = []
     ids = []
     metadatas = []
 
-    # Check if both PDF files exist
-    if os.path.exists(ashrae_pdf_path) and os.path.exists(iecc_pdf_path):
-        try:
-            splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+    ashrae55_count = 0
+    iecc_count = 0
+    ashrae901_count = 0
 
-            # 1. Load & chunk ASHRAE 55
-            ashrae_loader = PyPDFLoader(ashrae_pdf_path)
-            ashrae_docs = ashrae_loader.load()
-            ashrae_chunks = splitter.split_documents(ashrae_docs)
+    if PyPDFLoader is not None and RecursiveCharacterTextSplitter is not None:
+        splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
 
-            for i, chunk in enumerate(ashrae_chunks):
-                documents.append(chunk.page_content)
-                ids.append(f"ashrae_chunk_{i}")
-                metadatas.append({"source": "ASHRAE-55-2023"})
+        # 1. Load & chunk ASHRAE 55
+        if os.path.exists(ashrae55_path):
+            try:
+                loader = PyPDFLoader(ashrae55_path)
+                docs = loader.load()
+                chunks = splitter.split_documents(docs)
+                for i, chunk in enumerate(chunks):
+                    documents.append(chunk.page_content)
+                    ids.append(f"ashrae55_chunk_{i}")
+                    metadatas.append({"source": "ASHRAE-55-2023", "topic": "Thermal Comfort"})
+                ashrae55_count = len(chunks)
+            except Exception as e:
+                print(f"WARNING: Error parsing ASHRAE 55 PDF: {e}")
+        else:
+            print(f"WARNING: PDF file not found at '{ashrae55_path}'")
 
-            # 2. Load & chunk IECC 2021
-            iecc_loader = PyPDFLoader(iecc_pdf_path)
-            iecc_docs = iecc_loader.load()
-            iecc_chunks = splitter.split_documents(iecc_docs)
+        # 2. Load & chunk IECC 2021
+        if os.path.exists(iecc_path):
+            try:
+                loader = PyPDFLoader(iecc_path)
+                docs = loader.load()
+                chunks = splitter.split_documents(docs)
+                for i, chunk in enumerate(chunks):
+                    documents.append(chunk.page_content)
+                    ids.append(f"iecc_chunk_{i}")
+                    metadatas.append({"source": "IECC-2021", "topic": "Building Envelope & Energy Conservation"})
+                iecc_count = len(chunks)
+            except Exception as e:
+                print(f"WARNING: Error parsing IECC 2021 PDF: {e}")
+        else:
+            print(f"WARNING: PDF file not found at '{iecc_path}'")
 
-            for i, chunk in enumerate(iecc_chunks):
-                documents.append(chunk.page_content)
-                ids.append(f"iecc_chunk_{i}")
-                metadatas.append({"source": "IECC-2021"})
+        # 3. Load & chunk ASHRAE 90.1-2019
+        if os.path.exists(ashrae901_path):
+            try:
+                loader = PyPDFLoader(ashrae901_path)
+                docs = loader.load()
+                chunks = splitter.split_documents(docs)
+                for i, chunk in enumerate(chunks):
+                    documents.append(chunk.page_content)
+                    ids.append(f"ashrae901_chunk_{i}")
+                    metadatas.append({"source": "ASHRAE-90.1-2019", "topic": "Energy Standard for Commercial Buildings"})
+                ashrae901_count = len(chunks)
+            except Exception as e:
+                print(f"WARNING: Error parsing ASHRAE 90.1 PDF: {e}")
+        else:
+            print(f"WARNING: PDF file not found at '{ashrae901_path}'")
 
-            print(f"Loaded and split PDFs successfully: {len(ashrae_chunks)} ASHRAE chunks, {len(iecc_chunks)} IECC chunks.")
-        except Exception as e:
-            print(f"WARNING: Error parsing PDF documents: {e}. Falling back to default baseline chunks.")
-            documents = []
-            ids = []
-            metadatas = []
-
-    # Graceful Fallback if PDFs missing or error occurred
+    # Graceful Fallback if no documents loaded
     if not documents:
-        if not (os.path.exists(ashrae_pdf_path) and os.path.exists(iecc_pdf_path)):
-            print(f"WARNING: PDF files not found at '{ashrae_pdf_path}' or '{iecc_pdf_path}'. Falling back to default strings.")
-        
+        print("WARNING: Falling back to default baseline chunks.")
         documents = [
             "ASHRAE 55 Standard: The acceptable summer operative temperature range for building occupants wearing 0.5 clo is 73°F to 79°F. Temperatures above 79°F require mechanical pre-cooling.",
-            "IECC Building Envelope Code: In extreme heat climate zones, continuous insulation (ci) and strict U-factor compliance are mandatory to prevent thermal bridging during heat spikes."
+            "IECC Building Envelope Code: In extreme heat climate zones, continuous insulation (ci) and strict U-factor compliance are mandatory to prevent thermal bridging during heat spikes.",
+            "ASHRAE 90.1 Energy Standard: Commercial building mechanical systems and envelope components must modulate HVAC power and minimize conductive heat gains during peak thermal loads."
         ]
-        ids = ["ashrae_chunk_fallback", "iecc_chunk_fallback"]
+        ids = ["ashrae55_chunk_0", "iecc_chunk_0", "ashrae901_chunk_0"]
         metadatas = [
-            {"source": "ASHRAE-55-2023"},
-            {"source": "IECC-2021"}
+            {"source": "ASHRAE-55-2023", "topic": "Thermal Comfort"},
+            {"source": "IECC-2021", "topic": "Building Envelope & Energy Conservation"},
+            {"source": "ASHRAE-90.1-2019", "topic": "Energy Standard for Commercial Buildings"}
         ]
+        ashrae55_count = 1
+        iecc_count = 1
+        ashrae901_count = 1
 
-    # Add all chunks to ChromaDB
-    collection.add(
-        documents=documents,
-        ids=ids,
-        metadatas=metadatas
-    )
-    
+    # Add all chunks to ChromaDB in safe batches
+    batch_size = 500
+    for idx in range(0, len(documents), batch_size):
+        collection.add(
+            documents=documents[idx:idx + batch_size],
+            ids=ids[idx:idx + batch_size],
+            metadatas=metadatas[idx:idx + batch_size]
+        )
+
+    total_count = len(documents)
+    print(f"Seeded {ashrae55_count} ashrae55 chunks, {iecc_count} iecc chunks, {ashrae901_count} ashrae901 chunks. Total: {total_count}")
+
     _collection = collection
     return _collection
 
