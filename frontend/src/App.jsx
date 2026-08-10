@@ -12,13 +12,17 @@ import {
 } from "recharts";
 import {
   Activity,
-  AlertOctagon,
+  AlertTriangle,
   ChevronDown,
+  FileCheck,
+  Flame,
   Globe,
   Radio,
+  RefreshCw,
   Server,
   ShieldAlert,
   Thermometer,
+  X,
   Zap,
 } from "lucide-react";
 
@@ -37,25 +41,32 @@ export default function App() {
   const [eventLogs, setEventLogs] = useState([
     {
       id: "init-1",
-      timestamp: new Date().toLocaleTimeString(),
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
       type: "system",
-      text: "ThermalOS kernel online. Telemetry stream connected to FortyGuard endpoint.",
+      level: "info",
+      text: "ThermalOS kernel v26.4 initialized. Telemetry stream locked on FortyGuard endpoint.",
     },
   ]);
   const [currentReading, setCurrentReading] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [pollCount, setPollCount] = useState(0);
 
+  // Audit Modal State
+  const [isAuditOpen, setIsAuditOpen] = useState(false);
+  const [isAuditLoading, setIsAuditLoading] = useState(false);
+  const [auditReport, setAuditReport] = useState(null);
+  const [auditError, setAuditError] = useState(null);
+
   const logsEndRef = useRef(null);
 
-  // Auto-scroll logs
+  // Auto-scroll logs to bottom on update
   useEffect(() => {
     if (logsEndRef.current) {
       logsEndRef.current.scrollTop = logsEndRef.current.scrollHeight;
     }
   }, [eventLogs]);
 
-  // Polling loop
+  // Polling loop to FastAPI backend
   useEffect(() => {
     let isMounted = true;
 
@@ -102,8 +113,8 @@ export default function App() {
           return updated;
         });
 
-        // Trigger extreme alert if risk_level is extreme
-        if (data.risk_level === "extreme" || data.temperature_f >= 110) {
+        // Trigger extreme alert if risk_level is extreme or temp >= 105
+        if (data.risk_level === "extreme" || data.temperature_f >= 105) {
           const alertMessage = `🔴 [${timestamp}] HEAT SPIKE DETECTED: Threshold breached for ${selectedCity}.`;
           setEventLogs((prevLogs) => [
             ...prevLogs,
@@ -111,21 +122,25 @@ export default function App() {
               id: `${Date.now()}-${Math.random()}`,
               timestamp,
               type: "extreme",
+              level: "breach",
+              badge: "CRITICAL BREACH",
               text: alertMessage,
             },
           ]);
-        } else if (data.risk_level === "high") {
+        } else if (data.risk_level === "high" || data.temperature_f >= 100) {
           setEventLogs((prevLogs) => [
             ...prevLogs,
             {
               id: `${Date.now()}-${Math.random()}`,
               timestamp,
               type: "high",
+              level: "warning",
+              badge: "HIGH HEAT ELEVATION",
               text: `⚠️ [${timestamp}] HIGH HEAT ELEVATION: ${selectedCity} at ${data.temperature_f}°F. Monitoring thermal plume.`,
             },
           ]);
         } else {
-          // Standard periodic sync log (every 6 polls)
+          // Periodic standard telemetry sync log (every 6 polls)
           setEventLogs((prevLogs) => {
             if (prevLogs.length % 6 === 0) {
               return [
@@ -134,6 +149,8 @@ export default function App() {
                   id: `${Date.now()}-${Math.random()}`,
                   timestamp,
                   type: "info",
+                  level: "info",
+                  badge: null,
                   text: `📊 [${timestamp}] Telemetry frame verified for ${selectedCity} (${data.temperature_f}°F, ${data.resolution}).`,
                 },
               ];
@@ -150,6 +167,8 @@ export default function App() {
             id: `${Date.now()}-${Math.random()}`,
             timestamp,
             type: "error",
+            level: "error",
+            badge: "DISCONNECT",
             text: `❌ [${timestamp}] API DISCONNECT: Endpoint unreachable at http://127.0.0.1:8000. Retrying...`,
           },
         ]);
@@ -165,217 +184,269 @@ export default function App() {
     };
   }, [selectedCity]);
 
-  // Handle city change
+  // Handle city selector change
   const handleCityChange = (e) => {
     const newCity = e.target.value;
     setSelectedCity(newCity);
-    const ts = new Date().toLocaleTimeString();
+    const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
     setEventLogs((prev) => [
       ...prev,
       {
         id: `${Date.now()}-${Math.random()}`,
         timestamp: ts,
         type: "city_change",
+        level: "target",
+        badge: "TARGET SHIFT",
         text: `📍 [${ts}] Spatial target switched to [${newCity}]. Re-indexing urban telemetry.`,
       },
     ]);
   };
 
-  const renderRiskBadge = (level) => {
-    switch (level?.toLowerCase()) {
-      case "extreme":
-        return (
-          <span className="font-mono text-[11px] uppercase tracking-wider text-red-400 bg-red-950/60 border border-red-800/60 px-2 py-0.5 rounded">
-            EXTREME
-          </span>
-        );
-      case "high":
-        return (
-          <span className="font-mono text-[11px] uppercase tracking-wider text-amber-400 bg-amber-950/60 border border-amber-800/60 px-2 py-0.5 rounded">
-            HIGH
-          </span>
-        );
-      default:
-        return (
-          <span className="font-mono text-[11px] uppercase tracking-wider text-sky-400 bg-sky-950/60 border border-sky-800/60 px-2 py-0.5 rounded">
-            ELEVATED
-          </span>
-        );
+  // Trigger Agent 1 Compliance Audit
+  const handleRunAudit = async () => {
+    setIsAuditOpen(true);
+    setIsAuditLoading(true);
+    setAuditError(null);
+    setAuditReport(null);
+
+    const tempToSend = currentReading ? currentReading.temperature_f : 108;
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/v1/agents/audit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          location: selectedCity,
+          temperature_f: tempToSend,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Audit request failed with status: ${response.status}`);
+      }
+
+      const report = await response.json();
+      setAuditReport(report);
+
+      const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      setEventLogs((prev) => [
+        ...prev,
+        {
+          id: `${Date.now()}-${Math.random()}`,
+          timestamp: ts,
+          type: "audit",
+          level: "audit",
+          badge: "AGENT 1 AUDIT",
+          text: `⚡ [${ts}] AGENT 1 AUDIT COMPLETE: ASHRAE 55 & IECC evaluation generated for ${selectedCity} (${tempToSend}°F).`,
+        },
+      ]);
+    } catch (err) {
+      setAuditError(err.message || "Failed to connect to Agent 1 audit endpoint.");
+    } finally {
+      setIsAuditLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-black text-zinc-100 flex flex-col relative selection:bg-orange-500/20 selection:text-orange-200">
-      {/* Precision background dot grid */}
-      <div className="absolute inset-0 bg-[radial-gradient(#1f1f23_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none opacity-60" />
+    <div className="min-h-screen bg-[#0A0C0F] text-zinc-100 flex flex-col relative selection:bg-[#FF6B2B]/30 selection:text-white font-sans">
+      {/* Precision 16px Dot Grid Background */}
+      <div className="absolute inset-0 bg-[radial-gradient(#1E2330_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none opacity-80" />
 
-      {/* Top Header / Enterprise Control Bar */}
-      <header className="border-b border-zinc-800/70 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-50 px-6 py-3">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      {/* TOPBAR */}
+      <header className="border-b border-[#1E2330] bg-[#0A0C0F]/90 backdrop-blur-md sticky top-0 z-40 px-5 sm:px-8 py-3.5">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-3.5">
+          {/* Brand Left */}
           <div className="flex items-center gap-3">
-            <div className="h-7 w-7 rounded border border-zinc-700/80 bg-zinc-900/90 flex items-center justify-center shadow-inner">
-              <Thermometer className="w-4 h-4 text-orange-400" />
+            <div className="h-8 w-8 rounded-lg bg-[#FF6B2B]/10 border border-[#FF6B2B]/30 flex items-center justify-center shadow-[0_0_12px_rgba(255,107,43,0.2)]">
+              <Flame className="w-4 h-4 text-[#FF6B2B]" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-sm font-semibold tracking-tight text-white font-mono uppercase">
-                  ThermalOS: Urban Micro-Climate OS
-                </h1>
-                <span className="text-[10px] font-mono text-zinc-500 uppercase px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800">
-                  FortyGuard API
-                </span>
-              </div>
+            <div className="flex items-center gap-2.5">
+              <h1 className="font-display text-sm sm:text-base font-bold tracking-tight text-white uppercase">
+                THERMALOS: URBAN MICRO-CLIMATE OS
+              </h1>
+              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-[#181B22] text-zinc-400 border border-[#1E2330]">
+                FORTYGUARD API
+              </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-            {/* Live Status Badge */}
-            <div className="flex items-center gap-2 px-2.5 py-1 rounded border border-zinc-800/90 bg-zinc-900/60 font-mono text-xs">
+          {/* Actions & Controls Right */}
+          <div className="flex items-center gap-3 flex-wrap w-full md:w-auto justify-between md:justify-end">
+            {/* Run Compliance Audit Button */}
+            <button
+              onClick={handleRunAudit}
+              className="border border-[#FF6B2B]/70 text-[#FF6B2B] hover:bg-[#FF6B2B]/10 hover:shadow-[0_0_16px_rgba(255,107,43,0.3)] active:scale-95 transition-all font-mono text-xs px-3.5 py-1.5 rounded-full flex items-center gap-1.5 font-medium shadow-sm cursor-pointer"
+            >
+              <FileCheck className="w-3.5 h-3.5" />
+              <span>RUN COMPLIANCE AUDIT</span>
+            </button>
+
+            {/* Live Status Pill */}
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full border border-[#1E2330] bg-[#111318] font-mono text-xs">
               <span className="relative flex h-2 w-2">
                 {isConnected ? (
                   <>
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2ECC8A] opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#2ECC8A]" />
                   </>
                 ) : (
                   <>
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF3B3B] opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF3B3B]" />
                   </>
                 )}
               </span>
-              <span className={`text-[11px] font-medium tracking-wide uppercase ${isConnected ? "text-emerald-400" : "text-rose-400"}`}>
+              <span className={`text-[11px] font-semibold uppercase tracking-wider ${isConnected ? "text-[#2ECC8A]" : "text-[#FF3B3B]"}`}>
                 {isConnected ? "LIVE (1.5s)" : "OFFLINE"}
               </span>
             </div>
 
-            {/* City Selector */}
+            {/* City Dropdown */}
             <div className="relative flex items-center">
               <select
                 id="city-selector"
                 value={selectedCity}
                 onChange={handleCityChange}
-                className="appearance-none bg-zinc-900/90 border border-zinc-800 rounded px-3 py-1 pr-8 text-xs font-mono text-zinc-200 outline-none hover:border-zinc-700 focus:border-zinc-600 cursor-pointer shadow-sm"
+                className="appearance-none bg-[#111318] border border-[#1E2330] hover:border-zinc-700 rounded-md px-3 py-1.5 pr-8 text-xs font-mono text-zinc-200 outline-none focus:border-[#FF6B2B]/70 cursor-pointer shadow-sm"
               >
                 {CITIES.map((city) => (
-                  <option key={city} value={city} className="bg-zinc-950 text-zinc-200">
+                  <option key={city} value={city} className="bg-[#111318] text-zinc-100">
                     {city}
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-3.5 h-3.5 text-zinc-500 absolute right-2.5 pointer-events-none" />
+              <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 pointer-events-none" />
             </div>
           </div>
         </div>
       </header>
 
-      {/* Dashboard Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-5 relative z-10">
-        {/* Left 2 Columns: KPI Row & Telemetry Graph */}
+      {/* DASHBOARD BODY */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-5 relative z-10">
+        {/* Left 2 Columns: KPI Row + Recharts Telemetry */}
         <div className="lg:col-span-2 space-y-5">
-          {/* KPI Metrics */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {/* Card 1: Ambient Temperature */}
-            <div className="bg-zinc-900/50 backdrop-blur-md border border-zinc-800/60 rounded-md p-3.5 flex flex-col justify-between hover:border-zinc-700/60 transition-colors">
-              <div className="flex items-center justify-between text-zinc-400">
-                <span className="text-[11px] font-mono uppercase tracking-wider">Surface Temp</span>
-                <Thermometer className="w-3.5 h-3.5 text-zinc-400" />
+          {/* STAT KPI ROW (4 Cards) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+            {/* Card 1: SURFACE TEMP */}
+            <div className="bg-[#111318] border border-[#1E2330] rounded-lg p-4 flex flex-col justify-between hover:border-zinc-700/60 transition-colors shadow-lg">
+              <div className="flex items-center justify-between text-zinc-400 text-xs font-medium font-sans">
+                <span>SURFACE TEMP</span>
+                <Thermometer className="w-3.5 h-3.5 text-zinc-500" />
               </div>
-              <div className="my-2 flex items-baseline gap-1">
-                <span className="text-3xl font-semibold font-mono tracking-tight text-white">
+              <div className="my-2.5 flex items-baseline gap-1">
+                <span className="font-mono text-4xl text-white font-bold tracking-tight">
                   {currentReading ? currentReading.temperature_f : "--"}
                 </span>
-                <span className="text-xs font-mono text-zinc-500">°F</span>
+                <span className="font-mono text-sm text-zinc-500">°F</span>
               </div>
-              <div className="mt-0.5">
-                {currentReading ? renderRiskBadge(currentReading.risk_level) : (
-                  <span className="text-[10px] font-mono text-zinc-600">Awaiting stream...</span>
+              <div>
+                {currentReading ? (
+                  currentReading.temperature_f >= 110 ? (
+                    <span className="font-mono text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-[#FF3B3B]/10 text-[#FF3B3B] border border-[#FF3B3B]/30">
+                      EXTREME
+                    </span>
+                  ) : currentReading.temperature_f >= 100 ? (
+                    <span className="font-mono text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                      HIGH
+                    </span>
+                  ) : (
+                    <span className="font-mono text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/30">
+                      ELEVATED
+                    </span>
+                  )
+                ) : (
+                  <span className="font-mono text-[10px] text-zinc-600">Connecting...</span>
                 )}
               </div>
             </div>
 
-            {/* Card 2: Risk Classification */}
-            <div className="bg-zinc-900/50 backdrop-blur-md border border-zinc-800/60 rounded-md p-3.5 flex flex-col justify-between hover:border-zinc-700/60 transition-colors">
-              <div className="flex items-center justify-between text-zinc-400">
-                <span className="text-[11px] font-mono uppercase tracking-wider">Risk Matrix</span>
-                <ShieldAlert className="w-3.5 h-3.5 text-zinc-400" />
+            {/* Card 2: RISK MATRIX */}
+            <div className="bg-[#111318] border border-[#1E2330] rounded-lg p-4 flex flex-col justify-between hover:border-zinc-700/60 transition-colors shadow-lg">
+              <div className="flex items-center justify-between text-zinc-400 text-xs font-medium font-sans">
+                <span>RISK MATRIX</span>
+                <ShieldAlert className="w-3.5 h-3.5 text-zinc-500" />
               </div>
-              <div className="my-2">
-                <span className="text-xl font-medium font-mono uppercase tracking-tight text-zinc-200">
+              <div className="my-2.5">
+                <span className="font-mono text-2xl font-bold uppercase tracking-tight text-white">
                   {currentReading ? currentReading.risk_level : "--"}
                 </span>
               </div>
-              <div className="text-[10px] font-mono text-zinc-500">
-                Crit Floor: <span className="text-red-400">105°F</span>
+              <div className="font-mono text-[11px] text-zinc-500">
+                Crit Floor: <span className="text-[#FF3B3B] font-medium">105°F</span>
               </div>
             </div>
 
-            {/* Card 3: Spatial Resolution */}
-            <div className="bg-zinc-900/50 backdrop-blur-md border border-zinc-800/60 rounded-md p-3.5 flex flex-col justify-between hover:border-zinc-700/60 transition-colors">
-              <div className="flex items-center justify-between text-zinc-400">
-                <span className="text-[11px] font-mono uppercase tracking-wider">Resolution</span>
-                <Radio className="w-3.5 h-3.5 text-zinc-400" />
+            {/* Card 3: RESOLUTION */}
+            <div className="bg-[#111318] border border-[#1E2330] rounded-lg p-4 flex flex-col justify-between hover:border-zinc-700/60 transition-colors shadow-lg">
+              <div className="flex items-center justify-between text-zinc-400 text-xs font-medium font-sans">
+                <span>RESOLUTION</span>
+                <Radio className="w-3.5 h-3.5 text-zinc-500" />
               </div>
-              <div className="my-2">
-                <span className="text-xl font-medium font-mono text-zinc-200">
+              <div className="my-2.5">
+                <span className="font-mono text-2xl font-bold text-white">
                   {currentReading ? currentReading.resolution : "10mi²"}
                 </span>
               </div>
-              <div className="text-[10px] font-mono text-zinc-500 truncate">
-                {currentReading ? currentReading.measured_at : "2m agl"}
+              <div className="font-sans text-[11px] text-zinc-400 truncate">
+                {currentReading ? currentReading.measured_at : "2m above ground"}
               </div>
             </div>
 
-            {/* Card 4: FortyGuard API Credits */}
-            <div className="bg-zinc-900/50 backdrop-blur-md border border-zinc-800/60 rounded-md p-3.5 flex flex-col justify-between hover:border-zinc-700/60 transition-colors">
-              <div className="flex items-center justify-between text-zinc-400">
-                <span className="text-[11px] font-mono uppercase tracking-wider">Quota Remaining</span>
-                <Zap className="w-3.5 h-3.5 text-zinc-400" />
+            {/* Card 4: QUOTA REMAINING */}
+            <div className="bg-[#111318] border border-[#1E2330] rounded-lg p-4 flex flex-col justify-between hover:border-zinc-700/60 transition-colors shadow-lg">
+              <div className="flex items-center justify-between text-zinc-400 text-xs font-medium font-sans">
+                <span>QUOTA REMAINING</span>
+                <Zap className="w-3.5 h-3.5 text-zinc-500" />
               </div>
-              <div className="my-2">
-                <span className="text-xl font-medium font-mono text-zinc-200">
+              <div className="my-2.5">
+                <span className="font-mono text-2xl font-bold text-white">
                   {currentReading ? currentReading.credits_remaining.toLocaleString() : "999,999"}
                 </span>
               </div>
-              <div className="text-[10px] font-mono text-emerald-400">
-                Enterprise Active
+              <div>
+                <span className="font-mono text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-[#2ECC8A]/10 text-[#2ECC8A] border border-[#2ECC8A]/30">
+                  Enterprise Active
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Recharts Overhaul Container */}
-          <div className="bg-zinc-900/50 backdrop-blur-md border border-zinc-800/60 rounded-md p-4 sm:p-5 flex flex-col">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-zinc-800/50">
+          {/* RECHARTS TELEMETRY STREAM */}
+          <div className="bg-[#111318] border border-[#1E2330] rounded-lg p-5 flex flex-col shadow-xl">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3.5 border-b border-[#1E2330]">
               <div>
                 <div className="flex items-center gap-2">
-                  <Activity className="w-3.5 h-3.5 text-orange-500" />
-                  <h2 className="text-xs font-semibold uppercase tracking-wider font-mono text-zinc-200">
-                    Telemetry Stream • {selectedCity}
+                  <Activity className="w-4 h-4 text-[#FF6B2B]" />
+                  <h2 className="font-display text-sm font-bold uppercase tracking-tight text-white">
+                    TELEMETRY STREAM • {selectedCity}
                   </h2>
                 </div>
-                <p className="text-[11px] font-mono text-zinc-400 mt-0.5">
+                <p className="font-sans text-xs text-zinc-400 mt-0.5">
                   Dynamic micro-climate temperature readings (rolling 20-sample window)
                 </p>
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400">
-                  <span className="w-2.5 h-[1px] bg-red-600 inline-block border-t border-dashed border-red-500" />
-                  <span className="text-red-400/90">Limit: 105°F</span>
+                <div className="flex items-center gap-1.5 text-xs font-mono text-zinc-400">
+                  <span className="w-2.5 h-[1px] bg-[#FF3B3B] inline-block border-t border-dashed border-[#FF3B3B]" />
+                  <span className="text-[#FF3B3B]">CRITICAL: 105°F</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400">
-                  <span className="w-2 h-[2px] bg-orange-500 inline-block" />
-                  <span className="text-orange-400/90">Temp (°F)</span>
+                <div className="flex items-center gap-1.5 text-xs font-mono text-zinc-400">
+                  <span className="w-2 h-[2px] bg-[#FF6B2B] inline-block" />
+                  <span className="text-[#FF6B2B]">Temp (°F)</span>
                 </div>
               </div>
             </div>
 
-            {/* Precision Graph */}
+            {/* Smooth Monotone Area Chart */}
             <div className="w-full h-80">
               {telemetryData.length === 0 ? (
-                <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 font-mono text-xs gap-2 border border-zinc-800/40 rounded">
-                  <Activity className="w-5 h-5 animate-pulse text-zinc-400" />
-                  <span>Synchronizing telemetry stream...</span>
+                <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 font-mono text-xs gap-2.5 border border-dashed border-[#1E2330] rounded">
+                  <RefreshCw className="w-5 h-5 animate-spin text-[#FF6B2B]" />
+                  <span>Locking micro-climate telemetry for {selectedCity}...</span>
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -384,16 +455,16 @@ export default function App() {
                     margin={{ top: 10, right: 15, left: -20, bottom: 0 }}
                   >
                     <defs>
-                      <linearGradient id="neonOrangeGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#f97316" stopOpacity={0.18} />
-                        <stop offset="100%" stopColor="#f97316" stopOpacity={0.0} />
+                      <linearGradient id="thermalOrangeFaded" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#FF6B2B" stopOpacity={0.15} />
+                        <stop offset="100%" stopColor="#FF6B2B" stopOpacity={0.0} />
                       </linearGradient>
                     </defs>
 
                     <CartesianGrid
                       strokeDasharray="2 2"
-                      stroke="#27272a"
-                      opacity={0.4}
+                      stroke="#1E2330"
+                      opacity={0.7}
                       vertical={false}
                     />
 
@@ -401,18 +472,18 @@ export default function App() {
                       dataKey="time"
                       stroke="#52525b"
                       fontSize={10}
-                      fontFamily="monospace"
+                      fontFamily="JetBrains Mono, monospace"
                       tickLine={false}
-                      axisLine={{ stroke: "#27272a" }}
+                      axisLine={{ stroke: "#1E2330" }}
                     />
 
                     <YAxis
                       domain={[90, 120]}
                       stroke="#52525b"
                       fontSize={10}
-                      fontFamily="monospace"
+                      fontFamily="JetBrains Mono, monospace"
                       tickLine={false}
-                      axisLine={{ stroke: "#27272a" }}
+                      axisLine={{ stroke: "#1E2330" }}
                       tickFormatter={(val) => `${val}°`}
                     />
 
@@ -422,13 +493,13 @@ export default function App() {
                           const item = payload[0].payload;
                           const isBreached = item.temperature_f >= 105;
                           return (
-                            <div className="bg-zinc-950/95 border border-zinc-800 p-2.5 rounded shadow-2xl backdrop-blur-md font-mono text-xs">
+                            <div className="bg-[#0A0C0F]/95 border border-[#1E2330] p-3 rounded-lg shadow-2xl backdrop-blur-md font-mono text-xs">
                               <div className="text-[10px] text-zinc-500 uppercase">{item.time}</div>
-                              <div className="text-sm font-semibold text-white mt-0.5">
+                              <div className="text-base font-bold text-white mt-0.5">
                                 {item.temperature_f}°F
                               </div>
-                              <div className="text-[10px] mt-1 text-zinc-400">
-                                Status: <span className={isBreached ? "text-red-400 font-bold" : "text-zinc-300"}>{item.risk_level.toUpperCase()}</span>
+                              <div className="text-[11px] mt-1 text-zinc-400">
+                                Matrix: <span className={isBreached ? "text-[#FF3B3B] font-semibold uppercase" : "text-zinc-300 uppercase"}>{item.risk_level}</span>
                               </div>
                             </div>
                           );
@@ -437,41 +508,42 @@ export default function App() {
                       }}
                     />
 
-                    {/* Thin, refined Critical Threshold line */}
+                    {/* Horizontal Dashed Critical Threshold Reference Line */}
                     <ReferenceLine
                       y={105}
-                      stroke="#dc2626"
-                      strokeDasharray="3 3"
-                      strokeWidth={1}
+                      stroke="#FF3B3B"
+                      strokeDasharray="4 4"
+                      strokeWidth={1.5}
                       label={{
                         value: "CRITICAL 105°F",
-                        fill: "#ef4444",
+                        fill: "#FF3B3B",
                         position: "insideTopRight",
-                        fontSize: 9,
-                        fontFamily: "monospace",
-                        offset: 6,
+                        fontSize: 10,
+                        fontFamily: "JetBrains Mono, monospace",
+                        fontWeight: 600,
+                        offset: 8,
                       }}
                     />
 
-                    {/* Faded gradient area */}
+                    {/* Area Gradient */}
                     <Area
                       type="monotone"
                       dataKey="temperature_f"
-                      fill="url(#neonOrangeGrad)"
+                      fill="url(#thermalOrangeFaded)"
                       stroke="none"
                     />
 
-                    {/* Smooth, vibrant thin neon stroke without chunky dots */}
+                    {/* Neon Orange Line */}
                     <Line
                       type="monotone"
                       dataKey="temperature_f"
-                      stroke="#f97316"
-                      strokeWidth={1.75}
+                      stroke="#FF6B2B"
+                      strokeWidth={2}
                       dot={false}
                       activeDot={{
                         r: 4,
-                        fill: "#f97316",
-                        stroke: "#09090b",
+                        fill: "#FF6B2B",
+                        stroke: "#111318",
                         strokeWidth: 2,
                       }}
                       isAnimationActive={false}
@@ -481,88 +553,92 @@ export default function App() {
               )}
             </div>
 
-            {/* Bottom Footer Metadata */}
-            <div className="mt-3 pt-2.5 border-t border-zinc-800/40 flex items-center justify-between font-mono text-[11px] text-zinc-400">
-              <div className="flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            {/* Footer Bar */}
+            <div className="mt-3.5 pt-3 border-t border-[#1E2330] flex items-center justify-between font-mono text-xs text-zinc-400">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-[#2ECC8A]" />
                 <span>Sampling: 1500ms</span>
               </div>
               <div>
-                Frames Ingested: <span className="text-zinc-300 font-medium">{pollCount}</span>
+                Frames Ingested: <span className="text-zinc-200 font-semibold">{pollCount}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right 1 Column: Agent Event Log Sidebar (Terminal / Timeline Feed) */}
+        {/* Right 1 Column: AGENT EVENT LOG SIDEBAR */}
         <div className="lg:col-span-1 flex flex-col h-full space-y-4">
-          <div className="bg-zinc-900/50 backdrop-blur-md border border-zinc-800/60 rounded-md p-4 flex-1 flex flex-col max-h-[580px]">
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60 mb-3">
+          <div className="bg-[#111318] border border-[#1E2330] rounded-lg p-5 flex-1 flex flex-col max-h-[600px] shadow-xl">
+            {/* Sidebar Header */}
+            <div className="flex items-center justify-between pb-3.5 border-b border-[#1E2330] mb-3">
               <div className="flex items-center gap-2">
-                <Server className="w-3.5 h-3.5 text-zinc-400" />
-                <h2 className="text-xs font-semibold uppercase tracking-wider font-mono text-zinc-200">
-                  Agent Event Log
+                <Server className="w-4 h-4 text-zinc-400" />
+                <h2 className="font-display text-xs font-bold uppercase tracking-wider text-white">
+                  AGENT EVENT LOG
                 </h2>
               </div>
-              <span className="text-[10px] font-mono text-zinc-400 uppercase px-1.5 py-0.5 rounded bg-zinc-950 border border-zinc-800">
+              <span className="text-[10px] font-mono text-[#2ECC8A] uppercase px-2 py-0.5 rounded bg-[#2ECC8A]/10 border border-[#2ECC8A]/30">
                 LIVE FEED
               </span>
             </div>
 
-            {/* Terminal Timeline Feed */}
+            {/* Terminal Feed with Left Color Bars & Keyframe Slide-in */}
             <div
               ref={logsEndRef}
-              className="flex-1 overflow-y-auto space-y-3 pr-1 font-mono"
+              className="flex-1 overflow-y-auto space-y-2.5 pr-1 font-mono text-xs"
             >
               {eventLogs.map((log) => {
-                const isExtreme = log.type === "extreme";
-                const isHigh = log.type === "high";
-                const isCityChange = log.type === "city_change";
-                const isError = log.type === "error";
+                const isBreach = log.level === "breach" || log.type === "extreme";
+                const isWarning = log.level === "warning" || log.type === "high";
+                const isAudit = log.level === "audit";
+                const isTarget = log.level === "target";
 
-                const dotColor = isExtreme
-                  ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]"
-                  : isHigh
-                  ? "bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.6)]"
-                  : isCityChange
-                  ? "bg-sky-400 shadow-[0_0_6px_rgba(56,189,248,0.6)]"
-                  : isError
-                  ? "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]"
-                  : "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]";
+                const barColor = isBreach
+                  ? "border-[#FF3B3B] bg-[#FF3B3B]/5"
+                  : isWarning
+                  ? "border-amber-400 bg-amber-400/5"
+                  : isAudit
+                  ? "border-[#FF6B2B] bg-[#FF6B2B]/5"
+                  : isTarget
+                  ? "border-sky-400 bg-sky-400/5"
+                  : "border-[#1E2330] bg-transparent";
 
                 return (
                   <div
                     key={log.id}
-                    className="relative pl-3.5 pb-2.5 border-l border-zinc-800/80 last:border-l-0 group"
+                    className={`border-l-2 pl-3 py-2 rounded-r-md transition-all ${barColor} animate-slide-in`}
                   >
-                    {/* Glowing timeline dot */}
-                    <div
-                      className={`absolute -left-[4.5px] top-1 h-2 w-2 rounded-full ${dotColor} transition-transform group-hover:scale-125`}
-                    />
-
-                    {/* Timestamp & Type header */}
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[11px] text-zinc-400">
+                    {/* Timestamp & Badge */}
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="text-[11px] text-zinc-500 font-mono">
                         {log.timestamp}
                       </span>
-                      {isExtreme && (
-                        <span className="text-[9px] uppercase px-1.5 py-0.2 rounded bg-red-950/80 text-red-400 border border-red-800/60 font-semibold">
-                          CRITICAL BREACH
+                      {log.badge && (
+                        <span
+                          className={`text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded border ${
+                            isBreach
+                              ? "bg-[#FF3B3B]/20 text-[#FF3B3B] border-[#FF3B3B]/40"
+                              : isWarning
+                              ? "bg-amber-400/20 text-amber-300 border-amber-400/40"
+                              : isAudit
+                              ? "bg-[#FF6B2B]/20 text-[#FF6B2B] border-[#FF6B2B]/40"
+                              : "bg-sky-400/20 text-sky-300 border-sky-400/40"
+                          }`}
+                        >
+                          {log.badge}
                         </span>
                       )}
                     </div>
 
-                    {/* Message body */}
+                    {/* Message */}
                     <p
                       className={`text-xs leading-relaxed break-words ${
-                        isExtreme
+                        isBreach
                           ? "text-red-200 font-medium"
-                          : isHigh
+                          : isWarning
                           ? "text-amber-200"
-                          : isCityChange
-                          ? "text-sky-200"
-                          : isError
-                          ? "text-rose-300"
+                          : isAudit
+                          ? "text-orange-200"
                           : "text-zinc-300"
                       }`}
                     >
@@ -574,13 +650,119 @@ export default function App() {
             </div>
 
             {/* Sidebar Footer */}
-            <div className="mt-3 pt-2.5 border-t border-zinc-800/60 flex items-center justify-between text-[11px] font-mono text-zinc-400">
+            <div className="mt-3 pt-3 border-t border-[#1E2330] flex items-center justify-between text-[11px] font-mono text-zinc-500">
               <span>Telemetry: Active</span>
               <span>Events: {eventLogs.length}</span>
             </div>
           </div>
         </div>
       </main>
+
+      {/* AGENT 1 COMPLIANCE AUDIT MODAL OVERLAY */}
+      {isAuditOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#111318] border border-[#1E2330] rounded-xl max-w-2xl w-full p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh]">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-[#1E2330]">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-lg bg-[#FF6B2B]/10 border border-[#FF6B2B]/30 flex items-center justify-center">
+                  <FileCheck className="w-4 h-4 text-[#FF6B2B]" />
+                </div>
+                <div>
+                  <h2 className="font-display text-base font-bold uppercase tracking-tight text-white">
+                    Agent 1: Energy & Thermal Compliance Audit
+                  </h2>
+                  <p className="text-xs text-zinc-400 font-mono">
+                    RAG Vector Assessment • {selectedCity}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsAuditOpen(false)}
+                className="text-zinc-400 hover:text-white p-1 rounded-md hover:bg-[#1E2330] transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto py-5 space-y-4 font-sans text-sm">
+              {isAuditLoading ? (
+                <div className="py-12 flex flex-col items-center justify-center gap-3 text-zinc-400 font-mono text-xs">
+                  <RefreshCw className="w-8 h-8 animate-spin text-[#FF6B2B]" />
+                  <span>Retrieving ASHRAE 55 and IECC building codes from ChromaDB...</span>
+                </div>
+              ) : auditError ? (
+                <div className="p-4 rounded-lg bg-[#FF3B3B]/10 border border-[#FF3B3B]/30 text-red-200 font-mono text-xs space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-[#FF3B3B]">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span>Audit Execution Error</span>
+                  </div>
+                  <p>{auditError}</p>
+                </div>
+              ) : auditReport ? (
+                <div className="space-y-4">
+                  {/* Summary Status Bar */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-[#0A0C0F] border border-[#1E2330] font-mono text-xs">
+                    <span className="text-zinc-400">Target Region: <strong className="text-white">{auditReport.city}</strong></span>
+                    <span className="text-zinc-400">Audited Temp: <strong className="text-[#FF6B2B]">{auditReport.temperature_f}°F</strong></span>
+                  </div>
+
+                  {/* Section 1: ASHRAE 55 */}
+                  <div className="p-4 rounded-lg bg-[#0A0C0F] border border-[#1E2330] space-y-1.5">
+                    <span className="font-mono text-xs font-bold uppercase text-sky-400 tracking-wider">
+                      1. ASHRAE 55 Thermal Comfort Status
+                    </span>
+                    <p className="text-xs text-zinc-300 leading-relaxed font-mono">
+                      {auditReport.ashrae_compliance_status}
+                    </p>
+                  </div>
+
+                  {/* Section 2: IECC Envelope */}
+                  <div className="p-4 rounded-lg bg-[#0A0C0F] border border-[#1E2330] space-y-1.5">
+                    <span className="font-mono text-xs font-bold uppercase text-amber-400 tracking-wider">
+                      2. IECC Building Envelope & Insulation Warning
+                    </span>
+                    <p className="text-xs text-zinc-300 leading-relaxed font-mono">
+                      {auditReport.iecc_envelope_warning}
+                    </p>
+                  </div>
+
+                  {/* Section 3: Recommended HVAC */}
+                  <div className="p-4 rounded-lg bg-[#0A0C0F] border border-[#1E2330] space-y-1.5">
+                    <span className="font-mono text-xs font-bold uppercase text-[#FF6B2B] tracking-wider">
+                      3. Recommended HVAC Action Plan
+                    </span>
+                    <p className="text-xs text-zinc-300 leading-relaxed font-mono">
+                      {auditReport.recommended_hvac_action}
+                    </p>
+                  </div>
+
+                  {/* Raw JSON Accordion / View */}
+                  <div className="pt-2">
+                    <span className="text-[11px] font-mono uppercase text-zinc-500 block mb-1.5">
+                      Structured Pydantic JSON Payload:
+                    </span>
+                    <pre className="font-mono text-[11px] bg-[#0A0C0F] p-3.5 rounded-lg border border-[#1E2330] overflow-x-auto text-zinc-300 leading-relaxed">
+                      {JSON.stringify(auditReport, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-4 border-t border-[#1E2330] flex items-center justify-end gap-3 font-mono text-xs">
+              <button
+                onClick={() => setIsAuditOpen(false)}
+                className="px-4 py-1.5 rounded-md bg-[#181B22] hover:bg-[#1E2330] text-zinc-300 font-medium transition-colors"
+              >
+                DISMISS
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

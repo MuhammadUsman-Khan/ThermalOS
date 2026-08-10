@@ -4,14 +4,14 @@
 
 @layer base {
   body {
-    @apply bg-black text-zinc-100 antialiased font-sans selection:bg-orange-500/30 selection:text-orange-200;
+    @apply bg-[#0A0C0F] text-zinc-100 antialiased font-sans selection:bg-[#FF6B2B]/30 selection:text-white;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
   }
 }
 
-/* Custom Scrollbar - Foundry style */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -22,10 +22,25 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: #1E2330;
   border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: #2D3748;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
