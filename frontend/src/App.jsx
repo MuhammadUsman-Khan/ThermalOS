@@ -50,6 +50,11 @@ export default function App() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  // Dynamic Timers State
+  const [pollTimer, setPollTimer] = useState("0.0");
+  const [lastFetch, setLastFetch] = useState(Date.now());
+  const [uptime, setUptime] = useState("7d 14h 35m 00s");
+
   // Proper Dark Mode DOM Injection
   useEffect(() => {
     if (darkMode) {
@@ -68,6 +73,28 @@ export default function App() {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Running Live Polling Ticker (Ticks every 100ms)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPollTimer(((Date.now() - lastFetch) / 1000).toFixed(1));
+    }, 100);
+    return () => clearInterval(timer);
+  }, [lastFetch]);
+
+  // Dynamic System Uptime Ticker
+  useEffect(() => {
+    const bootTime = Date.now() - (7 * 24 * 60 * 60 * 1000 + 14 * 60 * 60 * 1000 + 35 * 60 * 1000);
+    const interval = setInterval(() => {
+      const diff = Math.floor((Date.now() - bootTime) / 1000);
+      const d = Math.floor(diff / (24 * 3600));
+      const h = Math.floor((diff % (24 * 3600)) / 3600);
+      const m = Math.floor((diff % 3600) / 60);
+      const s = diff % 60;
+      setUptime(`${d}d ${h}h ${m}m ${s.toString().padStart(2, "0")}s`);
+    }, 1000);
+    return () => clearInterval(interval);
   }, []);
 
   // Selection & Telemetry State
@@ -181,6 +208,7 @@ export default function App() {
         setIsConnected(true);
         setCurrentReading(data);
         setPollCount((prev) => prev + 1);
+        setLastFetch(Date.now()); // Reset dynamic live ticker
 
         // Update rolling telemetry window (max 20 points)
         setTelemetryData((prevData) => {
@@ -365,11 +393,11 @@ export default function App() {
               <span>RUN COMPLIANCE AUDIT</span>
             </button>
 
-            {/* Live Status Indicator Pill */}
+            {/* Dynamic Live Status Indicator Pill */}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-50/70 dark:bg-[#0B1015] font-mono text-xs shadow-inner">
               <Activity className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                LIVE (1.55s)
+              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-mono">
+                LIVE ({pollTimer}s)
               </span>
             </div>
 
@@ -434,7 +462,7 @@ export default function App() {
           ========================================================================= */}
       <main className="w-full max-w-7xl mx-auto px-4 py-6 flex-1 flex flex-col space-y-5 relative z-10">
         
-        {/* TOP KPI ROW (3 Cards with Reinstated High-Tech Sparklines) */}
+        {/* TOP KPI ROW (3 Cards with Heavy Bold Typography & Sparklines) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           
           {/* Card 1: SURFACE TEMP */}
@@ -446,10 +474,10 @@ export default function App() {
               <Thermometer className="w-4 h-4 text-gray-400 dark:text-zinc-500 mb-4" />
             </div>
             <div className="my-1 flex items-baseline">
-              <span className="text-5xl font-light tracking-tighter text-slate-900 dark:text-white mb-2 font-sans">
+              <span className="text-6xl font-black tracking-tighter tabular-nums text-slate-900 dark:text-white drop-shadow-md mb-2 font-sans">
                 {currentReading ? currentReading.temperature_f : 102}
               </span>
-              <span className="text-2xl text-gray-500 dark:text-gray-400 ml-1 font-light">°F</span>
+              <span className="text-2xl font-bold text-slate-400 dark:text-zinc-500 ml-2">°F</span>
             </div>
             
             {/* Sparkline & Badge Footer */}
@@ -496,7 +524,7 @@ export default function App() {
               <Shield className="w-4 h-4 text-gray-400 dark:text-zinc-500 mb-4" />
             </div>
             <div className="my-1 flex items-center gap-3">
-              <span className="text-5xl font-light tracking-tighter text-slate-900 dark:text-white mb-2 font-sans">
+              <span className="text-6xl font-black tracking-tighter tabular-nums text-slate-900 dark:text-white drop-shadow-md mb-2 font-sans">
                 {currentReading?.temperature_f >= 105 ? "CRIT" : "HIGH"}
               </span>
               <span
@@ -548,10 +576,10 @@ export default function App() {
               <Radio className="w-4 h-4 text-sky-500 dark:text-sky-400 mb-4" />
             </div>
             <div className="my-1 flex items-baseline">
-              <span className="text-5xl font-light tracking-tighter text-slate-900 dark:text-white mb-2 font-sans">
+              <span className="text-6xl font-black tracking-tighter tabular-nums text-slate-900 dark:text-white drop-shadow-md mb-2 font-sans">
                 10
               </span>
-              <span className="text-2xl text-gray-500 dark:text-gray-400 ml-1 font-light">m²</span>
+              <span className="text-2xl font-bold text-slate-400 dark:text-zinc-500 ml-2">m²</span>
             </div>
 
             {/* Sparkline & Subtext Footer */}
@@ -613,11 +641,14 @@ export default function App() {
               </div>
             </div>
 
+            {/* Dedicated Y-Axis Header with Clean Gap */}
+            <div className="flex items-center gap-4 text-xs font-bold text-slate-400 dark:text-zinc-500 mb-2 font-mono">
+              <span>TEMP</span>
+              <span>(°F)</span>
+            </div>
+
             {/* Glowing Recharts Area Chart */}
             <div className="w-full h-80 relative">
-              <span className="absolute top-1 left-2 font-mono text-[10px] text-gray-400 dark:text-zinc-500 uppercase z-10">
-                Temp (°F)
-              </span>
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
                   data={
@@ -636,7 +667,7 @@ export default function App() {
                           { time: "02:35:44 PM", temperature_f: 92 },
                         ]
                   }
-                  margin={{ top: 20, right: 15, left: -20, bottom: 0 }}
+                  margin={{ top: 10, right: 15, left: -20, bottom: 0 }}
                 >
                   <defs>
                     <linearGradient id="neonFill" x1="0" y1="0" x2="0" y2="1">
@@ -891,7 +922,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Card 4: SYSTEM UPTIME */}
+          {/* Card 4: DYNAMIC SYSTEM UPTIME */}
           <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-purple-500/30 transition-all">
             <div className="h-11 w-11 rounded-xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 flex items-center justify-center flex-shrink-0">
               <Shield className="w-5 h-5 text-purple-500" />
@@ -900,8 +931,8 @@ export default function App() {
               <span className="text-[10px] font-mono uppercase text-gray-400 dark:text-zinc-500 font-semibold block tracking-wider">
                 SYSTEM UPTIME
               </span>
-              <div className="text-sm font-semibold font-mono text-slate-900 dark:text-white my-0.5">
-                7d 14h 35m
+              <div className="text-sm font-semibold font-mono tabular-nums text-slate-900 dark:text-white my-0.5">
+                {uptime}
               </div>
               <span className="text-[11px] text-purple-600 dark:text-purple-400 font-medium">99.98% uptime</span>
             </div>
