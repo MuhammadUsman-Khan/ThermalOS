@@ -490,6 +490,8 @@ export default function App() {
   // Trigger Agent 1 Compliance Audit
   const handleRunAudit = async () => {
     setIsAuditOpen(true);
+    setIsInfraModalOpen(false);
+    setIsCivicModalOpen(false);
     setIsAuditLoading(true);
     setAuditError(null);
     setAuditReport(null);
@@ -559,6 +561,8 @@ export default function App() {
   // Trigger Agent 2: Infrastructure Pre-Cooling Dispatch
   const handleRunInfrastructure = async () => {
     setIsInfraModalOpen(true);
+    setIsAuditOpen(false);
+    setIsCivicModalOpen(false);
     setIsInfraLoading(true);
     setInfraError(null);
     setInfraData(null);
@@ -603,12 +607,15 @@ export default function App() {
     }
   };
 
-  // Trigger Agent 3: Civic & Public Health Heat Stress Override
-  const handleRunCivic = async () => {
-    setIsCivicModalOpen(true);
+  // Fetch Agent 3: Civic & Public Health Heat Stress Override
+  const fetchCivicData = async (openModal = true) => {
+    if (openModal) {
+      setIsCivicModalOpen(true);
+      setIsAuditOpen(false);
+      setIsInfraModalOpen(false);
+    }
     setIsCivicLoading(true);
     setCivicError(null);
-    setCivicData(null);
 
     const tempToSend = currentReading ? currentReading.temperature_f : 96;
 
@@ -650,6 +657,10 @@ export default function App() {
     }
   };
 
+  const handleRunCivic = () => {
+    fetchCivicData(true);
+  };
+
   const currentTemp = currentReading ? currentReading.temperature_f : 96;
   const riskConfig = getRiskConfig(currentTemp);
 
@@ -658,12 +669,14 @@ export default function App() {
     if (currentTemp >= 105 && !hasAutoTriggered) {
       setHasAutoTriggered(true);
       setIsEmergencyMode(true);
-      handleRunCivic();
+      // Only pop open modal if user is not actively auditing or viewing another modal
+      const shouldOpenModal = !isAuditOpen && !isInfraModalOpen;
+      fetchCivicData(shouldOpenModal);
     } else if (currentTemp < 100 && hasAutoTriggered) {
       setHasAutoTriggered(false);
       setIsEmergencyMode(false);
     }
-  }, [currentTemp, hasAutoTriggered]);
+  }, [currentTemp, hasAutoTriggered, isAuditOpen, isInfraModalOpen]);
 
   return (
     <div className={`min-h-screen bg-[#F8F9FA] dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden transition-colors duration-300 flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white ${
