@@ -326,6 +326,10 @@ export default function App() {
   const [isCivicLoading, setIsCivicLoading] = useState(false);
   const [civicError, setCivicError] = useState(null);
 
+  // Autonomous Emergency Trigger State
+  const [hasAutoTriggered, setHasAutoTriggered] = useState(false);
+  const [isEmergencyMode, setIsEmergencyMode] = useState(false);
+
   const logsEndRef = useRef(null);
   const prevRiskLevelRef = useRef(null);
 
@@ -644,8 +648,22 @@ export default function App() {
   const currentTemp = currentReading ? currentReading.temperature_f : 96;
   const riskConfig = getRiskConfig(currentTemp);
 
+  // Autonomous Emergency Observer (Triggers Agent 3 Civic Override on >= 105°F Breach)
+  useEffect(() => {
+    if (currentTemp >= 105 && !hasAutoTriggered) {
+      setHasAutoTriggered(true);
+      setIsEmergencyMode(true);
+      handleRunCivic();
+    } else if (currentTemp < 100 && hasAutoTriggered) {
+      setHasAutoTriggered(false);
+      setIsEmergencyMode(false);
+    }
+  }, [currentTemp, hasAutoTriggered]);
+
   return (
-    <div className="min-h-screen bg-[#F8F9FA] dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden transition-colors duration-300 flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white">
+    <div className={`min-h-screen bg-[#F8F9FA] dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden transition-colors duration-300 flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white ${
+      isEmergencyMode ? "shadow-[inset_0_0_100px_rgba(225,29,72,0.15)] animate-pulse" : ""
+    }`}>
       
       {/* Top Right Fiery Red-Orange Glow (#FF2A00) */}
       <div
@@ -733,11 +751,17 @@ export default function App() {
               <span>CIVIC OVERRIDE</span>
             </button>
 
-            {/* Dynamic Live Status Indicator Pill */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-50/70 dark:bg-[#0B1015] font-mono text-xs shadow-inner">
-              <Activity className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-mono tabular-nums">
-                LIVE ({uptime})
+            {/* Dynamic Live Status Indicator Pill (Flashes Red during Emergency Mode) */}
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border font-mono text-xs shadow-inner transition-colors ${
+                isEmergencyMode
+                  ? "text-red-500 border-red-500/50 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.25)]"
+                  : "border-emerald-500/30 bg-emerald-50/70 dark:bg-[#0B1015]"
+              }`}
+            >
+              <Activity className={`w-3.5 h-3.5 ${isEmergencyMode ? "text-red-500 animate-bounce" : "text-emerald-600 dark:text-emerald-400 animate-pulse"}`} />
+              <span className={`text-[11px] font-bold uppercase tracking-wider font-mono tabular-nums ${isEmergencyMode ? "text-red-500 font-extrabold" : "text-emerald-600 dark:text-emerald-400"}`}>
+                {isEmergencyMode ? "CRITICAL BREACH" : `LIVE (${uptime})`}
               </span>
             </div>
 
