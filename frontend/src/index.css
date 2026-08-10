@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-[#07080A] text-zinc-100 antialiased font-sans selection:bg-[#FF5500]/30 selection:text-white;
+    @apply antialiased font-sans selection:bg-[#FF5500]/30 selection:text-white;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
@@ -22,25 +22,25 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1C2028;
+  background: #cbd5e1;
   border-radius: 2px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #FF5500;
+.dark ::-webkit-scrollbar-thumb {
+  background: #1C2028;
 }
 
-/* Neon Glow Filters */
+::-webkit-scrollbar-thumb:hover {
+  background: #f97316;
+}
+
+/* Neon Glow Utilities */
 .glow-orange {
-  box-shadow: 0 0 24px rgba(255, 85, 0, 0.35);
+  box-shadow: 0 0 24px rgba(249, 115, 22, 0.35);
 }
 
 .glow-orange-button {
-  box-shadow: 0 0 25px rgba(255, 85, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.25);
-}
-
-.glow-orange-active-tab {
-  box-shadow: 0 0 20px rgba(255, 69, 0, 0.45);
+  box-shadow: 0 0 25px rgba(249, 115, 22, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.25);
 }
 
 .glow-red {
