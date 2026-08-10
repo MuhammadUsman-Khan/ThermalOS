@@ -43,6 +43,12 @@ const CITIES = [
 
 const MAX_DATA_POINTS = 20;
 
+// Helper to generate dynamic timestamps relative to current time
+const getPastTimeString = (secondsAgo = 0) => {
+  const d = new Date(Date.now() - secondsAgo * 1000);
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+};
+
 export default function App() {
   // Theme State
   const [darkMode, setDarkMode] = useState(false);
@@ -51,10 +57,21 @@ export default function App() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Dynamic Timers State
+  // Dynamic Timers & Live Metrics State
   const [pollTimer, setPollTimer] = useState("0.0");
   const [lastFetch, setLastFetch] = useState(Date.now());
   const [uptime, setUptime] = useState("3h 42m 00s");
+  const [latency, setLatency] = useState(18);
+  const [pollCount, setPollCount] = useState(1);
+  const [totalEventsCount, setTotalEventsCount] = useState(6);
+
+  // Real-time Clock and Date
+  const [currentTime, setCurrentTime] = useState(
+    new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+  );
+  const [currentDate, setCurrentDate] = useState(
+    new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+  );
 
   // Proper Dark Mode DOM Injection
   useEffect(() => {
@@ -86,11 +103,10 @@ export default function App() {
 
   // Dynamic System Uptime Ticker (Realistic Persistent Session)
   useEffect(() => {
-    // Check if we already have a boot time for this session
     let storedBoot = localStorage.getItem("thermalos_boot");
 
     if (!storedBoot) {
-      // If not, set it to exactly 3 hours and 42 minutes ago to match the backend start
+      // Initialize to 3h 42m ago on fresh storage
       storedBoot = Date.now() - (3 * 3600 + 42 * 60) * 1000;
       localStorage.setItem("thermalos_boot", storedBoot.toString());
     }
@@ -104,7 +120,6 @@ export default function App() {
       const m = Math.floor((diff % 3600) / 60);
       const s = diff % 60;
 
-      // Dynamically hide days if it's 0 (which it will be for a new backend session)
       const dayStr = d > 0 ? `${d}d ` : "";
       setUptime(`${dayStr}${h}h ${m}m ${s}s`);
     }, 1000);
@@ -112,66 +127,87 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Live Clock and Date Ticker
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      setCurrentTime(
+        now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+      );
+      setCurrentDate(
+        now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      );
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Selection & Telemetry State
   const [selectedCity, setSelectedCity] = useState("Phoenix, AZ");
-  const [telemetryData, setTelemetryData] = useState([]);
-  const [eventLogs, setEventLogs] = useState([
+  const [telemetryData, setTelemetryData] = useState(() => [
+    { time: getPastTimeString(18), temperature_f: 104 },
+    { time: getPastTimeString(15), temperature_f: 106 },
+    { time: getPastTimeString(12), temperature_f: 108 },
+    { time: getPastTimeString(9), temperature_f: 102 },
+    { time: getPastTimeString(6), temperature_f: 105 },
+    { time: getPastTimeString(3), temperature_f: 103 },
+    { time: getPastTimeString(0), temperature_f: 106 },
+  ]);
+
+  // Initial event logs with dynamic real timestamps
+  const [eventLogs, setEventLogs] = useState(() => [
     {
       id: "log-1",
-      timestamp: "02:35:41 PM",
+      timestamp: getPastTimeString(15),
       type: "extreme",
       badge: "CRITICAL BREACH",
       text: "Threshold breached for Phoenix, AZ.",
     },
     {
       id: "log-2",
-      timestamp: "02:35:38 PM",
+      timestamp: getPastTimeString(12),
       type: "high",
       badge: "ELEVATED",
       text: "HIGH HEAT ELEVATION: Phoenix, AZ at 103°F. Monitoring thermal plume.",
     },
     {
       id: "log-3",
-      timestamp: "02:35:40 PM",
+      timestamp: getPastTimeString(9),
       type: "high",
       badge: "ELEVATED",
       text: "HIGH HEAT ELEVATION: Phoenix, AZ at 100°F. Monitoring thermal plume.",
     },
     {
       id: "log-4",
-      timestamp: "02:35:41 PM",
+      timestamp: getPastTimeString(6),
       type: "extreme",
       badge: "CRITICAL BREACH",
       text: "HEAT SPIKE DETECTED: Threshold breached for Phoenix, AZ.",
     },
     {
       id: "log-5",
-      timestamp: "02:35:43 PM",
+      timestamp: getPastTimeString(3),
       type: "extreme",
       badge: "CRITICAL BREACH",
       text: "HEAT SPIKE DETECTED: Threshold breached for Phoenix, AZ.",
     },
     {
       id: "log-6",
-      timestamp: "02:35:44 PM",
+      timestamp: getPastTimeString(0),
       type: "high",
       badge: "ELEVATED",
       text: "HIGH HEAT ELEVATION: Phoenix, AZ at 102°F. Monitoring thermal plume.",
     },
   ]);
+
   const [currentReading, setCurrentReading] = useState({
     location: "Phoenix, AZ",
-    temperature_f: 102,
+    temperature_f: 104,
     risk_level: "high",
     resolution: "10m²",
     measured_at: "2m above ground",
-    credits_remaining: 999999,
+    credits_remaining: 1000000,
   });
   const [isConnected, setIsConnected] = useState(true);
-  const [pollCount, setPollCount] = useState(273);
-  const [currentTime, setCurrentTime] = useState(
-    new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-  );
 
   // Agent 1 Audit Modal State
   const [isAuditOpen, setIsAuditOpen] = useState(false);
@@ -182,17 +218,7 @@ export default function App() {
 
   const logsEndRef = useRef(null);
 
-  // Live Clock
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(
-        new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-      );
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Continuous 1500ms polling loop to FastAPI backend
+  // Continuous 1500ms polling loop to FastAPI backend with real latency measurement
   useEffect(() => {
     let isMounted = true;
 
@@ -203,6 +229,8 @@ export default function App() {
         second: "2-digit",
       });
 
+      const startTime = performance.now();
+
       try {
         const response = await fetch("http://127.0.0.1:8000/v1/heat-intelligence", {
           method: "POST",
@@ -211,6 +239,8 @@ export default function App() {
           },
           body: JSON.stringify({ location: selectedCity }),
         });
+
+        const roundTripMs = Math.round(performance.now() - startTime);
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -221,9 +251,10 @@ export default function App() {
         if (!isMounted) return;
 
         setIsConnected(true);
+        setLatency(roundTripMs > 0 ? roundTripMs : 12);
         setCurrentReading(data);
         setPollCount((prev) => prev + 1);
-        setLastFetch(Date.now()); // Reset dynamic live ticker
+        setLastFetch(Date.now()); // Reset dynamic live timer
 
         // Update rolling telemetry window (max 20 points)
         setTelemetryData((prevData) => {
@@ -240,7 +271,7 @@ export default function App() {
           return updated;
         });
 
-        // Trigger log alerts with unique IDs
+        // Trigger log alerts with unique IDs and increment real events count
         if (data.temperature_f >= 105 || data.risk_level === "extreme") {
           const alertMessage = `Threshold breached for ${selectedCity}.`;
           setEventLogs((prevLogs) => [
@@ -253,6 +284,7 @@ export default function App() {
             },
             ...prevLogs.slice(0, 15),
           ]);
+          setTotalEventsCount((c) => c + 1);
         } else if (data.temperature_f >= 100 || data.risk_level === "high") {
           setEventLogs((prevLogs) => [
             {
@@ -264,6 +296,7 @@ export default function App() {
             },
             ...prevLogs.slice(0, 15),
           ]);
+          setTotalEventsCount((c) => c + 1);
         }
       } catch (err) {
         if (!isMounted) return;
@@ -295,6 +328,7 @@ export default function App() {
       },
       ...prev.slice(0, 15),
     ]);
+    setTotalEventsCount((c) => c + 1);
   };
 
   // Trigger Agent 1 Compliance Audit
@@ -305,7 +339,7 @@ export default function App() {
     setAuditReport(null);
     setIsDispatched(false);
 
-    const tempToSend = currentReading ? currentReading.temperature_f : 102;
+    const tempToSend = currentReading ? currentReading.temperature_f : 104;
 
     try {
       const response = await fetch("http://127.0.0.1:8000/v1/agents/audit", {
@@ -337,6 +371,7 @@ export default function App() {
         },
         ...prev.slice(0, 15),
       ]);
+      setTotalEventsCount((c) => c + 1);
     } catch (err) {
       setAuditError(err.message || "Failed to connect to Agent 1 audit endpoint.");
     } finally {
@@ -357,6 +392,7 @@ export default function App() {
       },
       ...prev.slice(0, 15),
     ]);
+    setTotalEventsCount((c) => c + 1);
   };
 
   return (
@@ -490,7 +526,7 @@ export default function App() {
             </div>
             <div className="my-1 flex items-baseline">
               <span className="text-5xl lg:text-6xl font-semibold tracking-tight tabular-nums text-slate-800 dark:text-white">
-                {currentReading ? currentReading.temperature_f : 102}
+                {currentReading ? currentReading.temperature_f : 104}
               </span>
               <span className="text-2xl font-medium text-slate-500 dark:text-zinc-400 ml-1 inline-block align-top mt-1.5">°F</span>
             </div>
@@ -666,22 +702,7 @@ export default function App() {
             <div className="w-full h-80 relative">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
-                  data={
-                    telemetryData.length > 0
-                      ? telemetryData
-                      : [
-                          { time: "02:35:17 PM", temperature_f: 110 },
-                          { time: "02:35:20 PM", temperature_f: 106 },
-                          { time: "02:35:23 PM", temperature_f: 108 },
-                          { time: "02:35:26 PM", temperature_f: 95 },
-                          { time: "02:35:29 PM", temperature_f: 112 },
-                          { time: "02:35:32 PM", temperature_f: 104 },
-                          { time: "02:35:35 PM", temperature_f: 108 },
-                          { time: "02:35:38 PM", temperature_f: 96 },
-                          { time: "02:35:41 PM", temperature_f: 108 },
-                          { time: "02:35:44 PM", temperature_f: 92 },
-                        ]
-                  }
+                  data={telemetryData}
                   margin={{ top: 10, right: 15, left: -20, bottom: 0 }}
                 >
                   <defs>
@@ -877,7 +898,7 @@ export default function App() {
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 <span>Telemetry: Active</span>
               </div>
-              <span>Events: 206</span>
+              <span>Events: {totalEventsCount}</span>
             </div>
           </div>
         </div>
@@ -898,9 +919,13 @@ export default function App() {
               </span>
               <div className="flex items-center gap-1.5 my-0.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                <span className="text-sm font-semibold text-slate-900 dark:text-white">Stable</span>
+                <span className="text-sm font-semibold text-slate-900 dark:text-white">
+                  {isConnected ? "Stable" : "Reconnecting"}
+                </span>
               </div>
-              <span className="text-[11px] text-gray-500 dark:text-zinc-500">Latency: 28ms</span>
+              <span className="text-[11px] text-gray-500 dark:text-zinc-500 font-mono">
+                Latency: {latency}ms
+              </span>
             </div>
           </div>
 
@@ -915,7 +940,9 @@ export default function App() {
               </span>
               <div className="flex items-center gap-1.5 my-0.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                <span className="text-sm font-semibold text-slate-900 dark:text-white">Connected</span>
+                <span className="text-sm font-semibold text-slate-900 dark:text-white">
+                  {isConnected ? "Connected" : "Offline"}
+                </span>
               </div>
               <span className="text-[11px] text-gray-500 dark:text-zinc-500">FORTYGUARD API</span>
             </div>
@@ -933,7 +960,9 @@ export default function App() {
               <div className="text-sm font-semibold font-mono text-slate-900 dark:text-white my-0.5">
                 {currentTime}
               </div>
-              <span className="text-[11px] text-gray-500 dark:text-zinc-500">May 25, 2026</span>
+              <span className="text-[11px] text-gray-500 dark:text-zinc-500">
+                {currentDate}
+              </span>
             </div>
           </div>
 
