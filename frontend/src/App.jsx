@@ -46,6 +46,10 @@ export default function App() {
   // Theme State
   const [darkMode, setDarkMode] = useState(true);
 
+  // Custom Dropdown State
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
   // Proper Dark Mode DOM Injection
   useEffect(() => {
     if (darkMode) {
@@ -54,6 +58,17 @@ export default function App() {
       document.documentElement.classList.remove("dark");
     }
   }, [darkMode]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Selection & Telemetry State
   const [selectedCity, setSelectedCity] = useState("Phoenix, AZ");
@@ -222,10 +237,10 @@ export default function App() {
     };
   }, [selectedCity]);
 
-  // Handle city selector change
-  const handleCityChange = (e) => {
-    const newCity = e.target.value;
+  // Handle city selector change from custom dropdown
+  const handleSelectCity = (newCity) => {
     setSelectedCity(newCity);
+    setIsDropdownOpen(false);
     const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
     setEventLogs((prev) => [
       {
@@ -367,24 +382,48 @@ export default function App() {
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            {/* City Selector Pill */}
-            <div className="relative flex items-center">
-              <div className="flex items-center gap-2 bg-white dark:bg-[#0E1117] border border-slate-200 dark:border-[#1C2028] hover:border-slate-300 dark:hover:border-zinc-700 px-3 py-1.5 rounded-xl text-xs font-medium text-slate-800 dark:text-white cursor-pointer shadow-sm">
-                <MapPin className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-400" />
-                <select
-                  id="city-selector"
-                  value={selectedCity}
-                  onChange={handleCityChange}
-                  className="appearance-none bg-transparent text-xs font-medium text-slate-800 dark:text-white outline-none cursor-pointer pr-3"
-                >
-                  {CITIES.map((city) => (
-                    <option key={city} value={city} className="bg-white dark:bg-[#0E1117] text-slate-900 dark:text-white">
-                      {city}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-400 pointer-events-none -ml-2" />
-              </div>
+            {/* Custom React City Dropdown Component */}
+            <div ref={dropdownRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 bg-white/5 border border-white/10 hover:bg-white/10 px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer text-slate-800 dark:text-zinc-200"
+              >
+                <MapPin className="w-3.5 h-3.5 text-zinc-400" />
+                <span className="text-sm font-medium">{selectedCity}</span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-zinc-400 transition-transform duration-200 ${
+                    isDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              <AnimatePresence>
+                {isDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full mt-2 right-0 w-48 bg-[#0D0D0D] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
+                  >
+                    {CITIES.map((city) => (
+                      <div
+                        key={city}
+                        onClick={() => handleSelectCity(city)}
+                        className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
+                          selectedCity === city
+                            ? "bg-[#FF6B2B]/20 text-[#FF6B2B] font-semibold"
+                            : "text-zinc-300 hover:bg-orange-500/20 hover:text-orange-500"
+                        }`}
+                      >
+                        <span>{city}</span>
+                        {selectedCity === city && <Check className="w-3.5 h-3.5 text-[#FF6B2B]" />}
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
@@ -395,68 +434,81 @@ export default function App() {
           ========================================================================= */}
       <main className="w-full max-w-7xl mx-auto px-4 py-6 flex-1 flex flex-col space-y-5 relative z-10">
         
-        {/* TOP KPI ROW (3 Cards) */}
+        {/* TOP KPI ROW (3 Cards with Premium Sharp Typography) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           
           {/* Card 1: SURFACE TEMP */}
-          <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex flex-col justify-between shadow-lg dark:shadow-2xl hover:border-[#FF6B2B]/30 transition-all">
-            <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 text-xs font-medium">
-              <span className="uppercase tracking-wider text-[11px] font-semibold">SURFACE TEMP</span>
-              <Thermometer className="w-4 h-4 text-slate-400 dark:text-zinc-500" />
+          <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between shadow-lg dark:shadow-2xl hover:border-[#FF6B2B]/30 transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase mb-4">
+                SURFACE TEMP
+              </span>
+              <Thermometer className="w-4 h-4 text-zinc-500 mb-4" />
             </div>
-            <div className="my-3 flex items-baseline gap-1">
-              <span className="font-sans text-4xl text-slate-900 dark:text-white font-light tracking-tight">
+            <div className="my-1 flex items-baseline">
+              <span className="text-5xl font-light tracking-tighter text-white mb-2 font-sans">
                 {currentReading ? currentReading.temperature_f : 102}
               </span>
-              <span className="font-sans text-lg text-slate-400 dark:text-zinc-500">°F</span>
+              <span className="text-2xl text-zinc-500 ml-1">°F</span>
             </div>
             <div>
-              <span className="font-mono text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-[#FF6B2B]/10 text-[#FF6B2B] border border-[#FF6B2B]/20">
+              <span
+                className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                  currentReading?.temperature_f >= 105
+                    ? "bg-red-500/10 text-red-500 border border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.2)]"
+                    : "bg-orange-500/10 text-orange-500 border border-orange-500/30 shadow-[0_0_10px_rgba(249,115,22,0.15)]"
+                }`}
+              >
                 {currentReading?.temperature_f >= 105 ? "EXTREME" : "HIGH"}
               </span>
             </div>
           </div>
 
           {/* Card 2: RISK MATRIX */}
-          <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex flex-col justify-between shadow-lg dark:shadow-2xl hover:border-red-500/30 transition-all">
-            <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 text-xs font-medium">
-              <span className="uppercase tracking-wider text-[11px] font-semibold">RISK MATRIX</span>
-              <Shield className="w-4 h-4 text-slate-400 dark:text-zinc-500" />
+          <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between shadow-lg dark:shadow-2xl hover:border-red-500/30 transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase mb-4">
+                RISK MATRIX
+              </span>
+              <Shield className="w-4 h-4 text-zinc-500 mb-4" />
             </div>
-            <div className="my-3 flex items-center gap-2">
-              <span className="font-sans text-4xl text-slate-900 dark:text-white font-light tracking-tight">
+            <div className="my-1 flex items-center gap-3">
+              <span className="text-5xl font-light tracking-tighter text-white mb-2 font-sans">
                 {currentReading?.temperature_f >= 105 ? "CRIT" : "HIGH"}
               </span>
               <span
-                className={`font-mono text-[10px] uppercase font-semibold px-2 py-0.5 rounded border ${
+                className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-2 ${
                   currentReading?.temperature_f >= 105
-                    ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30"
-                    : "bg-[#FF6B2B]/10 text-[#FF6B2B] border-[#FF6B2B]/30"
+                    ? "bg-red-500/10 text-red-500 border border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.2)]"
+                    : "bg-orange-500/10 text-orange-500 border border-orange-500/30 shadow-[0_0_10px_rgba(249,115,22,0.15)]"
                 }`}
               >
                 {currentReading?.temperature_f >= 105 ? "EXTREME" : "HIGH"}
               </span>
             </div>
             <div>
-              <span className="font-mono text-[11px] text-slate-500 dark:text-zinc-500">
+              <span className="font-mono text-[11px] text-zinc-500">
                 Crit Floor: <span className="text-red-500 font-semibold">105°F</span>
               </span>
             </div>
           </div>
 
           {/* Card 3: RESOLUTION */}
-          <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex flex-col justify-between shadow-lg dark:shadow-2xl hover:border-sky-500/30 transition-all">
-            <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 text-xs font-medium">
-              <span className="uppercase tracking-wider text-[11px] font-semibold">RESOLUTION</span>
-              <Radio className="w-4 h-4 text-sky-500 dark:text-sky-400" />
-            </div>
-            <div className="my-3">
-              <span className="font-sans text-4xl text-slate-900 dark:text-white font-light tracking-tight">
-                10m²
+          <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between shadow-lg dark:shadow-2xl hover:border-sky-500/30 transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase mb-4">
+                RESOLUTION
               </span>
+              <Radio className="w-4 h-4 text-sky-400 mb-4" />
+            </div>
+            <div className="my-1 flex items-baseline">
+              <span className="text-5xl font-light tracking-tighter text-white mb-2 font-sans">
+                10
+              </span>
+              <span className="text-2xl text-zinc-500 ml-1">m²</span>
             </div>
             <div>
-              <span className="text-[11px] text-slate-500 dark:text-zinc-500">
+              <span className="text-[11px] text-zinc-500 font-mono">
                 2m above ground
               </span>
             </div>
@@ -679,7 +731,7 @@ export default function App() {
                         <span
                           className={`text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded border font-mono ${
                             isBreach
-                              ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30"
+                              ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30 shadow-[0_0_8px_rgba(239,68,68,0.2)]"
                               : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
                           }`}
                         >
