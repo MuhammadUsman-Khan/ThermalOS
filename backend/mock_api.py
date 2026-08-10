@@ -19,20 +19,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Realistic physical micro-climate baseline temperatures and bounds per city
-CITY_THERMODYNAMICS = {
-    "Phoenix, AZ": {"base": 96.5, "min": 91.0, "max": 104.0},
-    "Houston, TX": {"base": 88.2, "min": 82.0, "max": 95.0},
-    "Las Vegas, NV": {"base": 93.0, "min": 87.0, "max": 101.0},
-    "Dallas, TX": {"base": 86.8, "min": 81.0, "max": 93.0},
+# City temperature configuration: normal active range and rare spike ceiling
+CITY_CONFIGS = {
+    "Phoenix, AZ": {"min": 93, "max": 103, "spike_chance": 0.05, "spike_val": 106},
+    "Houston, TX": {"min": 85, "max": 95, "spike_chance": 0.03, "spike_val": 101},
+    "Las Vegas, NV": {"min": 90, "max": 101, "spike_chance": 0.04, "spike_val": 105},
+    "Dallas, TX": {"min": 84, "max": 94, "spike_chance": 0.03, "spike_val": 100},
 }
 
-# Continuous floating-point state simulating real thermal inertia
-CURRENT_FLOAT_TEMPS = {
-    "Phoenix, AZ": 96.4,
-    "Houston, TX": 88.2,
-    "Las Vegas, NV": 93.0,
-    "Dallas, TX": 86.8,
+# In-memory last temperature tracking per city
+LAST_CITY_TEMPS = {
+    "Phoenix, AZ": 96,
+    "Houston, TX": 88,
+    "Las Vegas, NV": 93,
+    "Dallas, TX": 87,
 }
 
 
@@ -48,35 +48,41 @@ class AuditRequest(BaseModel):
 @app.post("/v1/heat-intelligence")
 async def get_heat_intelligence(request: HeatIntelligenceRequest):
     city = request.location
-    config = CITY_THERMODYNAMICS.get(city, {"base": 90.0, "min": 80.0, "max": 102.0})
-    current = CURRENT_FLOAT_TEMPS.get(city, config["base"])
+    cfg = CITY_CONFIGS.get(
+        city,
+        {"min": 88, "max": 100, "spike_chance": 0.04, "spike_val": 105},
+    )
+    last_temp = LAST_CITY_TEMPS.get(city, 96)
 
-    # Realistic micro-climate thermal physics:
-    # Ambient temperature drifts gently by fractions of a degree (+/- 0.08°F)
-    micro_drift = random.uniform(-0.08, 0.08)
-    # Slow mean-reversion toward city thermal baseline
-    reversion = (config["base"] - current) * 0.03
+    # 4-5% chance of an occasional transient heat spike
+    if random.random() < cfg["spike_chance"]:
+        new_temp = random.randint(105, cfg["spike_val"])
+    else:
+        # Guarantee a visible change of +/- 1 to 3 degrees each second
+        step_options = [-3, -2, -1, 1, 2, 3]
+        step = random.choice(step_options)
+        new_temp = last_temp + step
 
-    new_float = current + micro_drift + reversion
-    # Clamp within realistic operating bounds
-    new_float = max(config["min"], min(config["max"], new_float))
-    CURRENT_FLOAT_TEMPS[city] = new_float
+        # Keep strictly bounded in normal active range
+        if new_temp < cfg["min"]:
+            new_temp = cfg["min"] + random.randint(0, 2)
+        elif new_temp > cfg["max"]:
+            new_temp = cfg["max"] - random.randint(0, 2)
 
-    # Physical sensors report rounded integer readings (holds steady and shifts naturally)
-    temp_int = int(round(new_float))
+    LAST_CITY_TEMPS[city] = new_temp
 
-    if temp_int >= 105:
+    if new_temp >= 105:
         risk_level = "extreme"
-    elif temp_int >= 100:
+    elif new_temp >= 100:
         risk_level = "high"
-    elif temp_int >= 92:
+    elif new_temp >= 92:
         risk_level = "elevated"
     else:
         risk_level = "nominal"
 
     return {
         "location": city,
-        "temperature_f": temp_int,
+        "temperature_f": new_temp,
         "risk_level": risk_level,
         "resolution": "10m²",
         "measured_at": "2m above ground",
@@ -90,8 +96,7 @@ async def audit_endpoint(request: AuditRequest):
     if request.temperature_f is not None:
         temp_f = request.temperature_f
     else:
-        current = CURRENT_FLOAT_TEMPS.get(request.location, 96.0)
-        temp_f = int(round(current))
+        temp_f = LAST_CITY_TEMPS.get(request.location, 96)
 
     report = run_compliance_audit(
         city=request.location,
