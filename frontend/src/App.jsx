@@ -44,7 +44,7 @@ const MAX_DATA_POINTS = 20;
 
 export default function App() {
   // Theme State
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
 
   // Custom Dropdown State
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -317,7 +317,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden transition-colors duration-300 flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white">
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden transition-colors duration-300 flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white">
       
       {/* Top Right Orange Glow */}
       <div className="hidden dark:block fixed top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-orange-600/20 blur-[120px] pointer-events-none z-0" />
@@ -327,12 +327,12 @@ export default function App() {
       {/* =========================================================================
           TOPBAR
           ========================================================================= */}
-      <header className="border-b border-slate-200 dark:border-white/5 bg-white/90 dark:bg-black/60 backdrop-blur-xl sticky top-0 z-40 px-6 py-3.5 transition-colors duration-300">
+      <header className="border-b border-gray-200 dark:border-white/5 bg-white/90 dark:bg-black/60 backdrop-blur-xl sticky top-0 z-40 px-6 py-3.5 transition-colors duration-300">
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4">
           
           {/* Brand Left */}
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-[#FF6B2B]/10 dark:bg-[#FF6B2B]/20 border border-[#FF6B2B]/30 dark:border-[#FF6B2B]/40 flex items-center justify-center shadow-sm dark:shadow-[0_0_15px_rgba(255,107,43,0.3)]">
+            <div className="h-9 w-9 rounded-xl bg-orange-50 dark:bg-[#FF6B2B]/20 border border-orange-200 dark:border-[#FF6B2B]/40 flex items-center justify-center shadow-sm dark:shadow-[0_0_15px_rgba(255,107,43,0.3)]">
               <Flame className="w-5 h-5 text-[#FF6B2B]" />
             </div>
             <div>
@@ -341,14 +341,14 @@ export default function App() {
                   THERMALOS
                 </h1>
                 {/* FortyGuard API Pill */}
-                <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#0D1017] border border-slate-200 dark:border-[#1C202B] px-2.5 py-0.5 rounded-full">
+                <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 px-2.5 py-0.5 rounded-full">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[10px] font-mono uppercase text-slate-600 dark:text-zinc-400 font-semibold tracking-wide">
+                  <span className="text-[10px] font-mono uppercase text-gray-600 dark:text-gray-300 font-semibold tracking-wide">
                     FORTYGUARD API
                   </span>
                 </div>
               </div>
-              <p className="text-[10px] font-semibold tracking-wider text-slate-400 dark:text-zinc-500 uppercase -mt-0.5">
+              <p className="text-[10px] font-semibold tracking-wider text-gray-400 dark:text-zinc-500 uppercase -mt-0.5">
                 URBAN MICRO-CLIMATE OS
               </p>
             </div>
@@ -366,7 +366,7 @@ export default function App() {
             </button>
 
             {/* Live Status Indicator Pill */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-50/50 dark:bg-[#0B1015] font-mono text-xs shadow-inner">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-50/70 dark:bg-[#0B1015] font-mono text-xs shadow-inner">
               <Activity className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
               <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                 LIVE (1.55s)
@@ -377,7 +377,7 @@ export default function App() {
             <button
               onClick={() => setDarkMode(!darkMode)}
               title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              className="p-2.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-zinc-300 hover:text-[#FF6B2B] dark:hover:text-[#FF6B2B] hover:border-[#FF6B2B]/30 transition-all shadow-sm cursor-pointer active:scale-95"
+              className="p-2.5 rounded-full bg-white dark:bg-transparent border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:text-[#FF6B2B] dark:hover:text-[#FF6B2B] hover:border-[#FF6B2B]/30 transition-all shadow-sm cursor-pointer active:scale-95"
             >
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
@@ -387,12 +387,12 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-200/60 dark:hover:bg-white/10 px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer text-slate-800 dark:text-zinc-200"
+                className="flex items-center gap-2 bg-white dark:bg-transparent border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer text-gray-700 dark:text-gray-200"
               >
-                <MapPin className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
+                <MapPin className="w-3.5 h-3.5 text-gray-400" />
                 <span className="text-sm font-medium">{selectedCity}</span>
                 <ChevronDown
-                  className={`w-3.5 h-3.5 text-slate-500 dark:text-zinc-400 transition-transform duration-200 ${
+                  className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${
                     isDropdownOpen ? "rotate-180" : ""
                   }`}
                 />
@@ -405,7 +405,7 @@ export default function App() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 6, scale: 0.98 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute top-full mt-2 right-0 w-48 bg-white dark:bg-[#0D0D0D] border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
+                    className="absolute top-full mt-2 right-0 w-48 bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
                   >
                     {CITIES.map((city) => (
                       <div
@@ -414,7 +414,7 @@ export default function App() {
                         className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
                           selectedCity === city
                             ? "bg-orange-50 dark:bg-[#FF6B2B]/20 text-[#FF6B2B] font-semibold"
-                            : "text-slate-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-orange-500/20 hover:text-orange-600 dark:hover:text-orange-400"
+                            : "text-gray-700 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-orange-500/20 hover:text-[#FF6B2B]"
                         }`}
                       >
                         <span>{city}</span>
@@ -434,24 +434,26 @@ export default function App() {
           ========================================================================= */}
       <main className="w-full max-w-7xl mx-auto px-4 py-6 flex-1 flex flex-col space-y-5 relative z-10">
         
-        {/* TOP KPI ROW (3 Cards with Depth & Dynamic Light/Dark Contrast) */}
+        {/* TOP KPI ROW (3 Cards with Reinstated High-Tech Sparklines) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           
           {/* Card 1: SURFACE TEMP */}
-          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl rounded-2xl p-5 flex flex-col justify-between backdrop-blur-xl hover:border-[#FF6B2B]/30 transition-all">
+          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-[#FF6B2B]/30 transition-all overflow-hidden relative">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold tracking-[0.2em] text-slate-500 dark:text-zinc-500 uppercase mb-4">
+              <span className="text-[10px] font-bold tracking-[0.2em] text-gray-500 dark:text-zinc-500 uppercase mb-4">
                 SURFACE TEMP
               </span>
-              <Thermometer className="w-4 h-4 text-slate-400 dark:text-zinc-500 mb-4" />
+              <Thermometer className="w-4 h-4 text-gray-400 dark:text-zinc-500 mb-4" />
             </div>
             <div className="my-1 flex items-baseline">
               <span className="text-5xl font-light tracking-tighter text-slate-900 dark:text-white mb-2 font-sans">
                 {currentReading ? currentReading.temperature_f : 102}
               </span>
-              <span className="text-2xl text-slate-500 dark:text-zinc-500 ml-1">°F</span>
+              <span className="text-2xl text-gray-500 dark:text-gray-400 ml-1 font-light">°F</span>
             </div>
-            <div>
+            
+            {/* Sparkline & Badge Footer */}
+            <div className="flex items-center justify-between pt-2">
               <span
                 className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                   currentReading?.temperature_f >= 105
@@ -461,16 +463,37 @@ export default function App() {
               >
                 {currentReading?.temperature_f >= 105 ? "EXTREME" : "HIGH"}
               </span>
+
+              {/* Surface Temp Orange Sparkline */}
+              <svg className="w-28 h-8 overflow-visible" viewBox="0 0 110 32">
+                <defs>
+                  <linearGradient id="sparkOrangeGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#FF6B2B" stopOpacity={darkMode ? 0.35 : 0.2} />
+                    <stop offset="100%" stopColor="#FF6B2B" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M0,24 Q15,6 32,18 T65,10 T95,14 L110,8 L110,32 L0,32 Z"
+                  fill="url(#sparkOrangeGrad)"
+                />
+                <path
+                  d="M0,24 Q15,6 32,18 T65,10 T95,14 L110,8"
+                  fill="none"
+                  stroke="#FF6B2B"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
             </div>
           </div>
 
           {/* Card 2: RISK MATRIX */}
-          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl rounded-2xl p-5 flex flex-col justify-between backdrop-blur-xl hover:border-red-500/30 transition-all">
+          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-red-500/30 transition-all overflow-hidden relative">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold tracking-[0.2em] text-slate-500 dark:text-zinc-500 uppercase mb-4">
+              <span className="text-[10px] font-bold tracking-[0.2em] text-gray-500 dark:text-zinc-500 uppercase mb-4">
                 RISK MATRIX
               </span>
-              <Shield className="w-4 h-4 text-slate-400 dark:text-zinc-500 mb-4" />
+              <Shield className="w-4 h-4 text-gray-400 dark:text-zinc-500 mb-4" />
             </div>
             <div className="my-1 flex items-center gap-3">
               <span className="text-5xl font-light tracking-tighter text-slate-900 dark:text-white mb-2 font-sans">
@@ -486,17 +509,40 @@ export default function App() {
                 {currentReading?.temperature_f >= 105 ? "EXTREME" : "HIGH"}
               </span>
             </div>
-            <div>
-              <span className="font-mono text-[11px] text-slate-500 dark:text-zinc-500">
+
+            {/* Sparkline & Subtext Footer */}
+            <div className="flex items-center justify-between pt-2">
+              <span className="font-mono text-[11px] text-gray-500 dark:text-zinc-500">
                 Crit Floor: <span className="text-red-500 font-semibold">105°F</span>
               </span>
+
+              {/* Risk Matrix Red Sparkline */}
+              <svg className="w-28 h-8 overflow-visible" viewBox="0 0 110 32">
+                <defs>
+                  <linearGradient id="sparkRedGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#FF3B3B" stopOpacity={darkMode ? 0.35 : 0.2} />
+                    <stop offset="100%" stopColor="#FF3B3B" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M0,18 Q20,26 42,12 T78,22 T98,8 L110,14 L110,32 L0,32 Z"
+                  fill="url(#sparkRedGrad)"
+                />
+                <path
+                  d="M0,18 Q20,26 42,12 T78,22 T98,8 L110,14"
+                  fill="none"
+                  stroke="#FF3B3B"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
             </div>
           </div>
 
           {/* Card 3: RESOLUTION */}
-          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl rounded-2xl p-5 flex flex-col justify-between backdrop-blur-xl hover:border-sky-500/30 transition-all">
+          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-sky-500/30 transition-all overflow-hidden relative">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold tracking-[0.2em] text-slate-500 dark:text-zinc-500 uppercase mb-4">
+              <span className="text-[10px] font-bold tracking-[0.2em] text-gray-500 dark:text-zinc-500 uppercase mb-4">
                 RESOLUTION
               </span>
               <Radio className="w-4 h-4 text-sky-500 dark:text-sky-400 mb-4" />
@@ -505,12 +551,35 @@ export default function App() {
               <span className="text-5xl font-light tracking-tighter text-slate-900 dark:text-white mb-2 font-sans">
                 10
               </span>
-              <span className="text-2xl text-slate-500 dark:text-zinc-500 ml-1">m²</span>
+              <span className="text-2xl text-gray-500 dark:text-gray-400 ml-1 font-light">m²</span>
             </div>
-            <div>
-              <span className="text-[11px] text-slate-500 dark:text-zinc-500 font-mono">
+
+            {/* Sparkline & Subtext Footer */}
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-[11px] text-gray-500 dark:text-zinc-500 font-mono">
                 2m above ground
               </span>
+
+              {/* Resolution Blue Sparkline */}
+              <svg className="w-28 h-8 overflow-visible" viewBox="0 0 110 32">
+                <defs>
+                  <linearGradient id="sparkBlueGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#38BDF8" stopOpacity={darkMode ? 0.35 : 0.2} />
+                    <stop offset="100%" stopColor="#38BDF8" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M0,20 Q24,8 52,16 T84,8 T102,12 L110,6 L110,32 L0,32 Z"
+                  fill="url(#sparkBlueGrad)"
+                />
+                <path
+                  d="M0,20 Q24,8 52,16 T84,8 T102,12 L110,6"
+                  fill="none"
+                  stroke="#38BDF8"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
             </div>
           </div>
         </div>
@@ -521,10 +590,10 @@ export default function App() {
           {/* =========================================================================
               TELEMETRY STREAM CHART PANEL - 8 cols
               ========================================================================= */}
-          <div className="lg:col-span-8 bg-white dark:bg-[#0D0D0D]/80 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl rounded-2xl p-5 flex flex-col backdrop-blur-xl">
+          <div className="lg:col-span-8 bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col shadow-sm dark:shadow-2xl backdrop-blur-xl">
             
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100 dark:border-white/5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100 dark:border-white/5">
               <div>
                 <div className="flex items-center gap-2.5">
                   <Activity className="w-4 h-4 text-[#FF6B2B]" />
@@ -532,7 +601,7 @@ export default function App() {
                     TELEMETRY STREAM • {selectedCity}
                   </h2>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
                   Dynamic micro-climate temperature readings (rolling 20-sample window)
                 </p>
               </div>
@@ -546,7 +615,7 @@ export default function App() {
 
             {/* Glowing Recharts Area Chart */}
             <div className="w-full h-80 relative">
-              <span className="absolute top-1 left-2 font-mono text-[10px] text-slate-400 dark:text-zinc-500 uppercase z-10">
+              <span className="absolute top-1 left-2 font-mono text-[10px] text-gray-400 dark:text-zinc-500 uppercase z-10">
                 Temp (°F)
               </span>
               <ResponsiveContainer width="100%" height="100%">
@@ -571,7 +640,7 @@ export default function App() {
                 >
                   <defs>
                     <linearGradient id="neonFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
+                      <stop offset="5%" stopColor="#f97316" stopOpacity={darkMode ? 0.3 : 0.08} />
                       <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
                     </linearGradient>
                     <filter id="neonGlow">
@@ -580,7 +649,7 @@ export default function App() {
                         dy="0"
                         stdDeviation="6"
                         floodColor="#f97316"
-                        floodOpacity={darkMode ? "0.6" : "0.2"}
+                        floodOpacity={darkMode ? "0.6" : "0.15"}
                       />
                     </filter>
                   </defs>
@@ -588,37 +657,37 @@ export default function App() {
                   {/* X Axis */}
                   <XAxis
                     dataKey="time"
-                    stroke={darkMode ? "#1E2330" : "#CBD5E1"}
+                    stroke={darkMode ? "#1E2330" : "#E5E7EB"}
                     tick={{
-                      fill: darkMode ? "#71717A" : "#64748B",
+                      fill: darkMode ? "#71717A" : "#6B7280",
                       fontSize: 10,
                       fontFamily: "JetBrains Mono, monospace",
                     }}
                     tickLine={false}
-                    axisLine={{ stroke: darkMode ? "#1E2330" : "#E2E8F0" }}
+                    axisLine={{ stroke: darkMode ? "#1E2330" : "#E5E7EB" }}
                   />
 
                   {/* Y Axis */}
                   <YAxis
                     domain={[90, 125]}
                     ticks={[90, 99, 108, 117, 125]}
-                    stroke={darkMode ? "#1E2330" : "#CBD5E1"}
+                    stroke={darkMode ? "#1E2330" : "#E5E7EB"}
                     tick={{
-                      fill: darkMode ? "#71717A" : "#64748B",
+                      fill: darkMode ? "#71717A" : "#6B7280",
                       fontSize: 10,
                       fontFamily: "JetBrains Mono, monospace",
                     }}
                     tickLine={false}
-                    axisLine={{ stroke: darkMode ? "#1E2330" : "#E2E8F0" }}
+                    axisLine={{ stroke: darkMode ? "#1E2330" : "#E5E7EB" }}
                     tickFormatter={(val) => `${val}°`}
                   />
 
-                  {/* Clean Tooltip with No White Cursor Line */}
+                  {/* Clean Tooltip with Adaptive Colors */}
                   <Tooltip
                     cursor={false}
                     contentStyle={{
-                      backgroundColor: darkMode ? "#0D0D0D" : "#FFFFFF",
-                      borderColor: darkMode ? "rgba(255,255,255,0.1)" : "#E2E8F0",
+                      backgroundColor: darkMode ? "#0D0D0D" : "#ffffff",
+                      borderColor: darkMode ? "rgba(255,255,255,0.1)" : "#e5e7eb",
                       borderRadius: "8px",
                       color: darkMode ? "#fff" : "#0f172a",
                       boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
@@ -666,13 +735,13 @@ export default function App() {
             </div>
 
             {/* Chart Footer Bar */}
-            <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between font-mono text-xs text-slate-500 dark:text-zinc-400">
+            <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-between font-mono text-xs text-gray-500 dark:text-zinc-400">
               <div className="flex items-center gap-2">
                 <Activity className="w-3.5 h-3.5 text-[#FF6B2B]" />
                 <span>Sampling: 1500ms</span>
               </div>
               <div className="flex items-center gap-2">
-                <Layers className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500" />
+                <Layers className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
                 <span>
                   Frames Ingested: <strong className="text-slate-900 dark:text-white">{pollCount}</strong>
                 </span>
@@ -683,12 +752,12 @@ export default function App() {
           {/* =========================================================================
               RIGHT SIDEBAR (AGENT EVENT LOG - LIQUID FEED) - 4 cols
               ========================================================================= */}
-          <div className="lg:col-span-4 bg-white dark:bg-[#0D0D0D]/80 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl rounded-2xl p-5 flex flex-col backdrop-blur-xl h-full">
+          <div className="lg:col-span-4 bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col shadow-sm dark:shadow-2xl backdrop-blur-xl h-full">
             
             {/* Header */}
-            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-white/5 mb-3">
+            <div className="flex items-center justify-between pb-3.5 border-b border-gray-100 dark:border-white/5 mb-3">
               <div className="flex items-center gap-2">
-                <Link2 className="w-4 h-4 text-slate-400 dark:text-zinc-400" />
+                <Link2 className="w-4 h-4 text-gray-400 dark:text-zinc-400" />
                 <h2 className="font-display text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
                   AGENT EVENT LOG
                 </h2>
@@ -698,7 +767,7 @@ export default function App() {
               </span>
             </div>
 
-            {/* Liquid Framer Motion Event Feed with Dynamic Text Contrast */}
+            {/* Liquid Framer Motion Event Feed with Clean Gray Borders */}
             <div
               ref={logsEndRef}
               className="flex-1 overflow-y-auto max-h-[340px] pr-1 font-mono text-xs"
@@ -713,7 +782,7 @@ export default function App() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.9 }}
                       transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                      className={`bg-white dark:bg-[#141414]/90 border border-slate-200 dark:border-white/5 rounded-xl p-3.5 mb-2.5 relative overflow-hidden shadow-sm dark:shadow-none border-l-4 ${
+                      className={`bg-white dark:bg-[#141414] border border-gray-200 dark:border-white/5 rounded-xl p-3.5 mb-2.5 relative overflow-hidden shadow-sm dark:shadow-none border-l-4 ${
                         isBreach ? "border-l-red-500" : "border-l-amber-500"
                       }`}
                     >
@@ -725,7 +794,7 @@ export default function App() {
                           ) : (
                             <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
                           )}
-                          <span className="text-[11px] text-slate-400 dark:text-zinc-500 font-mono">
+                          <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
                             {log.timestamp}
                           </span>
                         </div>
@@ -740,12 +809,12 @@ export default function App() {
                         </span>
                       </div>
 
-                      {/* Message Text with Full Contrast */}
+                      {/* Message Text with Crisp Contrast */}
                       <p
                         className={`text-xs leading-relaxed font-sans ${
                           isBreach
                             ? "text-red-700 dark:text-red-300 font-medium"
-                            : "text-slate-700 dark:text-amber-300/90 font-medium"
+                            : "text-gray-700 dark:text-gray-300 font-medium"
                         }`}
                       >
                         {log.text}
@@ -757,7 +826,7 @@ export default function App() {
             </div>
 
             {/* Sidebar Footer */}
-            <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-[11px] font-mono text-slate-400 dark:text-zinc-500">
+            <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-[11px] font-mono text-gray-400 dark:text-zinc-500">
               <div className="flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 <span>Telemetry: Active</span>
@@ -768,73 +837,73 @@ export default function App() {
         </div>
 
         {/* =========================================================================
-            BOTTOM STATUS ROW (4 Dual-Theme Indicator Cards with Depth)
+            BOTTOM "SYSTEM STATUS" ROW (4 Refined Status Cards)
             ========================================================================= */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
           
           {/* Card 1: DATA CONNECTION */}
-          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl rounded-2xl p-4 flex items-center gap-4 backdrop-blur-xl hover:border-[#FF6B2B]/30 transition-all">
-            <div className="h-11 w-11 rounded-xl bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 flex items-center justify-center flex-shrink-0">
-              <Wifi className="w-5 h-5 text-[#FF6B2B]" />
+          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-orange-500/30 transition-all">
+            <div className="h-11 w-11 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 flex items-center justify-center flex-shrink-0">
+              <Wifi className="w-5 h-5 text-orange-500" />
             </div>
             <div className="min-w-0">
-              <span className="text-[10px] font-mono uppercase text-slate-400 dark:text-zinc-500 font-semibold block tracking-wider">
+              <span className="text-[10px] font-mono uppercase text-gray-400 dark:text-zinc-500 font-semibold block tracking-wider">
                 DATA CONNECTION
               </span>
               <div className="flex items-center gap-1.5 my-0.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 <span className="text-sm font-semibold text-slate-900 dark:text-white">Stable</span>
               </div>
-              <span className="text-[11px] text-slate-500 dark:text-zinc-500">Latency: 28ms</span>
+              <span className="text-[11px] text-gray-500 dark:text-zinc-500">Latency: 28ms</span>
             </div>
           </div>
 
           {/* Card 2: API STATUS */}
-          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl rounded-2xl p-4 flex items-center gap-4 backdrop-blur-xl hover:border-amber-500/30 transition-all">
-            <div className="h-11 w-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
-              <Cloud className="w-5 h-5 text-amber-500" />
+          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-emerald-500/30 transition-all">
+            <div className="h-11 w-11 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 flex items-center justify-center flex-shrink-0">
+              <Cloud className="w-5 h-5 text-green-500" />
             </div>
             <div className="min-w-0">
-              <span className="text-[10px] font-mono uppercase text-slate-400 dark:text-zinc-500 font-semibold block tracking-wider">
+              <span className="text-[10px] font-mono uppercase text-gray-400 dark:text-zinc-500 font-semibold block tracking-wider">
                 API STATUS
               </span>
               <div className="flex items-center gap-1.5 my-0.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 <span className="text-sm font-semibold text-slate-900 dark:text-white">Connected</span>
               </div>
-              <span className="text-[11px] text-slate-500 dark:text-zinc-500">FORTYGUARD API</span>
+              <span className="text-[11px] text-gray-500 dark:text-zinc-500">FORTYGUARD API</span>
             </div>
           </div>
 
           {/* Card 3: LAST UPDATED */}
-          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl rounded-2xl p-4 flex items-center gap-4 backdrop-blur-xl hover:border-[#FF6B2B]/30 transition-all">
-            <div className="h-11 w-11 rounded-xl bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 flex items-center justify-center flex-shrink-0">
-              <Clock className="w-5 h-5 text-[#FF6B2B]" />
+          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-blue-500/30 transition-all">
+            <div className="h-11 w-11 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 flex items-center justify-center flex-shrink-0">
+              <Clock className="w-5 h-5 text-blue-500" />
             </div>
             <div className="min-w-0">
-              <span className="text-[10px] font-mono uppercase text-slate-400 dark:text-zinc-500 font-semibold block tracking-wider">
+              <span className="text-[10px] font-mono uppercase text-gray-400 dark:text-zinc-500 font-semibold block tracking-wider">
                 LAST UPDATED
               </span>
               <div className="text-sm font-semibold font-mono text-slate-900 dark:text-white my-0.5">
                 {currentTime}
               </div>
-              <span className="text-[11px] text-slate-500 dark:text-zinc-500">May 25, 2026</span>
+              <span className="text-[11px] text-gray-500 dark:text-zinc-500">May 25, 2026</span>
             </div>
           </div>
 
           {/* Card 4: SYSTEM UPTIME */}
-          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl rounded-2xl p-4 flex items-center gap-4 backdrop-blur-xl hover:border-[#FF6B2B]/30 transition-all">
-            <div className="h-11 w-11 rounded-xl bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 flex items-center justify-center flex-shrink-0">
-              <Shield className="w-5 h-5 text-[#FF6B2B]" />
+          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-purple-500/30 transition-all">
+            <div className="h-11 w-11 rounded-xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 flex items-center justify-center flex-shrink-0">
+              <Shield className="w-5 h-5 text-purple-500" />
             </div>
             <div className="min-w-0">
-              <span className="text-[10px] font-mono uppercase text-slate-400 dark:text-zinc-500 font-semibold block tracking-wider">
+              <span className="text-[10px] font-mono uppercase text-gray-400 dark:text-zinc-500 font-semibold block tracking-wider">
                 SYSTEM UPTIME
               </span>
               <div className="text-sm font-semibold font-mono text-slate-900 dark:text-white my-0.5">
                 7d 14h 35m
               </div>
-              <span className="text-[11px] text-[#FF6B2B] dark:text-[#FFA060] font-medium">99.98% uptime</span>
+              <span className="text-[11px] text-purple-600 dark:text-purple-400 font-medium">99.98% uptime</span>
             </div>
           </div>
         </div>
@@ -855,26 +924,26 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-white dark:bg-[#0D0D0D] border border-slate-200 dark:border-white/10 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh] text-slate-900 dark:text-zinc-100"
+              className="bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-white/10 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh] text-slate-900 dark:text-zinc-100"
             >
               {/* Modal Top Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-white/10">
+              <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-white/10">
                 <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-[#FF6B2B]/10 dark:bg-[#FF6B2B]/20 border border-[#FF6B2B]/30 flex items-center justify-center shadow-sm">
+                  <div className="h-9 w-9 rounded-xl bg-orange-50 dark:bg-[#FF6B2B]/20 border border-orange-200 dark:border-[#FF6B2B]/30 flex items-center justify-center shadow-sm">
                     <FileCheck className="w-5 h-5 text-[#FF6B2B]" />
                   </div>
                   <div>
                     <h2 className="font-display text-base font-bold uppercase tracking-tight text-slate-900 dark:text-white">
                       Agent 1: Energy & Thermal Compliance Audit
                     </h2>
-                    <p className="text-xs text-slate-500 dark:text-zinc-400 font-mono">
+                    <p className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
                       RAG Vector Assessment • {selectedCity}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsAuditOpen(false)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -883,7 +952,7 @@ export default function App() {
               {/* Modal Body */}
               <div className="flex-1 overflow-y-auto py-5 space-y-4 text-sm font-sans">
                 {isAuditLoading ? (
-                  <div className="py-12 flex flex-col items-center justify-center gap-3 font-mono text-xs text-slate-500 dark:text-zinc-400">
+                  <div className="py-12 flex flex-col items-center justify-center gap-3 font-mono text-xs text-gray-500 dark:text-zinc-400">
                     <RefreshCw className="w-8 h-8 animate-spin text-[#FF6B2B]" />
                     <span>Retrieving ASHRAE 55 and IECC building codes from ChromaDB...</span>
                   </div>
@@ -898,11 +967,11 @@ export default function App() {
                 ) : auditReport ? (
                   <div className="space-y-4">
                     {/* Status Pill Card */}
-                    <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/50 font-mono text-xs">
-                      <span className="text-slate-600 dark:text-zinc-400">
+                    <div className="flex items-center justify-between p-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/50 font-mono text-xs">
+                      <span className="text-gray-600 dark:text-zinc-400">
                         Target Region: <strong className="text-slate-900 dark:text-white">{auditReport.city}</strong>
                       </span>
-                      <span className="text-slate-600 dark:text-zinc-400">
+                      <span className="text-gray-600 dark:text-zinc-400">
                         Audited Temp: <strong className="text-[#FF6B2B]">{auditReport.temperature_f}°F</strong>
                       </span>
                     </div>
@@ -978,10 +1047,10 @@ export default function App() {
 
                     {/* Structured JSON Output */}
                     <div className="pt-2">
-                      <span className="text-[11px] font-mono uppercase text-slate-400 dark:text-zinc-500 block mb-1.5">
+                      <span className="text-[11px] font-mono uppercase text-gray-400 dark:text-zinc-500 block mb-1.5">
                         Structured Pydantic JSON Output:
                       </span>
-                      <pre className="font-mono text-[11px] p-3.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/60 text-slate-800 dark:text-zinc-300 overflow-x-auto leading-relaxed">
+                      <pre className="font-mono text-[11px] p-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/60 text-slate-800 dark:text-zinc-300 overflow-x-auto leading-relaxed">
                         {JSON.stringify(auditReport, null, 2)}
                       </pre>
                     </div>
@@ -990,10 +1059,10 @@ export default function App() {
               </div>
 
               {/* Modal Footer */}
-              <div className="pt-4 border-t border-slate-100 dark:border-white/10 flex items-center justify-end gap-3 font-mono text-xs">
+              <div className="pt-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-3 font-mono text-xs">
                 <button
                   onClick={() => setIsAuditOpen(false)}
-                  className="px-4 py-2 rounded-xl font-medium bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl font-medium bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-700 dark:text-zinc-300 transition-colors cursor-pointer"
                 >
                   DISMISS
                 </button>
