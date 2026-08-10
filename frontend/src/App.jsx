@@ -539,10 +539,10 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden transition-colors duration-300 flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white">
       
-      {/* Top Right Orange Glow */}
-      <div className="fixed top-[-10%] right-[-5%] w-[650px] h-[650px] rounded-full bg-orange-600/35 dark:bg-orange-600/20 blur-[130px] pointer-events-none z-0" />
-      {/* Bottom Center Red Glow */}
-      <div className="fixed bottom-[-10%] left-[20%] w-[850px] h-[550px] rounded-full bg-red-600/30 dark:bg-red-900/10 blur-[150px] pointer-events-none z-0" />
+      {/* Top Right Deep Espresso Glow (#270f02) */}
+      <div className="fixed top-[-10%] right-[-5%] w-[650px] h-[650px] rounded-full bg-[#270f02]/35 dark:bg-orange-600/20 blur-[130px] pointer-events-none z-0" />
+      {/* Bottom Center Deep Espresso Glow (#270f02) */}
+      <div className="fixed bottom-[-10%] left-[20%] w-[850px] h-[550px] rounded-full bg-[#270f02]/30 dark:bg-red-900/10 blur-[150px] pointer-events-none z-0" />
 
       {/* =========================================================================
           TOPBAR
