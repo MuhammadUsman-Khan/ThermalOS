@@ -4,37 +4,28 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100 antialiased font-sans selection:bg-rose-500 selection:text-white;
+    @apply bg-black text-zinc-100 antialiased font-sans selection:bg-orange-500/30 selection:text-orange-200;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
   }
 }
 
-/* Custom scrollbar */
+/* Custom Scrollbar - Foundry style */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 4px;
+  background: #27272a;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
-}
-
-@keyframes pulse-slow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-.animate-pulse-slow {
-  animation: pulse-slow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  background: #3f3f46;
 }
