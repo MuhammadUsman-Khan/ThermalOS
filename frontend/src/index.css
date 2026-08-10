@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-[#0A0C0F] text-zinc-100 antialiased font-sans selection:bg-[#FF6B2B]/30 selection:text-white;
+    @apply bg-[#07080A] text-zinc-100 antialiased font-sans selection:bg-[#FF5500]/30 selection:text-white;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
@@ -22,25 +22,50 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1E2330;
+  background: #1C2028;
   border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2D3748;
+  background: #FF5500;
 }
 
-@keyframes slideIn {
-  from {
+/* Neon Glow Filters */
+.glow-orange {
+  box-shadow: 0 0 24px rgba(255, 85, 0, 0.35);
+}
+
+.glow-orange-button {
+  box-shadow: 0 0 25px rgba(255, 85, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+}
+
+.glow-orange-active-tab {
+  box-shadow: 0 0 20px rgba(255, 69, 0, 0.45);
+}
+
+.glow-red {
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.3);
+}
+
+.glow-green {
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+}
+
+@keyframes pulseRing {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(2.2);
     opacity: 0;
-    transform: translateX(-4px);
   }
-  to {
-    opacity: 1;
-    transform: translateX(0);
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
   }
 }
 
-.animate-slide-in {
-  animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.animate-pulse-ring {
+  animation: pulseRing 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
 }
