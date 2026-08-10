@@ -27,6 +27,7 @@ import {
   RefreshCw,
   Send,
   Shield,
+  ShieldAlert,
   Sun,
   Thermometer,
   Wifi,
@@ -86,28 +87,28 @@ export default function App() {
   // Dynamic System Uptime Ticker (Realistic Persistent Session)
   useEffect(() => {
     // Check if we already have a boot time for this session
-    let storedBoot = localStorage.getItem('thermalos_boot');
-    
+    let storedBoot = localStorage.getItem("thermalos_boot");
+
     if (!storedBoot) {
       // If not, set it to exactly 3 hours and 42 minutes ago to match the backend start
       storedBoot = Date.now() - (3 * 3600 + 42 * 60) * 1000;
-      localStorage.setItem('thermalos_boot', storedBoot.toString());
+      localStorage.setItem("thermalos_boot", storedBoot.toString());
     }
-    
+
     const bootTime = parseInt(storedBoot, 10);
-    
+
     const interval = setInterval(() => {
       const diff = Math.floor((Date.now() - bootTime) / 1000);
       const d = Math.floor(diff / (24 * 3600));
       const h = Math.floor((diff % (24 * 3600)) / 3600);
       const m = Math.floor((diff % 3600) / 60);
       const s = diff % 60;
-      
+
       // Dynamically hide days if it's 0 (which it will be for a new backend session)
       const dayStr = d > 0 ? `${d}d ` : "";
       setUptime(`${dayStr}${h}h ${m}m ${s}s`);
     }, 1000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
