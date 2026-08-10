@@ -371,8 +371,8 @@ export default function App() {
             {/* Typography */}
             <div className="flex flex-col">
               <div className="flex items-center gap-3">
-                <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white leading-none">
-                  THERMALOS
+                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white leading-none">
+                  ThermalOS
                 </h1>
                 <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 tracking-widest uppercase flex items-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
