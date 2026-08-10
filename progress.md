@@ -75,13 +75,13 @@ All metrics and timestamps operate on dynamic, real-time measurements:
   - **Houston, TX**: `84°F – 96°F`.
   - **Las Vegas, NV**: `88°F – 101°F`.
   - **Dallas, TX**: `82°F – 94°F`.
-- **4-Tier Operational Classification**:
-  | Range | Risk Label | Badge | Accent | Live Log Message |
+- **4-Tier Operational Classification & Smart Deduplication**:
+  | Range | Risk Label | Badge | Accent | Live Log Stream Behavior |
   | :--- | :--- | :--- | :--- | :--- |
-  | **< 98°F** | `NORM` | `NOMINAL` | 🟢 Green | Normal ambient within ASHRAE comfort envelope |
-  | **98°F – 102°F** | `ELEV` | `ELEVATED` | 🟡 Amber | Moderate thermal boundary active |
-  | **103°F – 104°F** | `HIGH` | `HIGH HEAT` | 🟠 Orange | High heat elevation / thermal plume warning |
-  | **≥ 105°F** | `CRIT` | `CRIT BREACH` | 🔴 Red | Critical heat spike / threshold breached |
+  | **< 98°F** | `NORM` | `NOMINAL` | 🟢 Green | Logs once upon entering normal/nominal state (suppresses repetitive tick spam) |
+  | **98°F – 102°F** | `ELEV` | `ELEVATED` | 🟡 Amber | Active monitoring logs for moderate thermal boundary |
+  | **103°F – 104°F** | `HIGH` | `HIGH HEAT` | 🟠 Orange | High heat elevation / thermal plume warning logs |
+  | **≥ 105°F** | `CRIT` | `CRIT BREACH` | 🔴 Red | Critical heat spike / threshold breached emergency logs |
 
 ---
 

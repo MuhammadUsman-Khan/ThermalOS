@@ -313,6 +313,7 @@ export default function App() {
   const [isDispatched, setIsDispatched] = useState(false);
 
   const logsEndRef = useRef(null);
+  const prevRiskLevelRef = useRef(null);
 
   // Continuous 1500ms polling loop to FastAPI backend with real latency measurement
   useEffect(() => {
@@ -375,8 +376,11 @@ export default function App() {
           return updated;
         });
 
+        const currentRisk = data.risk_level;
+        const prevRisk = prevRiskLevelRef.current;
+
         // Trigger log entries across all operational temperature tiers
-        if (data.temperature_f >= 105 || data.risk_level === "extreme") {
+        if (data.temperature_f >= 105 || currentRisk === "extreme") {
           setEventLogs((prevLogs) => [
             {
               id: `${Date.now()}-${Math.random()}`,
@@ -388,7 +392,7 @@ export default function App() {
             ...prevLogs.slice(0, 15),
           ]);
           setTotalEventsCount((c) => c + 1);
-        } else if (data.temperature_f >= 103 || data.risk_level === "high") {
+        } else if (data.temperature_f >= 103 || currentRisk === "high") {
           setEventLogs((prevLogs) => [
             {
               id: `${Date.now()}-${Math.random()}`,
@@ -400,7 +404,7 @@ export default function App() {
             ...prevLogs.slice(0, 15),
           ]);
           setTotalEventsCount((c) => c + 1);
-        } else if (data.temperature_f >= 98 || data.risk_level === "elevated") {
+        } else if (data.temperature_f >= 98 || currentRisk === "elevated") {
           setEventLogs((prevLogs) => [
             {
               id: `${Date.now()}-${Math.random()}`,
@@ -413,18 +417,23 @@ export default function App() {
           ]);
           setTotalEventsCount((c) => c + 1);
         } else {
-          setEventLogs((prevLogs) => [
-            {
-              id: `${Date.now()}-${Math.random()}`,
-              timestamp,
-              type: "nominal",
-              badge: "NOMINAL",
-              text: `NORMAL AMBIENT: ${selectedCity} surface reading at ${data.temperature_f}°F. Thermal profile within ASHRAE comfort envelope.`,
-            },
-            ...prevLogs.slice(0, 15),
-          ]);
-          setTotalEventsCount((c) => c + 1);
+          // Only log normal when transitioning into nominal state (suppress repetitive spam when staying in normal)
+          if (prevRisk !== "nominal") {
+            setEventLogs((prevLogs) => [
+              {
+                id: `${Date.now()}-${Math.random()}`,
+                timestamp,
+                type: "nominal",
+                badge: "NOMINAL",
+                text: `NORMAL AMBIENT: ${selectedCity} surface reading at ${data.temperature_f}°F. Thermal profile within ASHRAE comfort envelope.`,
+              },
+              ...prevLogs.slice(0, 15),
+            ]);
+            setTotalEventsCount((c) => c + 1);
+          }
         }
+
+        prevRiskLevelRef.current = currentRisk;
       } catch (err) {
         if (!isMounted) return;
         setIsConnected(false);
@@ -445,6 +454,7 @@ export default function App() {
   const handleSelectCity = (newCity) => {
     setSelectedCity(newCity);
     setIsDropdownOpen(false);
+    prevRiskLevelRef.current = null; // Reset risk transition tracking for new city
     const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
     setEventLogs((prev) => [
       {
