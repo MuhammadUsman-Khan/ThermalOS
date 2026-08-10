@@ -540,9 +540,33 @@ export default function App() {
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden transition-colors duration-300 flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white">
       
       {/* Top Right Deep Espresso Glow (#270f02) */}
-      <div className="fixed top-[-10%] right-[-5%] w-[650px] h-[650px] rounded-full bg-[#270f02]/35 dark:bg-orange-600/20 blur-[130px] pointer-events-none z-0" />
+      <div
+        className="fixed pointer-events-none z-0"
+        style={{
+          top: "-12%",
+          right: "-8%",
+          width: "700px",
+          height: "700px",
+          borderRadius: "9999px",
+          background: darkMode ? "rgba(234, 88, 12, 0.20)" : "#270f02",
+          filter: "blur(110px)",
+          opacity: darkMode ? 1 : 0.75,
+        }}
+      />
       {/* Bottom Center Deep Espresso Glow (#270f02) */}
-      <div className="fixed bottom-[-10%] left-[20%] w-[850px] h-[550px] rounded-full bg-[#270f02]/30 dark:bg-red-900/10 blur-[150px] pointer-events-none z-0" />
+      <div
+        className="fixed pointer-events-none z-0"
+        style={{
+          bottom: "-15%",
+          left: "15%",
+          width: "900px",
+          height: "600px",
+          borderRadius: "9999px",
+          background: darkMode ? "rgba(127, 29, 29, 0.10)" : "#270f02",
+          filter: "blur(130px)",
+          opacity: darkMode ? 1 : 0.65,
+        }}
+      />
 
       {/* =========================================================================
           TOPBAR
