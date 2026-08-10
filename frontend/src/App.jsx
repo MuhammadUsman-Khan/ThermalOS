@@ -678,9 +678,7 @@ export default function App() {
   }, [currentTemp, hasAutoTriggered]);
 
   return (
-    <div className={`min-h-screen bg-[#F8F9FA] dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden transition-colors duration-300 flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white ${
-      isEmergencyMode ? "shadow-[inset_0_0_100px_rgba(225,29,72,0.15)] animate-pulse" : ""
-    }`}>
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden transition-colors duration-300 flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white">
       
       {/* Top Right Fiery Red-Orange Glow (#FF2A00) */}
       <div
