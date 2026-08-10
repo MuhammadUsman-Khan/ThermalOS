@@ -68,6 +68,86 @@ const getPastTimeString = (secondsAgo = 0) => {
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 };
 
+// Helper for dynamic risk configuration based on temperature
+const getRiskConfig = (temp = 96) => {
+  if (temp >= 105) {
+    return {
+      label: "CRIT",
+      badge: "EXTREME",
+      badgeClass: "bg-red-500/10 text-red-500 border border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.2)]",
+      textColor: "text-red-500",
+      sparkStroke: "#FF3B3B",
+    };
+  }
+  if (temp >= 100) {
+    return {
+      label: "HIGH",
+      badge: "HIGH",
+      badgeClass: "bg-orange-500/10 text-orange-500 border border-orange-500/30 shadow-[0_0_10px_rgba(249,115,22,0.15)]",
+      textColor: "text-orange-500",
+      sparkStroke: "#FF6B2B",
+    };
+  }
+  if (temp >= 92) {
+    return {
+      label: "ELEV",
+      badge: "ELEVATED",
+      badgeClass: "bg-amber-500/10 text-amber-500 border border-amber-500/30",
+      textColor: "text-amber-500",
+      sparkStroke: "#F59E0B",
+    };
+  }
+  return {
+    label: "NORM",
+    badge: "NOMINAL",
+    badgeClass: "bg-emerald-500/10 text-emerald-500 border border-emerald-500/30",
+    textColor: "text-emerald-500",
+    sparkStroke: "#10B981",
+  };
+};
+
+// Helper for event log badge and border styling
+const getLogConfig = (type) => {
+  switch (type) {
+    case "extreme":
+      return {
+        borderClass: "border-l-red-500",
+        badgeClass: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30 shadow-[0_0_8px_rgba(239,68,68,0.2)]",
+        textClass: "text-red-700 dark:text-red-300",
+        icon: <AlertOctagon className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />,
+      };
+    case "high":
+      return {
+        borderClass: "border-l-orange-500",
+        badgeClass: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30",
+        textClass: "text-orange-700 dark:text-orange-300",
+        icon: <AlertTriangle className="w-3.5 h-3.5 text-orange-500 flex-shrink-0" />,
+      };
+    case "elevated":
+      return {
+        borderClass: "border-l-amber-500",
+        badgeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30",
+        textClass: "text-amber-700 dark:text-amber-300",
+        icon: <Activity className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />,
+      };
+    case "audit":
+    case "dispatch":
+      return {
+        borderClass: "border-l-purple-500",
+        badgeClass: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30",
+        textClass: "text-purple-700 dark:text-purple-300",
+        icon: <FileCheck className="w-3.5 h-3.5 text-purple-500 flex-shrink-0" />,
+      };
+    default:
+      return {
+        borderClass: "border-l-emerald-500",
+        badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+        textClass: "text-gray-700 dark:text-zinc-300",
+        icon: <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />,
+      };
+  }
+};
+
 export default function App() {
   // Theme State
   const [darkMode, setDarkMode] = useState(false);
@@ -160,68 +240,68 @@ export default function App() {
   // Selection & Telemetry State
   const [selectedCity, setSelectedCity] = useState("Phoenix, AZ");
   const [telemetryData, setTelemetryData] = useState(() => [
-    { time: getPastTimeString(18), temperature_f: 104 },
-    { time: getPastTimeString(15), temperature_f: 106 },
-    { time: getPastTimeString(12), temperature_f: 108 },
-    { time: getPastTimeString(9), temperature_f: 102 },
-    { time: getPastTimeString(6), temperature_f: 105 },
-    { time: getPastTimeString(3), temperature_f: 103 },
-    { time: getPastTimeString(0), temperature_f: 106 },
+    { time: getPastTimeString(18), temperature_f: 95 },
+    { time: getPastTimeString(15), temperature_f: 96 },
+    { time: getPastTimeString(12), temperature_f: 97 },
+    { time: getPastTimeString(9), temperature_f: 96 },
+    { time: getPastTimeString(6), temperature_f: 97 },
+    { time: getPastTimeString(3), temperature_f: 96 },
+    { time: getPastTimeString(0), temperature_f: 96 },
   ]);
 
-  // Initial event logs with dynamic real timestamps
+  // Initial event logs with dynamic real timestamps and normal status
   const [eventLogs, setEventLogs] = useState(() => [
     {
       id: "log-1",
       timestamp: getPastTimeString(15),
-      type: "extreme",
-      badge: "CRITICAL BREACH",
-      text: "Threshold breached for Phoenix, AZ.",
+      type: "nominal",
+      badge: "OPTIMAL",
+      text: "Urban telemetry synchronized for Phoenix, AZ. Operative temperature within baseline envelope.",
     },
     {
       id: "log-2",
       timestamp: getPastTimeString(12),
-      type: "high",
-      badge: "ELEVATED",
-      text: "HIGH HEAT ELEVATION: Phoenix, AZ at 103°F. Monitoring thermal plume.",
+      type: "nominal",
+      badge: "NOMINAL",
+      text: "FortyGuard micro-climate grid stream active. Normal radiative heat profile.",
     },
     {
       id: "log-3",
       timestamp: getPastTimeString(9),
-      type: "high",
+      type: "elevated",
       badge: "ELEVATED",
-      text: "HIGH HEAT ELEVATION: Phoenix, AZ at 100°F. Monitoring thermal plume.",
+      text: "Thermal sensor array at 97°F. Ambient boundary stable.",
     },
     {
       id: "log-4",
       timestamp: getPastTimeString(6),
-      type: "extreme",
-      badge: "CRITICAL BREACH",
-      text: "HEAT SPIKE DETECTED: Threshold breached for Phoenix, AZ.",
+      type: "nominal",
+      badge: "OPTIMAL",
+      text: "Solar radiation index steady across 10m² micro-climate sector.",
     },
     {
       id: "log-5",
       timestamp: getPastTimeString(3),
-      type: "extreme",
-      badge: "CRITICAL BREACH",
-      text: "HEAT SPIKE DETECTED: Threshold breached for Phoenix, AZ.",
+      type: "nominal",
+      badge: "OPTIMAL",
+      text: "Urban surface emissivity index nominal. HVAC load within ASHRAE 55 band.",
     },
     {
       id: "log-6",
       timestamp: getPastTimeString(0),
-      type: "high",
+      type: "elevated",
       badge: "ELEVATED",
-      text: "HIGH HEAT ELEVATION: Phoenix, AZ at 102°F. Monitoring thermal plume.",
+      text: "Phoenix, AZ sensor reading 96°F. Monitoring micro-climate boundary.",
     },
   ]);
 
   const [currentReading, setCurrentReading] = useState({
     location: "Phoenix, AZ",
-    temperature_f: 104,
-    risk_level: "high",
+    temperature_f: 96,
+    risk_level: "elevated",
     resolution: "10m²",
     measured_at: "2m above ground",
-    credits_remaining: 1000000,
+    credits_remaining: 999999,
   });
   const [isConnected, setIsConnected] = useState(true);
 
@@ -295,9 +375,9 @@ export default function App() {
           return updated;
         });
 
-        // Trigger log alerts with unique IDs and increment real events count
+        // Trigger log alerts when threshold breaches or heat elevation occurs
         if (data.temperature_f >= 105 || data.risk_level === "extreme") {
-          const alertMessage = `Threshold breached for ${selectedCity}.`;
+          const alertMessage = `CRITICAL HEAT SPIKE: Threshold breached for ${selectedCity} (${data.temperature_f}°F).`;
           setEventLogs((prevLogs) => [
             {
               id: `${Date.now()}-${Math.random()}`,
@@ -364,7 +444,7 @@ export default function App() {
     setAuditReport(null);
     setIsDispatched(false);
 
-    const tempToSend = currentReading ? currentReading.temperature_f : 104;
+    const tempToSend = currentReading ? currentReading.temperature_f : 96;
 
     try {
       const response = await fetch("http://127.0.0.1:8000/v1/agents/audit", {
@@ -419,6 +499,9 @@ export default function App() {
     ]);
     setTotalEventsCount((c) => c + 1);
   };
+
+  const currentTemp = currentReading ? currentReading.temperature_f : 96;
+  const riskConfig = getRiskConfig(currentTemp);
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden transition-colors duration-300 flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white">
@@ -538,7 +621,7 @@ export default function App() {
           ========================================================================= */}
       <main className="w-full max-w-7xl mx-auto px-4 py-6 flex-1 flex flex-col space-y-5 relative z-10">
         
-        {/* TOP KPI ROW (3 Cards with Elegant Balanced Typography & Sparklines) */}
+        {/* TOP KPI ROW (3 Cards with Dynamic Responsive Risk Configuration) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           
           {/* Card 1: SURFACE TEMP */}
@@ -551,29 +634,23 @@ export default function App() {
             </div>
             <div className="my-1 flex items-baseline">
               <span className="text-5xl lg:text-6xl font-semibold tracking-tight tabular-nums text-slate-800 dark:text-white">
-                {currentReading ? currentReading.temperature_f : 104}
+                {currentTemp}
               </span>
               <span className="text-2xl font-medium text-slate-500 dark:text-zinc-400 ml-1 inline-block align-top mt-1.5">°F</span>
             </div>
             
             {/* Sparkline & Badge Footer */}
             <div className="flex items-center justify-between pt-2">
-              <span
-                className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                  currentReading?.temperature_f >= 105
-                    ? "bg-red-500/10 text-red-500 border border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.2)]"
-                    : "bg-orange-500/10 text-orange-500 border border-orange-500/30 shadow-[0_0_10px_rgba(249,115,22,0.15)]"
-                }`}
-              >
-                {currentReading?.temperature_f >= 105 ? "EXTREME" : "HIGH"}
+              <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${riskConfig.badgeClass}`}>
+                {riskConfig.badge}
               </span>
 
-              {/* Surface Temp Orange Sparkline */}
+              {/* Surface Temp Dynamic Sparkline */}
               <svg className="w-28 h-8 overflow-visible" viewBox="0 0 110 32">
                 <defs>
                   <linearGradient id="sparkOrangeGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#FF6B2B" stopOpacity={darkMode ? 0.35 : 0.2} />
-                    <stop offset="100%" stopColor="#FF6B2B" stopOpacity={0.0} />
+                    <stop offset="0%" stopColor={riskConfig.sparkStroke} stopOpacity={darkMode ? 0.35 : 0.2} />
+                    <stop offset="100%" stopColor={riskConfig.sparkStroke} stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
                 <path
@@ -583,7 +660,7 @@ export default function App() {
                 <path
                   d="M0,24 Q15,6 32,18 T65,10 T95,14 L110,8"
                   fill="none"
-                  stroke="#FF6B2B"
+                  stroke={riskConfig.sparkStroke}
                   strokeWidth="2"
                   strokeLinecap="round"
                 />
@@ -601,16 +678,10 @@ export default function App() {
             </div>
             <div className="my-1 flex items-center gap-3">
               <span className="text-5xl lg:text-6xl font-semibold tracking-tight tabular-nums text-slate-800 dark:text-white">
-                {currentReading?.temperature_f >= 105 ? "CRIT" : "HIGH"}
+                {riskConfig.label}
               </span>
-              <span
-                className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-1 ${
-                  currentReading?.temperature_f >= 105
-                    ? "bg-red-500/10 text-red-500 border border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.2)]"
-                    : "bg-orange-500/10 text-orange-500 border border-orange-500/30 shadow-[0_0_10px_rgba(249,115,22,0.15)]"
-                }`}
-              >
-                {currentReading?.temperature_f >= 105 ? "EXTREME" : "HIGH"}
+              <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-1 ${riskConfig.badgeClass}`}>
+                {riskConfig.badge}
               </span>
             </div>
 
@@ -759,10 +830,10 @@ export default function App() {
                     axisLine={{ stroke: darkMode ? "#1E2330" : "#E5E7EB" }}
                   />
 
-                  {/* Y Axis */}
+                  {/* Y Axis spanning realistic urban ranges */}
                   <YAxis
-                    domain={[90, 125]}
-                    ticks={[90, 99, 108, 117, 125]}
+                    domain={[75, 115]}
+                    ticks={[75, 85, 95, 105, 115]}
                     stroke={darkMode ? "#1E2330" : "#E5E7EB"}
                     tick={{
                       fill: darkMode ? "#71717A" : "#6B7280",
@@ -859,14 +930,14 @@ export default function App() {
               </span>
             </div>
 
-            {/* Liquid Framer Motion Event Feed with Clean Gray Borders */}
+            {/* Liquid Framer Motion Event Feed with Clean Dynamic Styles */}
             <div
               ref={logsEndRef}
               className="flex-1 overflow-y-auto max-h-[340px] pr-1 font-mono text-xs"
             >
               <AnimatePresence initial={false}>
                 {eventLogs.map((log) => {
-                  const isBreach = log.type === "extreme";
+                  const cfg = getLogConfig(log.type);
                   return (
                     <motion.div
                       key={log.id}
@@ -874,41 +945,23 @@ export default function App() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.9 }}
                       transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                      className={`bg-white dark:bg-[#141414] border border-gray-200 dark:border-white/5 rounded-xl p-3.5 mb-2.5 relative overflow-hidden shadow-sm dark:shadow-none border-l-4 ${
-                        isBreach ? "border-l-red-500" : "border-l-amber-500"
-                      }`}
+                      className={`bg-white dark:bg-[#141414] border border-gray-200 dark:border-white/5 rounded-xl p-3.5 mb-2.5 relative overflow-hidden shadow-sm dark:shadow-none border-l-4 ${cfg.borderClass}`}
                     >
                       {/* Top row: Icon + Timestamp + Badge */}
                       <div className="flex items-center justify-between mb-1.5">
                         <div className="flex items-center gap-1.5">
-                          {isBreach ? (
-                            <AlertOctagon className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
-                          ) : (
-                            <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-                          )}
+                          {cfg.icon}
                           <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
                             {log.timestamp}
                           </span>
                         </div>
-                        <span
-                          className={`text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded border font-mono ${
-                            isBreach
-                              ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30 shadow-[0_0_8px_rgba(239,68,68,0.2)]"
-                              : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
-                          }`}
-                        >
+                        <span className={`text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded border font-mono ${cfg.badgeClass}`}>
                           {log.badge}
                         </span>
                       </div>
 
-                      {/* Message Text with Crisp Contrast */}
-                      <p
-                        className={`text-xs leading-relaxed font-sans ${
-                          isBreach
-                            ? "text-red-700 dark:text-red-300 font-medium"
-                            : "text-gray-700 dark:text-gray-300 font-medium"
-                        }`}
-                      >
+                      {/* Message Text */}
+                      <p className={`text-xs leading-relaxed font-sans font-medium ${cfg.textClass}`}>
                         {log.text}
                       </p>
                     </motion.div>
