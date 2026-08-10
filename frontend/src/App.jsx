@@ -539,7 +539,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden transition-colors duration-300 flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white">
       
-      {/* Top Right Bright Orange Glow */}
+      {/* Top Right Tangerine Glow (#F28C28) */}
       <div
         className="fixed pointer-events-none z-0"
         style={{
@@ -548,11 +548,11 @@ export default function App() {
           width: "700px",
           height: "700px",
           borderRadius: "9999px",
-          background: darkMode ? "rgba(234, 88, 12, 0.20)" : "rgba(255, 107, 43, 0.45)",
+          background: darkMode ? "rgba(234, 88, 12, 0.20)" : "rgba(242, 140, 40, 0.45)",
           filter: "blur(110px)",
         }}
       />
-      {/* Bottom Center Bright Orange-Amber Glow */}
+      {/* Bottom Center Tangerine Glow (#F28C28) */}
       <div
         className="fixed pointer-events-none z-0"
         style={{
@@ -561,7 +561,7 @@ export default function App() {
           width: "900px",
           height: "600px",
           borderRadius: "9999px",
-          background: darkMode ? "rgba(127, 29, 29, 0.10)" : "rgba(255, 85, 0, 0.35)",
+          background: darkMode ? "rgba(127, 29, 29, 0.10)" : "rgba(242, 140, 40, 0.35)",
           filter: "blur(130px)",
         }}
       />
