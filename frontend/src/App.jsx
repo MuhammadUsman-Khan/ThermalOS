@@ -53,7 +53,7 @@ export default function App() {
   // Dynamic Timers State
   const [pollTimer, setPollTimer] = useState("0.0");
   const [lastFetch, setLastFetch] = useState(Date.now());
-  const [uptime, setUptime] = useState("7d 14h 35m 30s");
+  const [uptime, setUptime] = useState("3h 42m 00s");
 
   // Proper Dark Mode DOM Injection
   useEffect(() => {
@@ -83,10 +83,18 @@ export default function App() {
     return () => clearInterval(timer);
   }, [lastFetch]);
 
-  // Dynamic System Uptime Ticker (Ticks every second)
+  // Dynamic System Uptime Ticker (Realistic Persistent Session)
   useEffect(() => {
-    // Simulate a boot time exactly 7d 14h 35m 30s ago from mount
-    const bootTime = Date.now() - (7 * 24 * 60 * 60 + 14 * 60 * 60 + 35 * 60 + 30) * 1000;
+    // Check if we already have a boot time for this session
+    let storedBoot = localStorage.getItem('thermalos_boot');
+    
+    if (!storedBoot) {
+      // If not, set it to exactly 3 hours and 42 minutes ago to match the backend start
+      storedBoot = Date.now() - (3 * 3600 + 42 * 60) * 1000;
+      localStorage.setItem('thermalos_boot', storedBoot.toString());
+    }
+    
+    const bootTime = parseInt(storedBoot, 10);
     
     const interval = setInterval(() => {
       const diff = Math.floor((Date.now() - bootTime) / 1000);
@@ -94,7 +102,10 @@ export default function App() {
       const h = Math.floor((diff % (24 * 3600)) / 3600);
       const m = Math.floor((diff % 3600) / 60);
       const s = diff % 60;
-      setUptime(`${d}d ${h}h ${m}m ${s}s`);
+      
+      // Dynamically hide days if it's 0 (which it will be for a new backend session)
+      const dayStr = d > 0 ? `${d}d ` : "";
+      setUptime(`${dayStr}${h}h ${m}m ${s}s`);
     }, 1000);
     
     return () => clearInterval(interval);
