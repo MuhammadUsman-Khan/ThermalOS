@@ -53,7 +53,7 @@ export default function App() {
   // Dynamic Timers State
   const [pollTimer, setPollTimer] = useState("0.0");
   const [lastFetch, setLastFetch] = useState(Date.now());
-  const [uptime, setUptime] = useState("7d 14h 35m 00s");
+  const [uptime, setUptime] = useState("7d 14h 35m 30s");
 
   // Proper Dark Mode DOM Injection
   useEffect(() => {
@@ -85,15 +85,18 @@ export default function App() {
 
   // Dynamic System Uptime Ticker
   useEffect(() => {
-    const bootTime = Date.now() - (7 * 24 * 60 * 60 * 1000 + 14 * 60 * 60 * 1000 + 35 * 60 * 1000);
+    // Simulate a boot time exactly 7d 14h 35m 30s ago from mount
+    const bootTime = Date.now() - (7 * 24 * 60 * 60 + 14 * 60 * 60 + 35 * 60 + 30) * 1000;
+    
     const interval = setInterval(() => {
       const diff = Math.floor((Date.now() - bootTime) / 1000);
       const d = Math.floor(diff / (24 * 3600));
       const h = Math.floor((diff % (24 * 3600)) / 3600);
       const m = Math.floor((diff % 3600) / 60);
       const s = diff % 60;
-      setUptime(`${d}d ${h}h ${m}m ${s.toString().padStart(2, "0")}s`);
+      setUptime(`${d}d ${h}h ${m}m ${s}s`);
     }, 1000);
+    
     return () => clearInterval(interval);
   }, []);
 
@@ -358,26 +361,26 @@ export default function App() {
       <header className="border-b border-gray-200 dark:border-white/5 bg-white/90 dark:bg-black/60 backdrop-blur-xl sticky top-0 z-40 px-6 py-3.5 transition-colors duration-300">
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4">
           
-          {/* Brand Left */}
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-orange-50 dark:bg-[#FF6B2B]/20 border border-orange-200 dark:border-[#FF6B2B]/40 flex items-center justify-center shadow-sm dark:shadow-[0_0_15px_rgba(255,107,43,0.3)]">
-              <Flame className="w-5 h-5 text-[#FF6B2B]" />
+          {/* Brand Left (Premium App Icon & Typography) */}
+          <div className="flex items-center gap-4">
+            {/* Glowing App Icon */}
+            <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-orange-500/10 border border-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.15)]">
+              <Flame className="w-5 h-5 text-orange-500"/>
             </div>
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h1 className="font-display text-sm sm:text-base font-bold tracking-tight text-slate-900 dark:text-white uppercase">
+            
+            {/* Typography */}
+            <div className="flex flex-col">
+              <div className="flex items-center gap-3">
+                <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white leading-none">
                   THERMALOS
                 </h1>
-                {/* FortyGuard API Pill */}
-                <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 px-2.5 py-0.5 rounded-full">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[10px] font-mono uppercase text-gray-600 dark:text-gray-300 font-semibold tracking-wide">
-                    FORTYGUARD API
-                  </span>
-                </div>
+                <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 tracking-widest uppercase flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                  FORTYGUARD API
+                </span>
               </div>
-              <p className="text-[10px] font-semibold tracking-wider text-gray-400 dark:text-zinc-500 uppercase -mt-0.5">
-                URBAN MICRO-CLIMATE OS
+              <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] mt-1">
+                Urban Micro-Climate OS
               </p>
             </div>
           </div>
@@ -931,7 +934,7 @@ export default function App() {
               <span className="text-[10px] font-mono uppercase text-gray-400 dark:text-zinc-500 font-semibold block tracking-wider">
                 SYSTEM UPTIME
               </span>
-              <div className="text-sm font-semibold font-mono tabular-nums text-slate-900 dark:text-white my-0.5">
+              <div className="text-lg font-bold text-slate-900 dark:text-white font-mono tabular-nums">
                 {uptime}
               </div>
               <span className="text-[11px] text-purple-600 dark:text-purple-400 font-medium">99.98% uptime</span>
