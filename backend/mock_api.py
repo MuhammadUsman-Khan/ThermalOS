@@ -106,6 +106,53 @@ async def audit_endpoint(request: AuditRequest):
     return report
 
 
+# =========================================================================
+# AGENT 2 & AGENT 3 PYDANTIC CONTRACTS & STUB ENDPOINTS
+# =========================================================================
+
+class InfrastructurePrecoolReport(BaseModel):
+    city: str
+    current_temp_f: float
+    target_precool_temp_f: float
+    grid_load_shift_active: bool
+    hvac_action_plan: str
+
+
+class CivicDispatchReport(BaseModel):
+    city: str
+    wbgt_index: float
+    heat_stress_risk: str
+    civic_alert_dispatched: bool
+    emergency_protocol: str
+
+
+class AgentRequest(BaseModel):
+    city: str
+    temperature_f: float
+
+
+@app.post("/v1/agents/infrastructure", response_model=InfrastructurePrecoolReport)
+async def infrastructure_precool_endpoint(request: AgentRequest):
+    return InfrastructurePrecoolReport(
+        city=request.city,
+        current_temp_f=request.temperature_f,
+        target_precool_temp_f=68.0,
+        grid_load_shift_active=True,
+        hvac_action_plan="Initiate Stage 2 pre-cooling sequence to offset impending thermal peak.",
+    )
+
+
+@app.post("/v1/agents/civic", response_model=CivicDispatchReport)
+async def civic_dispatch_endpoint(request: AgentRequest):
+    return CivicDispatchReport(
+        city=request.city,
+        wbgt_index=92.5,
+        heat_stress_risk="EXTREME",
+        civic_alert_dispatched=True,
+        emergency_protocol="Activate cooling centers and route automated Vapi.ai voice alerts to field managers.",
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
 
