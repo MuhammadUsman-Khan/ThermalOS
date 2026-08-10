@@ -69,7 +69,7 @@ const getPastTimeString = (secondsAgo = 0) => {
 };
 
 // Helper for dynamic risk configuration based on temperature
-const getRiskConfig = (temp = 96) => {
+const getRiskConfig = (temp = 95) => {
   if (temp >= 105) {
     return {
       label: "CRIT",
@@ -79,7 +79,7 @@ const getRiskConfig = (temp = 96) => {
       sparkStroke: "#FF3B3B",
     };
   }
-  if (temp >= 100) {
+  if (temp >= 103) {
     return {
       label: "HIGH",
       badge: "HIGH",
@@ -88,7 +88,7 @@ const getRiskConfig = (temp = 96) => {
       sparkStroke: "#FF6B2B",
     };
   }
-  if (temp >= 92) {
+  if (temp >= 98) {
     return {
       label: "ELEV",
       badge: "ELEVATED",
@@ -388,7 +388,7 @@ export default function App() {
             ...prevLogs.slice(0, 15),
           ]);
           setTotalEventsCount((c) => c + 1);
-        } else if (data.temperature_f >= 100 || data.risk_level === "high") {
+        } else if (data.temperature_f >= 103 || data.risk_level === "high") {
           setEventLogs((prevLogs) => [
             {
               id: `${Date.now()}-${Math.random()}`,
@@ -400,14 +400,14 @@ export default function App() {
             ...prevLogs.slice(0, 15),
           ]);
           setTotalEventsCount((c) => c + 1);
-        } else if (data.temperature_f >= 92 || data.risk_level === "elevated") {
+        } else if (data.temperature_f >= 98 || data.risk_level === "elevated") {
           setEventLogs((prevLogs) => [
             {
               id: `${Date.now()}-${Math.random()}`,
               timestamp,
               type: "elevated",
               badge: "ELEVATED",
-              text: `MODERATE BOUNDARY: ${selectedCity} telemetry at ${data.temperature_f}°F. Micro-climate grid stable.`,
+              text: `MODERATE BOUNDARY: ${selectedCity} telemetry at ${data.temperature_f}°F. Micro-climate grid active.`,
             },
             ...prevLogs.slice(0, 15),
           ]);
@@ -419,7 +419,7 @@ export default function App() {
               timestamp,
               type: "nominal",
               badge: "NOMINAL",
-              text: `NOMINAL AMBIENT: ${selectedCity} surface reading at ${data.temperature_f}°F within ASHRAE 55 comfort zone.`,
+              text: `NORMAL AMBIENT: ${selectedCity} surface reading at ${data.temperature_f}°F. Thermal profile within ASHRAE comfort envelope.`,
             },
             ...prevLogs.slice(0, 15),
           ]);

@@ -21,18 +21,18 @@ app.add_middleware(
 
 # City temperature configuration: normal active range and rare spike ceiling
 CITY_CONFIGS = {
-    "Phoenix, AZ": {"min": 93, "max": 103, "spike_chance": 0.05, "spike_val": 106},
-    "Houston, TX": {"min": 85, "max": 95, "spike_chance": 0.03, "spike_val": 101},
-    "Las Vegas, NV": {"min": 90, "max": 101, "spike_chance": 0.04, "spike_val": 105},
-    "Dallas, TX": {"min": 84, "max": 94, "spike_chance": 0.03, "spike_val": 100},
+    "Phoenix, AZ": {"min": 91, "max": 103, "spike_chance": 0.04, "spike_val": 106},
+    "Houston, TX": {"min": 84, "max": 96, "spike_chance": 0.02, "spike_val": 101},
+    "Las Vegas, NV": {"min": 88, "max": 101, "spike_chance": 0.03, "spike_val": 105},
+    "Dallas, TX": {"min": 82, "max": 94, "spike_chance": 0.02, "spike_val": 100},
 }
 
 # In-memory last temperature tracking per city
 LAST_CITY_TEMPS = {
-    "Phoenix, AZ": 96,
+    "Phoenix, AZ": 95,
     "Houston, TX": 88,
-    "Las Vegas, NV": 93,
-    "Dallas, TX": 87,
+    "Las Vegas, NV": 92,
+    "Dallas, TX": 86,
 }
 
 
@@ -50,20 +50,20 @@ async def get_heat_intelligence(request: HeatIntelligenceRequest):
     city = request.location
     cfg = CITY_CONFIGS.get(
         city,
-        {"min": 88, "max": 100, "spike_chance": 0.04, "spike_val": 105},
+        {"min": 85, "max": 100, "spike_chance": 0.03, "spike_val": 105},
     )
-    last_temp = LAST_CITY_TEMPS.get(city, 96)
+    last_temp = LAST_CITY_TEMPS.get(city, 95)
 
-    # 4-5% chance of an occasional transient heat spike
+    # 3-4% chance of an occasional transient heat spike
     if random.random() < cfg["spike_chance"]:
         new_temp = random.randint(105, cfg["spike_val"])
     else:
-        # Guarantee a visible change of +/- 1 to 3 degrees each second
+        # Visible fluctuation of +/- 1 to 3 degrees each second
         step_options = [-3, -2, -1, 1, 2, 3]
         step = random.choice(step_options)
         new_temp = last_temp + step
 
-        # Keep strictly bounded in normal active range
+        # Keep bounded in normal active range
         if new_temp < cfg["min"]:
             new_temp = cfg["min"] + random.randint(0, 2)
         elif new_temp > cfg["max"]:
@@ -71,11 +71,12 @@ async def get_heat_intelligence(request: HeatIntelligenceRequest):
 
     LAST_CITY_TEMPS[city] = new_temp
 
+    # Dynamic risk categories calibrated to urban thermal thresholds
     if new_temp >= 105:
         risk_level = "extreme"
-    elif new_temp >= 100:
+    elif new_temp >= 103:
         risk_level = "high"
-    elif new_temp >= 92:
+    elif new_temp >= 98:
         risk_level = "elevated"
     else:
         risk_level = "nominal"
@@ -96,7 +97,7 @@ async def audit_endpoint(request: AuditRequest):
     if request.temperature_f is not None:
         temp_f = request.temperature_f
     else:
-        temp_f = LAST_CITY_TEMPS.get(request.location, 96)
+        temp_f = LAST_CITY_TEMPS.get(request.location, 95)
 
     report = run_compliance_audit(
         city=request.location,
