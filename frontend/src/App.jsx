@@ -539,32 +539,30 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden transition-colors duration-300 flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white">
       
-      {/* Top Right Deep Espresso Glow (#270f02) */}
+      {/* Top Right Bright Orange Glow */}
       <div
         className="fixed pointer-events-none z-0"
         style={{
-          top: "-12%",
-          right: "-8%",
+          top: "-10%",
+          right: "-5%",
           width: "700px",
           height: "700px",
           borderRadius: "9999px",
-          background: darkMode ? "rgba(234, 88, 12, 0.20)" : "#270f02",
+          background: darkMode ? "rgba(234, 88, 12, 0.20)" : "rgba(255, 107, 43, 0.45)",
           filter: "blur(110px)",
-          opacity: darkMode ? 1 : 0.75,
         }}
       />
-      {/* Bottom Center Deep Espresso Glow (#270f02) */}
+      {/* Bottom Center Bright Orange-Amber Glow */}
       <div
         className="fixed pointer-events-none z-0"
         style={{
-          bottom: "-15%",
+          bottom: "-12%",
           left: "15%",
           width: "900px",
           height: "600px",
           borderRadius: "9999px",
-          background: darkMode ? "rgba(127, 29, 29, 0.10)" : "#270f02",
+          background: darkMode ? "rgba(127, 29, 29, 0.10)" : "rgba(255, 85, 0, 0.35)",
           filter: "blur(130px)",
-          opacity: darkMode ? 1 : 0.65,
         }}
       />
 
