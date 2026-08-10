@@ -5,7 +5,6 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  CartesianGrid,
   ReferenceLine,
   Area,
   ComposedChart,
@@ -303,24 +302,21 @@ export default function App() {
 
   return (
     <div className={darkMode ? "dark" : ""}>
-      <div className="min-h-screen transition-colors duration-300 bg-slate-50 dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden flex flex-col selection:bg-orange-500/30 selection:text-orange-900 dark:selection:text-white">
+      <div className="min-h-screen bg-slate-50 dark:bg-[#050505] text-slate-900 dark:text-zinc-100 font-sans relative flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white transition-colors duration-300">
         
         {/* Ambient Glow (Dark Mode Only) */}
-        <div className="hidden dark:block fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-orange-900/20 via-black to-black pointer-events-none" />
-
-        {/* Subtle organic topographic contour grid */}
-        <div className="fixed inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] dark:bg-[radial-gradient(#1E2330_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none opacity-25 dark:opacity-30 z-0" />
+        <div className="hidden dark:block fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(249,115,22,0.15),_transparent_50%)] pointer-events-none" />
 
         {/* =========================================================================
             TOPBAR
             ========================================================================= */}
-        <header className="border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-black/80 backdrop-blur-xl sticky top-0 z-40 px-6 py-3.5 transition-colors duration-300">
+        <header className="border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-black/60 backdrop-blur-xl sticky top-0 z-40 px-6 py-3.5 transition-colors duration-300">
           <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-4">
             
             {/* Brand Left */}
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/30 dark:border-orange-500/40 flex items-center justify-center shadow-sm dark:shadow-[0_0_15px_rgba(249,115,22,0.3)]">
-                <Flame className="w-5 h-5 text-orange-500 dark:text-orange-400" />
+              <div className="h-9 w-9 rounded-xl bg-[#FF6B2B]/10 dark:bg-[#FF6B2B]/20 border border-[#FF6B2B]/30 dark:border-[#FF6B2B]/40 flex items-center justify-center shadow-sm dark:shadow-[0_0_15px_rgba(255,107,43,0.3)]">
+                <Flame className="w-5 h-5 text-[#FF6B2B]" />
               </div>
               <div>
                 <div className="flex items-center gap-2.5">
@@ -364,7 +360,7 @@ export default function App() {
               <button
                 onClick={() => setDarkMode(!darkMode)}
                 title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                className="p-2.5 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-zinc-300 hover:text-orange-500 dark:hover:text-orange-400 hover:border-orange-500/30 transition-all shadow-sm cursor-pointer active:scale-95"
+                className="p-2.5 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-zinc-300 hover:text-[#FF6B2B] dark:hover:text-[#FF6B2B] hover:border-[#FF6B2B]/30 transition-all shadow-sm cursor-pointer active:scale-95"
               >
                 {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
@@ -393,22 +389,22 @@ export default function App() {
         </header>
 
         {/* =========================================================================
-            DASHBOARD CONTAINER
+            DASHBOARD CONTAINER (RELATIVE Z-10 BG-TRANSPARENT)
             ========================================================================= */}
-        <div className="flex-1 max-w-[1600px] w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 relative z-10">
+        <div className="relative z-10 bg-transparent flex-1 max-w-[1600px] w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5">
           
           {/* =========================================================================
               LEFT COLUMN (NAV SIDEBAR + SYSTEM STATUS) - 2 cols
               ========================================================================= */}
           <aside className="lg:col-span-2 flex flex-col justify-between space-y-5">
-            {/* Navigation Links with Glassmorphic Dual-Theme Styling */}
+            {/* Navigation Links with Clean Transparent Active State */}
             <nav className="space-y-1">
               {/* Overview */}
               <button
                 onClick={() => setActiveNav("overview")}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-r-xl text-xs transition-all cursor-pointer ${
                   activeNav === "overview"
-                    ? "bg-orange-50 dark:bg-gradient-to-r dark:from-orange-500/20 dark:to-transparent border-l-2 border-orange-500 text-orange-600 dark:text-orange-400 font-semibold shadow-sm dark:shadow-none"
+                    ? "bg-[#FF6B2B]/10 border-l-2 border-[#FF6B2B] text-[#FF6B2B] font-semibold"
                     : "text-slate-500 hover:text-slate-700 dark:text-zinc-500 dark:hover:text-zinc-300 hover:bg-slate-100/50 dark:hover:bg-white/[0.02] border-l-2 border-transparent font-medium"
                 }`}
               >
@@ -421,7 +417,7 @@ export default function App() {
                 onClick={() => setActiveNav("telemetry")}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-r-xl text-xs transition-all cursor-pointer ${
                   activeNav === "telemetry"
-                    ? "bg-orange-50 dark:bg-gradient-to-r dark:from-orange-500/20 dark:to-transparent border-l-2 border-orange-500 text-orange-600 dark:text-orange-400 font-semibold shadow-sm dark:shadow-none"
+                    ? "bg-[#FF6B2B]/10 border-l-2 border-[#FF6B2B] text-[#FF6B2B] font-semibold"
                     : "text-slate-500 hover:text-slate-700 dark:text-zinc-500 dark:hover:text-zinc-300 hover:bg-slate-100/50 dark:hover:bg-white/[0.02] border-l-2 border-transparent font-medium"
                 }`}
               >
@@ -434,7 +430,7 @@ export default function App() {
                 onClick={() => setActiveNav("risk_matrix")}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-r-xl text-xs transition-all cursor-pointer ${
                   activeNav === "risk_matrix"
-                    ? "bg-orange-50 dark:bg-gradient-to-r dark:from-orange-500/20 dark:to-transparent border-l-2 border-orange-500 text-orange-600 dark:text-orange-400 font-semibold shadow-sm dark:shadow-none"
+                    ? "bg-[#FF6B2B]/10 border-l-2 border-[#FF6B2B] text-[#FF6B2B] font-semibold"
                     : "text-slate-500 hover:text-slate-700 dark:text-zinc-500 dark:hover:text-zinc-300 hover:bg-slate-100/50 dark:hover:bg-white/[0.02] border-l-2 border-transparent font-medium"
                 }`}
               >
@@ -447,7 +443,7 @@ export default function App() {
                 onClick={() => setActiveNav("events")}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-r-xl text-xs transition-all cursor-pointer ${
                   activeNav === "events"
-                    ? "bg-orange-50 dark:bg-gradient-to-r dark:from-orange-500/20 dark:to-transparent border-l-2 border-orange-500 text-orange-600 dark:text-orange-400 font-semibold shadow-sm dark:shadow-none"
+                    ? "bg-[#FF6B2B]/10 border-l-2 border-[#FF6B2B] text-[#FF6B2B] font-semibold"
                     : "text-slate-500 hover:text-slate-700 dark:text-zinc-500 dark:hover:text-zinc-300 hover:bg-slate-100/50 dark:hover:bg-white/[0.02] border-l-2 border-transparent font-medium"
                 }`}
               >
@@ -460,7 +456,7 @@ export default function App() {
                 onClick={() => setActiveNav("reports")}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-r-xl text-xs transition-all cursor-pointer ${
                   activeNav === "reports"
-                    ? "bg-orange-50 dark:bg-gradient-to-r dark:from-orange-500/20 dark:to-transparent border-l-2 border-orange-500 text-orange-600 dark:text-orange-400 font-semibold shadow-sm dark:shadow-none"
+                    ? "bg-[#FF6B2B]/10 border-l-2 border-[#FF6B2B] text-[#FF6B2B] font-semibold"
                     : "text-slate-500 hover:text-slate-700 dark:text-zinc-500 dark:hover:text-zinc-300 hover:bg-slate-100/50 dark:hover:bg-white/[0.02] border-l-2 border-transparent font-medium"
                 }`}
               >
@@ -473,7 +469,7 @@ export default function App() {
                 onClick={() => setActiveNav("settings")}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-r-xl text-xs transition-all cursor-pointer ${
                   activeNav === "settings"
-                    ? "bg-orange-50 dark:bg-gradient-to-r dark:from-orange-500/20 dark:to-transparent border-l-2 border-orange-500 text-orange-600 dark:text-orange-400 font-semibold shadow-sm dark:shadow-none"
+                    ? "bg-[#FF6B2B]/10 border-l-2 border-[#FF6B2B] text-[#FF6B2B] font-semibold"
                     : "text-slate-500 hover:text-slate-700 dark:text-zinc-500 dark:hover:text-zinc-300 hover:bg-slate-100/50 dark:hover:bg-white/[0.02] border-l-2 border-transparent font-medium"
                 }`}
               >
@@ -489,8 +485,8 @@ export default function App() {
               </span>
 
               {/* Circular Gauge Ring */}
-              <div className="relative w-14 h-14 rounded-full border-2 border-orange-500 flex items-center justify-center shadow-md dark:shadow-[0_0_15px_rgba(249,115,22,0.3)] mb-2.5">
-                <Check className="w-5 h-5 text-orange-500 stroke-[2.5]" />
+              <div className="relative w-14 h-14 rounded-full border-2 border-[#FF6B2B] flex items-center justify-center shadow-md dark:shadow-[0_0_15px_rgba(255,107,43,0.3)] mb-2.5">
+                <Check className="w-5 h-5 text-[#FF6B2B] stroke-[2.5]" />
               </div>
 
               <span className="text-xs font-bold font-mono tracking-wider text-emerald-600 dark:text-emerald-400 uppercase">
@@ -511,7 +507,7 @@ export default function App() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               
               {/* Card 1: SURFACE TEMP */}
-              <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex flex-col justify-between shadow-lg dark:shadow-2xl hover:border-orange-500/30 transition-all">
+              <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex flex-col justify-between shadow-lg dark:shadow-2xl hover:border-[#FF6B2B]/30 transition-all">
                 <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 text-xs font-medium">
                   <span className="uppercase tracking-wider text-[11px] font-semibold">SURFACE TEMP</span>
                   <Thermometer className="w-4 h-4 text-slate-400 dark:text-zinc-500" />
@@ -523,7 +519,7 @@ export default function App() {
                   <span className="font-sans text-lg text-slate-400 dark:text-zinc-500">°F</span>
                 </div>
                 <div>
-                  <span className="font-mono text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
+                  <span className="font-mono text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-[#FF6B2B]/10 text-[#FF6B2B] border border-[#FF6B2B]/20">
                     {currentReading?.temperature_f >= 105 ? "EXTREME" : "HIGH"}
                   </span>
                 </div>
@@ -543,7 +539,7 @@ export default function App() {
                     className={`font-mono text-[10px] uppercase font-semibold px-2 py-0.5 rounded border ${
                       currentReading?.temperature_f >= 105
                         ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30"
-                        : "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30"
+                        : "bg-[#FF6B2B]/10 text-[#FF6B2B] border-[#FF6B2B]/30"
                     }`}
                   >
                     {currentReading?.temperature_f >= 105 ? "EXTREME" : "HIGH"}
@@ -579,7 +575,7 @@ export default function App() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
               
               {/* =========================================================================
-                  TELEMETRY STREAM CHART PANEL - 8 cols
+                  TELEMETRY STREAM CHART PANEL - 8 cols (NO CARTESIAN GRID)
                   ========================================================================= */}
               <div className="lg:col-span-8 bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-5 flex flex-col shadow-lg dark:shadow-2xl">
                 
@@ -587,7 +583,7 @@ export default function App() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100 dark:border-white/5">
                   <div>
                     <div className="flex items-center gap-2.5">
-                      <Activity className="w-4 h-4 text-orange-500" />
+                      <Activity className="w-4 h-4 text-[#FF6B2B]" />
                       <h2 className="font-display text-sm font-bold uppercase tracking-tight text-slate-900 dark:text-white">
                         TELEMETRY STREAM • {selectedCity}
                       </h2>
@@ -604,7 +600,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Neon Glowing Recharts Area Chart */}
+                {/* Neon Glowing Recharts Area Chart without Grid Lines */}
                 <div className="w-full h-80 relative">
                   <span className="absolute top-1 left-2 font-mono text-[10px] text-slate-400 dark:text-zinc-500 uppercase z-10">
                     Temp (°F)
@@ -644,14 +640,6 @@ export default function App() {
                           />
                         </filter>
                       </defs>
-
-                      {/* Dual-theme Cartesian Grid */}
-                      <CartesianGrid
-                        strokeDasharray="2 2"
-                        stroke={darkMode ? "#1E2330" : "#E2E8F0"}
-                        strokeOpacity={darkMode ? 0.3 : 0.6}
-                        vertical={false}
-                      />
 
                       {/* X Axis */}
                       <XAxis
@@ -747,7 +735,7 @@ export default function App() {
                 {/* Chart Footer Bar */}
                 <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between font-mono text-xs text-slate-500 dark:text-zinc-400">
                   <div className="flex items-center gap-2">
-                    <Activity className="w-3.5 h-3.5 text-orange-500" />
+                    <Activity className="w-3.5 h-3.5 text-[#FF6B2B]" />
                     <span>Sampling: 1500ms</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -760,7 +748,7 @@ export default function App() {
               </div>
 
               {/* =========================================================================
-                  RIGHT SIDEBAR (AGENT EVENT LOG - FRAMER MOTION LIQUID FEED) - 4 cols
+                  RIGHT SIDEBAR (AGENT EVENT LOG - LIQUID FEED & CLEAN BORDERS) - 4 cols
                   ========================================================================= */}
               <div className="lg:col-span-4 bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-5 flex flex-col shadow-lg dark:shadow-2xl h-full">
                 
@@ -777,7 +765,7 @@ export default function App() {
                   </span>
                 </div>
 
-                {/* Liquid Framer Motion Event Feed */}
+                {/* Liquid Framer Motion Event Feed with Clean Borders */}
                 <div
                   ref={logsEndRef}
                   className="flex-1 overflow-y-auto max-h-[340px] pr-1 font-mono text-xs"
@@ -792,7 +780,7 @@ export default function App() {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.9 }}
                           transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                          className={`bg-white dark:bg-[#141414]/90 border border-slate-100 dark:border-white/5 rounded-xl p-3.5 mb-2.5 relative overflow-hidden shadow-sm dark:shadow-none border-l-4 ${
+                          className={`bg-white dark:bg-[#141414]/90 border border-slate-200 dark:border-white/5 rounded-xl p-3.5 mb-2.5 relative overflow-hidden shadow-sm dark:shadow-none border-l-4 ${
                             isBreach ? "border-l-red-500" : "border-l-amber-500"
                           }`}
                         >
@@ -852,9 +840,9 @@ export default function App() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               
               {/* Card 1: DATA CONNECTION */}
-              <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-lg dark:shadow-2xl hover:border-orange-500/30 transition-all">
-                <div className="h-11 w-11 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
-                  <Wifi className="w-5 h-5 text-orange-500" />
+              <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-lg dark:shadow-2xl hover:border-[#FF6B2B]/30 transition-all">
+                <div className="h-11 w-11 rounded-xl bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 flex items-center justify-center flex-shrink-0">
+                  <Wifi className="w-5 h-5 text-[#FF6B2B]" />
                 </div>
                 <div className="min-w-0">
                   <span className="text-[10px] font-mono uppercase text-slate-400 dark:text-zinc-500 font-semibold block tracking-wider">
@@ -886,9 +874,9 @@ export default function App() {
               </div>
 
               {/* Card 3: LAST UPDATED */}
-              <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-lg dark:shadow-2xl hover:border-orange-500/30 transition-all">
-                <div className="h-11 w-11 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
-                  <Clock className="w-5 h-5 text-orange-500" />
+              <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-lg dark:shadow-2xl hover:border-[#FF6B2B]/30 transition-all">
+                <div className="h-11 w-11 rounded-xl bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 flex items-center justify-center flex-shrink-0">
+                  <Clock className="w-5 h-5 text-[#FF6B2B]" />
                 </div>
                 <div className="min-w-0">
                   <span className="text-[10px] font-mono uppercase text-slate-400 dark:text-zinc-500 font-semibold block tracking-wider">
@@ -902,9 +890,9 @@ export default function App() {
               </div>
 
               {/* Card 4: SYSTEM UPTIME */}
-              <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-lg dark:shadow-2xl hover:border-orange-500/30 transition-all">
-                <div className="h-11 w-11 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
-                  <Shield className="w-5 h-5 text-orange-500" />
+              <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-lg dark:shadow-2xl hover:border-[#FF6B2B]/30 transition-all">
+                <div className="h-11 w-11 rounded-xl bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-5 h-5 text-[#FF6B2B]" />
                 </div>
                 <div className="min-w-0">
                   <span className="text-[10px] font-mono uppercase text-slate-400 dark:text-zinc-500 font-semibold block tracking-wider">
@@ -913,7 +901,7 @@ export default function App() {
                   <div className="text-sm font-semibold font-mono text-slate-900 dark:text-white my-0.5">
                     7d 14h 35m
                   </div>
-                  <span className="text-[11px] text-orange-600 dark:text-orange-300 font-medium">99.98% uptime</span>
+                  <span className="text-[11px] text-[#FF6B2B] dark:text-[#FFA060] font-medium">99.98% uptime</span>
                 </div>
               </div>
             </div>
@@ -940,8 +928,8 @@ export default function App() {
                 {/* Modal Top Header */}
                 <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-white/10">
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/30 flex items-center justify-center shadow-sm">
-                      <FileCheck className="w-5 h-5 text-orange-500" />
+                    <div className="h-9 w-9 rounded-xl bg-[#FF6B2B]/10 dark:bg-[#FF6B2B]/20 border border-[#FF6B2B]/30 flex items-center justify-center shadow-sm">
+                      <FileCheck className="w-5 h-5 text-[#FF6B2B]" />
                     </div>
                     <div>
                       <h2 className="font-display text-base font-bold uppercase tracking-tight text-slate-900 dark:text-white">
@@ -964,7 +952,7 @@ export default function App() {
                 <div className="flex-1 overflow-y-auto py-5 space-y-4 text-sm font-sans">
                   {isAuditLoading ? (
                     <div className="py-12 flex flex-col items-center justify-center gap-3 font-mono text-xs text-slate-500 dark:text-zinc-400">
-                      <RefreshCw className="w-8 h-8 animate-spin text-orange-500" />
+                      <RefreshCw className="w-8 h-8 animate-spin text-[#FF6B2B]" />
                       <span>Retrieving ASHRAE 55 and IECC building codes from ChromaDB...</span>
                     </div>
                   ) : auditError ? (
@@ -983,7 +971,7 @@ export default function App() {
                           Target Region: <strong className="text-slate-900 dark:text-white">{auditReport.city}</strong>
                         </span>
                         <span className="text-slate-600 dark:text-zinc-400">
-                          Audited Temp: <strong className="text-orange-500">{auditReport.temperature_f}°F</strong>
+                          Audited Temp: <strong className="text-[#FF6B2B]">{auditReport.temperature_f}°F</strong>
                         </span>
                       </div>
 
@@ -1014,10 +1002,10 @@ export default function App() {
                       </div>
 
                       {/* Section 3: Recommended HVAC Action & Dispatch */}
-                      <div className="p-4 rounded-xl border border-orange-500/30 bg-orange-500/5 space-y-3">
+                      <div className="p-4 rounded-xl border border-[#FF6B2B]/30 bg-[#FF6B2B]/5 space-y-3">
                         <div className="flex items-center gap-2">
-                          <Flame className="w-4 h-4 text-orange-500" />
-                          <span className="font-mono text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">
+                          <Flame className="w-4 h-4 text-[#FF6B2B]" />
+                          <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#FF6B2B]">
                             3. Recommended HVAC Mitigation Plan
                           </span>
                         </div>
