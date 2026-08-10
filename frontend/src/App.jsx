@@ -83,7 +83,7 @@ export default function App() {
     return () => clearInterval(timer);
   }, [lastFetch]);
 
-  // Dynamic System Uptime Ticker
+  // Dynamic System Uptime Ticker (Ticks every second)
   useEffect(() => {
     // Simulate a boot time exactly 7d 14h 35m 30s ago from mount
     const bootTime = Date.now() - (7 * 24 * 60 * 60 + 14 * 60 * 60 + 35 * 60 + 30) * 1000;
