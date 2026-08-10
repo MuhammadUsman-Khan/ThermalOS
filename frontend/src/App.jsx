@@ -1406,16 +1406,6 @@ export default function App() {
                         )}
                       </div>
                     </div>
-
-                    {/* Structured JSON Output */}
-                    <div className="pt-2">
-                      <span className="text-[11px] font-mono uppercase text-gray-400 dark:text-zinc-500 block mb-1.5">
-                        Structured Pydantic JSON Output:
-                      </span>
-                      <pre className="font-mono text-[11px] p-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/60 text-slate-800 dark:text-zinc-300 overflow-x-auto leading-relaxed">
-                        {JSON.stringify(auditReport, null, 2)}
-                      </pre>
-                    </div>
                   </div>
                 ) : null}
               </div>
@@ -1527,16 +1517,6 @@ export default function App() {
                       </div>
                       <pre className="font-mono text-xs leading-relaxed p-3.5 rounded-xl border border-cyan-500/20 bg-white/70 dark:bg-black/60 text-slate-800 dark:text-zinc-200 overflow-x-auto">
                         {infraData.hvac_action_plan}
-                      </pre>
-                    </div>
-
-                    {/* Structured Output */}
-                    <div className="pt-2">
-                      <span className="text-[11px] font-mono uppercase text-gray-400 dark:text-zinc-500 block mb-1.5">
-                        Pydantic Report Payload:
-                      </span>
-                      <pre className="font-mono text-[11px] p-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/60 text-slate-800 dark:text-zinc-300 overflow-x-auto leading-relaxed">
-                        {JSON.stringify(infraData, null, 2)}
                       </pre>
                     </div>
                   </div>
@@ -1652,16 +1632,6 @@ export default function App() {
                       </div>
                       <pre className="font-mono text-xs leading-relaxed p-3.5 rounded-xl border border-rose-500/20 bg-white/70 dark:bg-black/60 text-slate-800 dark:text-zinc-200 overflow-x-auto">
                         {civicData.emergency_protocol}
-                      </pre>
-                    </div>
-
-                    {/* Structured Output */}
-                    <div className="pt-2">
-                      <span className="text-[11px] font-mono uppercase text-gray-400 dark:text-zinc-500 block mb-1.5">
-                        Pydantic Report Payload:
-                      </span>
-                      <pre className="font-mono text-[11px] p-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/60 text-slate-800 dark:text-zinc-300 overflow-x-auto leading-relaxed">
-                        {JSON.stringify(civicData, null, 2)}
                       </pre>
                     </div>
                   </div>
