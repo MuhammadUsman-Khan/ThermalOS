@@ -317,7 +317,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden transition-colors duration-300 flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden transition-colors duration-300 flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white">
       
       {/* Top Right Orange Glow */}
       <div className="hidden dark:block fixed top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-orange-600/20 blur-[120px] pointer-events-none z-0" />
@@ -327,7 +327,7 @@ export default function App() {
       {/* =========================================================================
           TOPBAR
           ========================================================================= */}
-      <header className="border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-black/60 backdrop-blur-xl sticky top-0 z-40 px-6 py-3.5 transition-colors duration-300">
+      <header className="border-b border-slate-200 dark:border-white/5 bg-white/90 dark:bg-black/60 backdrop-blur-xl sticky top-0 z-40 px-6 py-3.5 transition-colors duration-300">
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4">
           
           {/* Brand Left */}
@@ -377,7 +377,7 @@ export default function App() {
             <button
               onClick={() => setDarkMode(!darkMode)}
               title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              className="p-2.5 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-zinc-300 hover:text-[#FF6B2B] dark:hover:text-[#FF6B2B] hover:border-[#FF6B2B]/30 transition-all shadow-sm cursor-pointer active:scale-95"
+              className="p-2.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-zinc-300 hover:text-[#FF6B2B] dark:hover:text-[#FF6B2B] hover:border-[#FF6B2B]/30 transition-all shadow-sm cursor-pointer active:scale-95"
             >
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
@@ -387,12 +387,12 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 bg-white/5 border border-white/10 hover:bg-white/10 px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer text-slate-800 dark:text-zinc-200"
+                className="flex items-center gap-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-200/60 dark:hover:bg-white/10 px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer text-slate-800 dark:text-zinc-200"
               >
-                <MapPin className="w-3.5 h-3.5 text-zinc-400" />
+                <MapPin className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
                 <span className="text-sm font-medium">{selectedCity}</span>
                 <ChevronDown
-                  className={`w-3.5 h-3.5 text-zinc-400 transition-transform duration-200 ${
+                  className={`w-3.5 h-3.5 text-slate-500 dark:text-zinc-400 transition-transform duration-200 ${
                     isDropdownOpen ? "rotate-180" : ""
                   }`}
                 />
@@ -405,7 +405,7 @@ export default function App() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 6, scale: 0.98 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute top-full mt-2 right-0 w-48 bg-[#0D0D0D] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
+                    className="absolute top-full mt-2 right-0 w-48 bg-white dark:bg-[#0D0D0D] border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
                   >
                     {CITIES.map((city) => (
                       <div
@@ -413,8 +413,8 @@ export default function App() {
                         onClick={() => handleSelectCity(city)}
                         className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
                           selectedCity === city
-                            ? "bg-[#FF6B2B]/20 text-[#FF6B2B] font-semibold"
-                            : "text-zinc-300 hover:bg-orange-500/20 hover:text-orange-500"
+                            ? "bg-orange-50 dark:bg-[#FF6B2B]/20 text-[#FF6B2B] font-semibold"
+                            : "text-slate-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-orange-500/20 hover:text-orange-600 dark:hover:text-orange-400"
                         }`}
                       >
                         <span>{city}</span>
@@ -434,22 +434,22 @@ export default function App() {
           ========================================================================= */}
       <main className="w-full max-w-7xl mx-auto px-4 py-6 flex-1 flex flex-col space-y-5 relative z-10">
         
-        {/* TOP KPI ROW (3 Cards with Premium Sharp Typography) */}
+        {/* TOP KPI ROW (3 Cards with Depth & Dynamic Light/Dark Contrast) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           
           {/* Card 1: SURFACE TEMP */}
-          <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between shadow-lg dark:shadow-2xl hover:border-[#FF6B2B]/30 transition-all">
+          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl rounded-2xl p-5 flex flex-col justify-between backdrop-blur-xl hover:border-[#FF6B2B]/30 transition-all">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase mb-4">
+              <span className="text-[10px] font-bold tracking-[0.2em] text-slate-500 dark:text-zinc-500 uppercase mb-4">
                 SURFACE TEMP
               </span>
-              <Thermometer className="w-4 h-4 text-zinc-500 mb-4" />
+              <Thermometer className="w-4 h-4 text-slate-400 dark:text-zinc-500 mb-4" />
             </div>
             <div className="my-1 flex items-baseline">
-              <span className="text-5xl font-light tracking-tighter text-white mb-2 font-sans">
+              <span className="text-5xl font-light tracking-tighter text-slate-900 dark:text-white mb-2 font-sans">
                 {currentReading ? currentReading.temperature_f : 102}
               </span>
-              <span className="text-2xl text-zinc-500 ml-1">°F</span>
+              <span className="text-2xl text-slate-500 dark:text-zinc-500 ml-1">°F</span>
             </div>
             <div>
               <span
@@ -465,15 +465,15 @@ export default function App() {
           </div>
 
           {/* Card 2: RISK MATRIX */}
-          <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between shadow-lg dark:shadow-2xl hover:border-red-500/30 transition-all">
+          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl rounded-2xl p-5 flex flex-col justify-between backdrop-blur-xl hover:border-red-500/30 transition-all">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase mb-4">
+              <span className="text-[10px] font-bold tracking-[0.2em] text-slate-500 dark:text-zinc-500 uppercase mb-4">
                 RISK MATRIX
               </span>
-              <Shield className="w-4 h-4 text-zinc-500 mb-4" />
+              <Shield className="w-4 h-4 text-slate-400 dark:text-zinc-500 mb-4" />
             </div>
             <div className="my-1 flex items-center gap-3">
-              <span className="text-5xl font-light tracking-tighter text-white mb-2 font-sans">
+              <span className="text-5xl font-light tracking-tighter text-slate-900 dark:text-white mb-2 font-sans">
                 {currentReading?.temperature_f >= 105 ? "CRIT" : "HIGH"}
               </span>
               <span
@@ -487,28 +487,28 @@ export default function App() {
               </span>
             </div>
             <div>
-              <span className="font-mono text-[11px] text-zinc-500">
+              <span className="font-mono text-[11px] text-slate-500 dark:text-zinc-500">
                 Crit Floor: <span className="text-red-500 font-semibold">105°F</span>
               </span>
             </div>
           </div>
 
           {/* Card 3: RESOLUTION */}
-          <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between shadow-lg dark:shadow-2xl hover:border-sky-500/30 transition-all">
+          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl rounded-2xl p-5 flex flex-col justify-between backdrop-blur-xl hover:border-sky-500/30 transition-all">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase mb-4">
+              <span className="text-[10px] font-bold tracking-[0.2em] text-slate-500 dark:text-zinc-500 uppercase mb-4">
                 RESOLUTION
               </span>
-              <Radio className="w-4 h-4 text-sky-400 mb-4" />
+              <Radio className="w-4 h-4 text-sky-500 dark:text-sky-400 mb-4" />
             </div>
             <div className="my-1 flex items-baseline">
-              <span className="text-5xl font-light tracking-tighter text-white mb-2 font-sans">
+              <span className="text-5xl font-light tracking-tighter text-slate-900 dark:text-white mb-2 font-sans">
                 10
               </span>
-              <span className="text-2xl text-zinc-500 ml-1">m²</span>
+              <span className="text-2xl text-slate-500 dark:text-zinc-500 ml-1">m²</span>
             </div>
             <div>
-              <span className="text-[11px] text-zinc-500 font-mono">
+              <span className="text-[11px] text-slate-500 dark:text-zinc-500 font-mono">
                 2m above ground
               </span>
             </div>
@@ -521,7 +521,7 @@ export default function App() {
           {/* =========================================================================
               TELEMETRY STREAM CHART PANEL - 8 cols
               ========================================================================= */}
-          <div className="lg:col-span-8 bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-5 flex flex-col shadow-lg dark:shadow-2xl">
+          <div className="lg:col-span-8 bg-white dark:bg-[#0D0D0D]/80 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl rounded-2xl p-5 flex flex-col backdrop-blur-xl">
             
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100 dark:border-white/5">
@@ -588,7 +588,7 @@ export default function App() {
                   {/* X Axis */}
                   <XAxis
                     dataKey="time"
-                    stroke={darkMode ? "#1E2330" : "#E2E8F0"}
+                    stroke={darkMode ? "#1E2330" : "#CBD5E1"}
                     tick={{
                       fill: darkMode ? "#71717A" : "#64748B",
                       fontSize: 10,
@@ -602,7 +602,7 @@ export default function App() {
                   <YAxis
                     domain={[90, 125]}
                     ticks={[90, 99, 108, 117, 125]}
-                    stroke={darkMode ? "#1E2330" : "#E2E8F0"}
+                    stroke={darkMode ? "#1E2330" : "#CBD5E1"}
                     tick={{
                       fill: darkMode ? "#71717A" : "#64748B",
                       fontSize: 10,
@@ -617,10 +617,11 @@ export default function App() {
                   <Tooltip
                     cursor={false}
                     contentStyle={{
-                      backgroundColor: "#0D0D0D",
-                      borderColor: "rgba(255,255,255,0.1)",
+                      backgroundColor: darkMode ? "#0D0D0D" : "#FFFFFF",
+                      borderColor: darkMode ? "rgba(255,255,255,0.1)" : "#E2E8F0",
                       borderRadius: "8px",
-                      color: "#fff",
+                      color: darkMode ? "#fff" : "#0f172a",
+                      boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
                     }}
                     itemStyle={{ color: "#f97316" }}
                   />
@@ -682,7 +683,7 @@ export default function App() {
           {/* =========================================================================
               RIGHT SIDEBAR (AGENT EVENT LOG - LIQUID FEED) - 4 cols
               ========================================================================= */}
-          <div className="lg:col-span-4 bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-5 flex flex-col shadow-lg dark:shadow-2xl h-full">
+          <div className="lg:col-span-4 bg-white dark:bg-[#0D0D0D]/80 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl rounded-2xl p-5 flex flex-col backdrop-blur-xl h-full">
             
             {/* Header */}
             <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-white/5 mb-3">
@@ -697,7 +698,7 @@ export default function App() {
               </span>
             </div>
 
-            {/* Liquid Framer Motion Event Feed */}
+            {/* Liquid Framer Motion Event Feed with Dynamic Text Contrast */}
             <div
               ref={logsEndRef}
               className="flex-1 overflow-y-auto max-h-[340px] pr-1 font-mono text-xs"
@@ -739,12 +740,12 @@ export default function App() {
                         </span>
                       </div>
 
-                      {/* Message Text */}
+                      {/* Message Text with Full Contrast */}
                       <p
                         className={`text-xs leading-relaxed font-sans ${
                           isBreach
                             ? "text-red-700 dark:text-red-300 font-medium"
-                            : "text-amber-800 dark:text-amber-300/90 font-medium"
+                            : "text-slate-700 dark:text-amber-300/90 font-medium"
                         }`}
                       >
                         {log.text}
@@ -767,12 +768,12 @@ export default function App() {
         </div>
 
         {/* =========================================================================
-            BOTTOM STATUS ROW (4 Dual-Theme Indicator Cards)
+            BOTTOM STATUS ROW (4 Dual-Theme Indicator Cards with Depth)
             ========================================================================= */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
           {/* Card 1: DATA CONNECTION */}
-          <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-lg dark:shadow-2xl hover:border-[#FF6B2B]/30 transition-all">
+          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl rounded-2xl p-4 flex items-center gap-4 backdrop-blur-xl hover:border-[#FF6B2B]/30 transition-all">
             <div className="h-11 w-11 rounded-xl bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 flex items-center justify-center flex-shrink-0">
               <Wifi className="w-5 h-5 text-[#FF6B2B]" />
             </div>
@@ -789,7 +790,7 @@ export default function App() {
           </div>
 
           {/* Card 2: API STATUS */}
-          <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-lg dark:shadow-2xl hover:border-amber-500/30 transition-all">
+          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl rounded-2xl p-4 flex items-center gap-4 backdrop-blur-xl hover:border-amber-500/30 transition-all">
             <div className="h-11 w-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
               <Cloud className="w-5 h-5 text-amber-500" />
             </div>
@@ -806,7 +807,7 @@ export default function App() {
           </div>
 
           {/* Card 3: LAST UPDATED */}
-          <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-lg dark:shadow-2xl hover:border-[#FF6B2B]/30 transition-all">
+          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl rounded-2xl p-4 flex items-center gap-4 backdrop-blur-xl hover:border-[#FF6B2B]/30 transition-all">
             <div className="h-11 w-11 rounded-xl bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 flex items-center justify-center flex-shrink-0">
               <Clock className="w-5 h-5 text-[#FF6B2B]" />
             </div>
@@ -822,7 +823,7 @@ export default function App() {
           </div>
 
           {/* Card 4: SYSTEM UPTIME */}
-          <div className="bg-white/90 dark:bg-[#0D0D0D]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-lg dark:shadow-2xl hover:border-[#FF6B2B]/30 transition-all">
+          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-2xl rounded-2xl p-4 flex items-center gap-4 backdrop-blur-xl hover:border-[#FF6B2B]/30 transition-all">
             <div className="h-11 w-11 rounded-xl bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 flex items-center justify-center flex-shrink-0">
               <Shield className="w-5 h-5 text-[#FF6B2B]" />
             </div>
