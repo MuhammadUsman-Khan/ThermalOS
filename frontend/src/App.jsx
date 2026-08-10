@@ -462,7 +462,7 @@ export default function App() {
           ========================================================================= */}
       <main className="w-full max-w-7xl mx-auto px-4 py-6 flex-1 flex flex-col space-y-5 relative z-10">
         
-        {/* TOP KPI ROW (3 Cards with Heavy Bold Typography & Sparklines) */}
+        {/* TOP KPI ROW (3 Cards with Elegant Balanced Typography & Sparklines) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           
           {/* Card 1: SURFACE TEMP */}
@@ -474,10 +474,10 @@ export default function App() {
               <Thermometer className="w-4 h-4 text-gray-400 dark:text-zinc-500 mb-4" />
             </div>
             <div className="my-1 flex items-baseline">
-              <span className="text-6xl font-black tracking-tighter tabular-nums text-slate-900 dark:text-white drop-shadow-md mb-2 font-sans">
+              <span className="text-5xl lg:text-6xl font-semibold tracking-tight tabular-nums text-slate-800 dark:text-white">
                 {currentReading ? currentReading.temperature_f : 102}
               </span>
-              <span className="text-2xl font-bold text-slate-400 dark:text-zinc-500 ml-2">°F</span>
+              <span className="text-2xl font-medium text-slate-500 dark:text-zinc-400 ml-1 inline-block align-top mt-1.5">°F</span>
             </div>
             
             {/* Sparkline & Badge Footer */}
@@ -524,11 +524,11 @@ export default function App() {
               <Shield className="w-4 h-4 text-gray-400 dark:text-zinc-500 mb-4" />
             </div>
             <div className="my-1 flex items-center gap-3">
-              <span className="text-6xl font-black tracking-tighter tabular-nums text-slate-900 dark:text-white drop-shadow-md mb-2 font-sans">
+              <span className="text-5xl lg:text-6xl font-semibold tracking-tight tabular-nums text-slate-800 dark:text-white">
                 {currentReading?.temperature_f >= 105 ? "CRIT" : "HIGH"}
               </span>
               <span
-                className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-2 ${
+                className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-1 ${
                   currentReading?.temperature_f >= 105
                     ? "bg-red-500/10 text-red-500 border border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.2)]"
                     : "bg-orange-500/10 text-orange-500 border border-orange-500/30 shadow-[0_0_10px_rgba(249,115,22,0.15)]"
@@ -576,10 +576,10 @@ export default function App() {
               <Radio className="w-4 h-4 text-sky-500 dark:text-sky-400 mb-4" />
             </div>
             <div className="my-1 flex items-baseline">
-              <span className="text-6xl font-black tracking-tighter tabular-nums text-slate-900 dark:text-white drop-shadow-md mb-2 font-sans">
+              <span className="text-5xl lg:text-6xl font-semibold tracking-tight tabular-nums text-slate-800 dark:text-white">
                 10
               </span>
-              <span className="text-2xl font-bold text-slate-400 dark:text-zinc-500 ml-2">m²</span>
+              <span className="text-2xl font-medium text-slate-500 dark:text-zinc-400 ml-1 inline-block align-top mt-1.5">m²</span>
             </div>
 
             {/* Sparkline & Subtext Footer */}
