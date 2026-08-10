@@ -43,6 +43,25 @@ const CITIES = [
 
 const MAX_DATA_POINTS = 20;
 
+// Helper to format real uptime seconds cleanly
+const formatUptime = (totalSeconds) => {
+  const d = Math.floor(totalSeconds / 86400);
+  const h = Math.floor((totalSeconds % 86400) / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+
+  if (d > 0) {
+    return `${d}d ${h}h ${m}m ${s}s`;
+  }
+  if (h > 0) {
+    return `${h}h ${m}m ${s}s`;
+  }
+  if (m > 0) {
+    return `${m}m ${s}s`;
+  }
+  return `${s}s`;
+};
+
 // Helper to generate dynamic timestamps relative to current time
 const getPastTimeString = (secondsAgo = 0) => {
   const d = new Date(Date.now() - secondsAgo * 1000);
@@ -63,7 +82,8 @@ export default function App() {
   const [lastReceivedTime, setLastReceivedTime] = useState(() =>
     new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
   );
-  const [uptime, setUptime] = useState("3h 42m 00s");
+  const [uptimeSeconds, setUptimeSeconds] = useState(0);
+  const [uptime, setUptime] = useState("0s");
   const [latency, setLatency] = useState(24);
   const [pollCount, setPollCount] = useState(1);
   const [failedPolls, setFailedPolls] = useState(0);
@@ -76,6 +96,11 @@ export default function App() {
   const [currentDate, setCurrentDate] = useState(
     new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
   );
+
+  // Clean out legacy stored dummy boot timestamp
+  useEffect(() => {
+    localStorage.removeItem("thermalos_boot");
+  }, []);
 
   // Proper Dark Mode DOM Injection
   useEffect(() => {
@@ -105,27 +130,14 @@ export default function App() {
     return () => clearInterval(timer);
   }, [lastFetch]);
 
-  // Dynamic System Uptime Ticker (Realistic Persistent Session)
+  // Real System Uptime Ticker (Ticks every second)
   useEffect(() => {
-    let storedBoot = localStorage.getItem("thermalos_boot");
-
-    if (!storedBoot) {
-      // Initialize to 3h 42m ago on fresh storage
-      storedBoot = Date.now() - (3 * 3600 + 42 * 60) * 1000;
-      localStorage.setItem("thermalos_boot", storedBoot.toString());
-    }
-
-    const bootTime = parseInt(storedBoot, 10);
-
     const interval = setInterval(() => {
-      const diff = Math.floor((Date.now() - bootTime) / 1000);
-      const d = Math.floor(diff / (24 * 3600));
-      const h = Math.floor((diff % (24 * 3600)) / 3600);
-      const m = Math.floor((diff % 3600) / 60);
-      const s = diff % 60;
-
-      const dayStr = d > 0 ? `${d}d ` : "";
-      setUptime(`${dayStr}${h}h ${m}m ${s}s`);
+      setUptimeSeconds((prev) => {
+        const next = prev + 1;
+        setUptime(formatUptime(next));
+        return next;
+      });
     }, 1000);
 
     return () => clearInterval(interval);
@@ -262,6 +274,10 @@ export default function App() {
         setCurrentReading(data);
         setPollCount((prev) => prev + 1);
         setLastReceivedTime(timestamp);
+        if (data.server_uptime_seconds !== undefined) {
+          setUptimeSeconds(data.server_uptime_seconds);
+          setUptime(formatUptime(data.server_uptime_seconds));
+        }
         setLastFetch(Date.now()); // Reset dynamic live ticker
 
         // Update rolling telemetry window (max 20 points)

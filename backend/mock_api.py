@@ -1,3 +1,4 @@
+import time
 import random
 from typing import Optional
 from fastapi import FastAPI
@@ -6,6 +7,8 @@ from pydantic import BaseModel
 from agent1_rag import run_compliance_audit, ComplianceReport
 
 app = FastAPI(title="FortyGuard Mock Temperature API & ThermalOS Agents")
+
+SERVER_START_TIME = time.time()
 
 # Configure CORS
 app.add_middleware(
@@ -41,9 +44,10 @@ async def get_heat_intelligence(request: HeatIntelligenceRequest):
         "location": request.location,
         "temperature_f": temperature_f,
         "risk_level": risk_level,
-        "resolution": "10mi²",
+        "resolution": "10m²",
         "measured_at": "2m above ground",
         "credits_remaining": 999999,
+        "server_uptime_seconds": int(time.time() - SERVER_START_TIME),
     }
 
 
