@@ -31,14 +31,10 @@
       --border-subtle: #161922;
       --border-default: #1A1E26;
 
-      --orange-gradient: linear-gradient(135deg, #FF5500 0%, #D43000 100%);
-      --orange-btn-gradient: linear-gradient(135deg, #FF5500 0%, #FF6B00 50%, #E63B00 100%);
-      --uptime-gradient: linear-gradient(90deg, #180A05 0%, #2A1005 50%, #451605 100%);
-
-      --orange-500: #FF5500;
+      --orange-500: #FF6B2B;
       --orange-400: #FF6B2B;
       --orange-300: #FFA060;
-      --orange-100: rgba(255,85,0,0.12);
+      --orange-100: rgba(255,107,43,0.12);
 
       --red-500: #FF3B3B;
       --red-300: #FF6B74;
@@ -52,7 +48,7 @@
       --text-secondary: #94A3B8;
       --text-muted: #525E75;
 
-      --shadow-glow-orange: 0 0 25px rgba(255,85,0,0.45);
+      --shadow-glow-orange: 0 0 25px rgba(255,107,43,0.3);
       --shadow-card: 0 4px 20px rgba(0,0,0,0.5);
     }
 
@@ -79,7 +75,7 @@
       left: 0;
       right: 0;
       height: 380px;
-      background: radial-gradient(ellipse at 50% -20%, rgba(255, 60, 0, 0.20), transparent 70%);
+      background: radial-gradient(ellipse at 50% -20%, rgba(255, 107, 43, 0.15), transparent 70%);
       pointer-events: none;
       z-index: 0;
     }
@@ -89,7 +85,7 @@
       inset: 0;
       background: radial-gradient(#1A1E26 1px, transparent 1px);
       background-size: 20px 20px;
-      opacity: 0.35;
+      opacity: 0.3;
       pointer-events: none;
       z-index: 0;
     }
@@ -116,20 +112,20 @@
     }
 
     .flame-icon-box {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      background: rgba(255, 85, 0, 0.15);
-      border: 1px solid rgba(255, 85, 0, 0.4);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(255, 107, 43, 0.1);
+      border: 1px solid rgba(255, 107, 43, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 15px rgba(255, 85, 0, 0.35);
+      box-shadow: 0 0 10px rgba(255, 107, 43, 0.2);
     }
 
     .brand-title {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       letter-spacing: 0.04em;
       color: #FFF;
@@ -154,8 +150,8 @@
       border-radius: 9999px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
-      font-weight: 700;
-      color: #E2E8F0;
+      font-weight: 600;
+      color: #94A3B8;
       margin-left: 10px;
     }
 
@@ -174,48 +170,47 @@
     }
 
     .btn-audit {
-      background: var(--orange-btn-gradient);
-      color: #FFF;
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
+      border: 1px solid rgba(255, 107, 43, 0.5);
+      background: rgba(255, 107, 43, 0.1);
+      color: #FF6B2B;
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.10em;
       text-transform: uppercase;
-      padding: 8px 18px;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 160, 102, 0.4);
-      box-shadow: 0 0 25px rgba(255, 85, 0, 0.55);
+      padding: 6px 14px;
+      border-radius: 6px;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       transition: all 0.2s;
+      box-shadow: 0 0 10px rgba(255, 107, 43, 0.1);
     }
 
     .btn-audit:hover {
-      filter: brightness(1.1);
-      transform: translateY(-1px);
+      background: rgba(255, 107, 43, 0.2);
     }
 
     .live-pill {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 14px;
+      padding: 6px 12px;
       background: #0B1015;
-      border: 1px solid rgba(16, 185, 129, 0.35);
-      border-radius: 10px;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 6px;
       color: var(--green-500);
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 600;
     }
 
     .icon-btn {
       padding: 8px;
       background: var(--bg-elevated);
       border: 1px solid var(--border-default);
-      border-radius: 10px;
+      border-radius: 6px;
       color: var(--text-secondary);
       cursor: pointer;
       display: flex;
@@ -226,11 +221,11 @@
     .city-select-box {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       background: var(--bg-elevated);
       border: 1px solid var(--border-default);
-      border-radius: 10px;
-      padding: 6px 12px;
+      border-radius: 6px;
+      padding: 6px 10px;
       color: #FFF;
       font-size: 12px;
       font-weight: 500;
@@ -245,114 +240,16 @@
       cursor: pointer;
     }
 
-    /* Main Dashboard Layout */
+    /* Main Dashboard Layout (Full Width Workspace) */
     .dashboard-layout {
       max-width: 1600px;
       margin: 0 auto;
       padding: 20px;
-      display: grid;
-      grid-template-columns: 210px 1fr;
+      display: flex;
+      flex-direction: column;
       gap: 20px;
       position: relative;
       z-index: 10;
-    }
-
-    /* Left Sidebar */
-    .sidebar {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 20px;
-    }
-
-    .nav-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      background: transparent;
-      border: 1px solid transparent;
-      cursor: pointer;
-      text-align: left;
-      transition: all 0.2s;
-    }
-
-    .nav-item:hover {
-      background: var(--bg-elevated);
-      color: #FFF;
-    }
-
-    .nav-item.active {
-      background: var(--orange-gradient);
-      color: #FFF;
-      font-weight: 600;
-      border: 1px solid rgba(255, 119, 51, 0.4);
-      box-shadow: 0 0 20px rgba(255, 69, 0, 0.45);
-    }
-
-    /* System Status Widget */
-    .system-status-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-default);
-      border-radius: 16px;
-      padding: 20px 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-
-    .status-title {
-      font-size: 10px;
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      color: var(--text-muted);
-      margin-bottom: 14px;
-    }
-
-    .gauge-circle {
-      width: 68px;
-      height: 68px;
-      border-radius: 50%;
-      border: 3px solid var(--orange-500);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 20px rgba(255, 85, 0, 0.45);
-      margin-bottom: 12px;
-    }
-
-    .operational-text {
-      color: var(--green-500);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .status-subtitle {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    /* Main Workspace */
-    .workspace {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
     }
 
     /* 3 KPI Cards Row */
@@ -365,14 +262,12 @@
     .kpi-card {
       background: var(--bg-surface);
       border: 1px solid var(--border-default);
-      border-radius: 16px;
-      padding: 18px 20px;
+      border-radius: 12px;
+      padding: 16px 20px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      position: relative;
-      overflow: hidden;
-      min-height: 125px;
+      min-height: 115px;
     }
 
     .kpi-header {
@@ -380,7 +275,7 @@
       align-items: center;
       justify-content: space-between;
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 500;
       letter-spacing: 0.06em;
       color: var(--text-secondary);
       text-transform: uppercase;
@@ -390,15 +285,16 @@
       display: flex;
       align-items: baseline;
       gap: 4px;
-      margin: 8px 0;
+      margin: 6px 0;
     }
 
     .kpi-val {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 36px;
-      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      font-size: 38px;
+      font-weight: 300;
       color: #FFF;
       line-height: 1;
+      letter-spacing: -0.02em;
     }
 
     .kpi-footer {
@@ -408,14 +304,25 @@
     }
 
     .kpi-badge-orange {
-      background: rgba(255, 85, 0, 0.15);
-      border: 1px solid rgba(255, 85, 0, 0.4);
+      background: rgba(255, 107, 43, 0.1);
+      border: 1px solid rgba(255, 107, 43, 0.3);
       color: var(--orange-500);
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
-      font-weight: 700;
+      font-weight: 600;
       padding: 2px 8px;
-      border-radius: 6px;
+      border-radius: 4px;
+    }
+
+    .kpi-badge-red {
+      background: rgba(255, 59, 59, 0.1);
+      border: 1px solid rgba(255, 59, 59, 0.3);
+      color: var(--red-500);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
     }
 
     /* Middle Row: Chart & Event Log */
@@ -428,7 +335,7 @@
     .panel-card {
       background: var(--bg-surface);
       border: 1px solid var(--border-default);
-      border-radius: 16px;
+      border-radius: 12px;
       padding: 20px;
       display: flex;
       flex-direction: column;
@@ -439,9 +346,9 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding-bottom: 14px;
+      padding-bottom: 12px;
       border-bottom: 1px solid var(--border-subtle);
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .panel-title {
@@ -462,11 +369,11 @@
       background: var(--red-bg);
       border: 1px solid var(--red-500);
       color: var(--red-300);
-      padding: 4px 10px;
-      border-radius: 8px;
+      padding: 3px 8px;
+      border-radius: 6px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 600;
     }
 
     #uplot-chart {
@@ -491,24 +398,21 @@
       margin-top: 10px;
     }
 
-    /* Event Log List */
+    /* Event Log List (Continuous Minimalist Feed) */
     .event-feed {
       display: flex;
       flex-direction: column;
-      gap: 10px;
       max-height: 300px;
       overflow-y: auto;
       padding-right: 4px;
     }
 
     .event-item {
-      background: var(--bg-elevated);
-      border: 1px solid var(--border-default);
-      border-radius: 12px;
-      padding: 10px 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(30, 35, 48, 0.5);
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
     }
 
     .event-header {
@@ -520,9 +424,9 @@
     .event-tag {
       font-family: 'JetBrains Mono', monospace;
       font-size: 9px;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 4px;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 3px;
       text-transform: uppercase;
     }
 
@@ -533,15 +437,15 @@
     }
 
     .event-tag-yellow {
-      background: rgba(251, 191, 36, 0.15);
-      border: 1px solid rgba(251, 191, 36, 0.4);
+      background: rgba(251, 191, 36, 0.1);
+      border: 1px solid rgba(251, 191, 36, 0.3);
       color: #FCD34D;
     }
 
     .event-text {
-      font-size: 12px;
-      line-height: 1.4;
-      font-family: 'Inter', sans-serif;
+      font-size: 11.5px;
+      line-height: 1.45;
+      font-family: 'JetBrains Mono', monospace;
     }
 
     /* Bottom Row (4 Cards) */
@@ -554,25 +458,19 @@
     .status-card {
       background: var(--bg-surface);
       border: 1px solid var(--border-default);
-      border-radius: 16px;
+      border-radius: 12px;
       padding: 16px;
       display: flex;
       align-items: center;
       gap: 14px;
     }
 
-    .status-card.uptime-card {
-      background: var(--uptime-gradient);
-      border: 1px solid rgba(255, 85, 0, 0.4);
-      box-shadow: 0 0 20px rgba(255, 85, 0, 0.2);
-    }
-
     .icon-circle {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: rgba(255, 85, 0, 0.15);
-      border: 1px solid rgba(255, 85, 0, 0.35);
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: rgba(255, 107, 43, 0.1);
+      border: 1px solid rgba(255, 107, 43, 0.2);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -581,8 +479,8 @@
     }
 
     .icon-circle.yellow {
-      background: rgba(251, 191, 36, 0.15);
-      border-color: rgba(251, 191, 36, 0.35);
+      background: rgba(251, 191, 36, 0.1);
+      border-color: rgba(251, 191, 36, 0.2);
       color: #FBBF24;
     }
 
@@ -595,7 +493,7 @@
     .status-label {
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
-      font-weight: 700;
+      font-weight: 600;
       color: var(--text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -603,7 +501,7 @@
 
     .status-main {
       font-size: 14px;
-      font-weight: 700;
+      font-weight: 600;
       color: #FFF;
       display: flex;
       align-items: center;
@@ -626,7 +524,7 @@
   <header class="topbar">
     <div class="brand-group">
       <div class="flame-icon-box">
-        <i data-lucide="flame" style="width: 20px; height: 20px; color: #FF5500;"></i>
+        <i data-lucide="flame" style="width: 18px; height: 18px; color: #FF6B2B;"></i>
       </div>
       <div>
         <div style="display: flex; align-items: center;">
@@ -643,7 +541,7 @@
     <div class="topbar-actions">
       <!-- RUN COMPLIANCE AUDIT Button -->
       <button class="btn-audit" onclick="alert('Triggering Agent 1 RAG Compliance Audit...')">
-        <i data-lucide="shield-check" style="width: 16px; height: 16px;"></i>
+        <i data-lucide="file-check" style="width: 14px; height: 14px;"></i>
         RUN COMPLIANCE AUDIT
       </button>
 
@@ -655,7 +553,7 @@
 
       <!-- Sun icon -->
       <button class="icon-btn">
-        <i data-lucide="sun" style="width: 16px; height: 16px;"></i>
+        <i data-lucide="sun" style="width: 14px; height: 14px;"></i>
       </button>
 
       <!-- Location Dropdown -->
@@ -672,280 +570,226 @@
     </div>
   </header>
 
-  <!-- DASHBOARD LAYOUT -->
-  <div class="dashboard-layout">
+  <!-- DASHBOARD LAYOUT (FULL WIDTH WORKSPACE) -->
+  <main class="dashboard-layout">
     
-    <!-- LEFT SIDEBAR -->
-    <aside class="sidebar">
-      <!-- Navigation Links -->
-      <div class="nav-list">
-        <button class="nav-item active">
-          <i data-lucide="home" style="width: 16px; height: 16px;"></i>
-          Overview
-        </button>
-        <button class="nav-item">
-          <i data-lucide="activity" style="width: 16px; height: 16px;"></i>
-          Telemetry
-        </button>
-        <button class="nav-item">
-          <i data-lucide="shield-alert" style="width: 16px; height: 16px;"></i>
-          Risk Matrix
-        </button>
-        <button class="nav-item">
-          <i data-lucide="bell" style="width: 16px; height: 16px;"></i>
-          Events
-        </button>
-        <button class="nav-item">
-          <i data-lucide="file-text" style="width: 16px; height: 16px;"></i>
-          Reports
-        </button>
-        <button class="nav-item">
-          <i data-lucide="settings" style="width: 16px; height: 16px;"></i>
-          Settings
-        </button>
+    <!-- TOP KPI ROW (3 Cards — Quota Section Removed) -->
+    <section class="kpi-row">
+      <!-- Card 1: SURFACE TEMP -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>SURFACE TEMP</span>
+          <i data-lucide="thermometer" style="width: 14px; height: 14px;"></i>
+        </div>
+        <div class="kpi-body">
+          <span id="kpi-temp-val" class="kpi-val">102</span>
+          <span style="font-size: 18px; font-weight: 400; color: var(--text-secondary); margin-left: 2px;">°F</span>
+        </div>
+        <div class="kpi-footer">
+          <span class="kpi-badge-orange">HIGH</span>
+        </div>
       </div>
 
-      <!-- System Status Widget -->
-      <div class="system-status-card">
-        <div class="status-title">SYSTEM STATUS</div>
-        <div class="gauge-circle">
-          <i data-lucide="check" style="width: 28px; height: 28px; color: #FF5500; stroke-width: 3;"></i>
+      <!-- Card 2: RISK MATRIX -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>RISK MATRIX</span>
+          <i data-lucide="shield" style="width: 14px; height: 14px;"></i>
         </div>
-        <div class="operational-text">OPERATIONAL</div>
-        <div class="status-subtitle">All systems normal</div>
+        <div class="kpi-body" style="align-items: center; gap: 8px;">
+          <span class="kpi-val">HIGH</span>
+          <span class="kpi-badge-orange">ELEVATED</span>
+        </div>
+        <div class="kpi-footer">
+          <span style="font-size: 11px; font-family: 'JetBrains Mono'; color: var(--text-muted);">
+            Crit Floor: <strong style="color: var(--red-500);">105°F</strong>
+          </span>
+        </div>
       </div>
-    </aside>
 
-    <!-- RIGHT MAIN WORKSPACE -->
-    <main class="workspace">
-      
-      <!-- TOP KPI ROW (3 Cards — Quota Section Removed) -->
-      <section class="kpi-row">
-        <!-- Card 1: SURFACE TEMP -->
-        <div class="kpi-card">
-          <div class="kpi-header">
-            <span>SURFACE TEMP</span>
-            <i data-lucide="thermometer" style="width: 15px; height: 15px;"></i>
-          </div>
-          <div class="kpi-body">
-            <span id="kpi-temp-val" class="kpi-val">102</span>
-            <span style="font-size: 20px; font-weight: 600; color: var(--text-secondary); margin-left: 2px;">°F</span>
-          </div>
-          <div class="kpi-footer">
-            <span class="kpi-badge-orange">HIGH</span>
-            <svg width="100" height="24" viewBox="0 0 100 24">
-              <path d="M0,18 Q15,4 30,14 T60,8 T100,12" fill="none" stroke="#FF5500" stroke-width="2" style="filter: drop-shadow(0 0 6px rgba(255,85,0,0.8));" />
-            </svg>
-          </div>
+      <!-- Card 3: RESOLUTION -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>RESOLUTION</span>
+          <i data-lucide="radio" style="width: 14px; height: 14px;"></i>
         </div>
-
-        <!-- Card 2: RISK MATRIX -->
-        <div class="kpi-card">
-          <div class="kpi-header">
-            <span>RISK MATRIX</span>
-            <i data-lucide="shield" style="width: 15px; height: 15px;"></i>
-          </div>
-          <div class="kpi-body">
-            <span class="kpi-val" style="color: var(--red-500); font-size: 32px;">HIGH</span>
-          </div>
-          <div class="kpi-footer">
-            <span style="font-size: 11px; font-family: 'JetBrains Mono'; color: var(--text-muted);">
-              Crit Floor: <strong style="color: var(--red-500);">105°F</strong>
-            </span>
-            <svg width="100" height="24" viewBox="0 0 100 24">
-              <path d="M0,14 Q20,20 40,10 T80,18 T100,6" fill="none" stroke="#FF3B3B" stroke-width="2" style="filter: drop-shadow(0 0 6px rgba(255,59,59,0.8));" />
-            </svg>
-          </div>
+        <div class="kpi-body">
+          <span class="kpi-val">10m²</span>
         </div>
-
-        <!-- Card 3: RESOLUTION -->
-        <div class="kpi-card">
-          <div class="kpi-header">
-            <span>RESOLUTION</span>
-            <i data-lucide="radio" style="width: 15px; height: 15px; color: #38BDF8;"></i>
-          </div>
-          <div class="kpi-body">
-            <span class="kpi-val">10m²</span>
-          </div>
-          <div class="kpi-footer">
-            <span style="font-size: 11px; color: var(--text-secondary);">2m above ground</span>
-            <svg width="100" height="24" viewBox="0 0 100 24">
-              <path d="M0,16 Q25,8 50,14 T80,6 T100,10" fill="none" stroke="#38BDF8" stroke-width="2" style="filter: drop-shadow(0 0 6px rgba(56,189,248,0.8));" />
-            </svg>
-          </div>
+        <div class="kpi-footer">
+          <span style="font-size: 11px; color: var(--text-secondary);">2m above ground</span>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- MIDDLE ROW: CHART & EVENT LOG -->
-      <section class="middle-row">
-        <!-- Telemetry Stream Chart Panel -->
-        <div class="panel-card">
-          <div class="panel-header">
-            <div>
-              <div class="panel-title">
-                <i data-lucide="activity" style="width: 16px; height: 16px; color: #FF5500;"></i>
-                TELEMETRY STREAM • PHOENIX, AZ
-              </div>
-              <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">
-                Dynamic micro-climate temperature readings (rolling 20-sample window)
-              </div>
-            </div>
-            <div class="critical-badge-pill">
-              <i data-lucide="alert-triangle" style="width: 14px; height: 14px;"></i>
-              CRITICAL: 105°F
-            </div>
-          </div>
-
-          <div id="uplot-chart"></div>
-
-          <div class="chart-footer">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <i data-lucide="activity" style="width: 13px; height: 13px; color: #FF5500;"></i>
-              Sampling: 1500ms
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <i data-lucide="layers" style="width: 13px; height: 13px; color: var(--text-muted);"></i>
-              Frames Ingested: <strong id="frame-count" style="color: #FFF;">273</strong>
-            </div>
-          </div>
-        </div>
-
-        <!-- Agent Event Log Sidebar Panel -->
-        <div class="panel-card">
-          <div class="panel-header">
+    <!-- MIDDLE ROW: CHART & EVENT LOG -->
+    <section class="middle-row">
+      <!-- Telemetry Stream Chart Panel -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <div>
             <div class="panel-title">
-              <i data-lucide="link-2" style="width: 16px; height: 16px; color: var(--text-secondary);"></i>
-              AGENT EVENT LOG
+              <i data-lucide="activity" style="width: 16px; height: 16px; color: #FF6B2B;"></i>
+              TELEMETRY STREAM • PHOENIX, AZ
             </div>
-            <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: var(--green-500); font-family: 'JetBrains Mono'; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 9999px;">
-              LIVE FEED
-            </div>
-          </div>
-
-          <div id="event-feed-list" class="event-feed">
-            <div class="event-item">
-              <div class="event-header">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <i data-lucide="alert-octagon" style="width: 13px; height: 13px; color: var(--red-500);"></i>
-                  <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: var(--text-muted);">02:35:41 PM</span>
-                </div>
-                <span class="event-tag event-tag-red">CRITICAL BREACH</span>
-              </div>
-              <div class="event-text" style="color: var(--red-300);">
-                Threshold breached for Phoenix, AZ.
-              </div>
-            </div>
-
-            <div class="event-item">
-              <div class="event-header">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <i data-lucide="alert-triangle" style="width: 13px; height: 13px; color: #FBBF24;"></i>
-                  <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: var(--text-muted);">02:35:38 PM</span>
-                </div>
-                <span class="event-tag event-tag-yellow">ELEVATED</span>
-              </div>
-              <div class="event-text" style="color: #FDE68A;">
-                HIGH HEAT ELEVATION: Phoenix, AZ at 103°F. Monitoring thermal plume.
-              </div>
-            </div>
-
-            <div class="event-item">
-              <div class="event-header">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <i data-lucide="alert-triangle" style="width: 13px; height: 13px; color: #FBBF24;"></i>
-                  <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: var(--text-muted);">02:35:40 PM</span>
-                </div>
-                <span class="event-tag event-tag-yellow">ELEVATED</span>
-              </div>
-              <div class="event-text" style="color: #FDE68A;">
-                HIGH HEAT ELEVATION: Phoenix, AZ at 100°F. Monitoring thermal plume.
-              </div>
-            </div>
-
-            <div class="event-item">
-              <div class="event-header">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <i data-lucide="alert-octagon" style="width: 13px; height: 13px; color: var(--red-500);"></i>
-                  <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: var(--text-muted);">02:35:41 PM</span>
-                </div>
-                <span class="event-tag event-tag-red">CRITICAL BREACH</span>
-              </div>
-              <div class="event-text" style="color: var(--red-300);">
-                HEAT SPIKE DETECTED: Threshold breached for Phoenix, AZ.
-              </div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">
+              Dynamic micro-climate temperature readings (rolling 20-sample window)
             </div>
           </div>
-
-          <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border-subtle); margin-top: 10px; font-family: 'JetBrains Mono'; font-size: 11px; color: var(--text-muted);">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span class="green-dot" style="width: 5px; height: 5px;"></span>
-              Telemetry: Active
-            </div>
-            <div>Events: 206</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- BOTTOM ROW (4 Status Cards) -->
-      <section class="bottom-row">
-        <!-- Card 1: DATA CONNECTION -->
-        <div class="status-card">
-          <div class="icon-circle">
-            <i data-lucide="wifi" style="width: 20px; height: 20px;"></i>
-          </div>
-          <div class="status-meta">
-            <span class="status-label">DATA CONNECTION</span>
-            <div class="status-main">
-              <span class="green-dot"></span>
-              Stable
-            </div>
-            <span class="status-sub">Latency: 28ms</span>
+          <div class="critical-badge-pill">
+            <i data-lucide="alert-triangle" style="width: 13px; height: 13px;"></i>
+            CRITICAL: 105°F
           </div>
         </div>
 
-        <!-- Card 2: API STATUS -->
-        <div class="status-card">
-          <div class="icon-circle yellow">
-            <i data-lucide="cloud" style="width: 20px; height: 20px;"></i>
+        <div id="uplot-chart"></div>
+
+        <div class="chart-footer">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="activity" style="width: 13px; height: 13px; color: #FF6B2B;"></i>
+            Sampling: 1500ms
           </div>
-          <div class="status-meta">
-            <span class="status-label">API STATUS</span>
-            <div class="status-main">
-              <span class="green-dot"></span>
-              Connected
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="layers" style="width: 13px; height: 13px; color: var(--text-muted);"></i>
+            Frames Ingested: <strong id="frame-count" style="color: #FFF;">273</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agent Event Log Sidebar Panel (Continuous Terminal Stream) -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i data-lucide="link-2" style="width: 16px; height: 16px; color: var(--text-secondary);"></i>
+            AGENT EVENT LOG
+          </div>
+          <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--green-500); font-family: 'JetBrains Mono'; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 9999px;">
+            LIVE FEED
+          </div>
+        </div>
+
+        <div id="event-feed-list" class="event-feed">
+          <div class="event-item">
+            <div class="event-header">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="alert-octagon" style="width: 13px; height: 13px; color: var(--red-500);"></i>
+                <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: var(--text-muted);">02:35:41 PM</span>
+              </div>
+              <span class="event-tag event-tag-red">CRITICAL BREACH</span>
             </div>
-            <span class="status-sub">FORTYGUARD API</span>
+            <div class="event-text" style="color: var(--red-300);">
+              Threshold breached for Phoenix, AZ.
+            </div>
+          </div>
+
+          <div class="event-item">
+            <div class="event-header">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="alert-triangle" style="width: 13px; height: 13px; color: #FBBF24;"></i>
+                <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: var(--text-muted);">02:35:38 PM</span>
+              </div>
+              <span class="event-tag event-tag-yellow">ELEVATED</span>
+            </div>
+            <div class="event-text" style="color: #FDE68A;">
+              HIGH HEAT ELEVATION: Phoenix, AZ at 103°F. Monitoring thermal plume.
+            </div>
+          </div>
+
+          <div class="event-item">
+            <div class="event-header">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="alert-triangle" style="width: 13px; height: 13px; color: #FBBF24;"></i>
+                <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: var(--text-muted);">02:35:40 PM</span>
+              </div>
+              <span class="event-tag event-tag-yellow">ELEVATED</span>
+            </div>
+            <div class="event-text" style="color: #FDE68A;">
+              HIGH HEAT ELEVATION: Phoenix, AZ at 100°F. Monitoring thermal plume.
+            </div>
+          </div>
+
+          <div class="event-item">
+            <div class="event-header">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="alert-octagon" style="width: 13px; height: 13px; color: var(--red-500);"></i>
+                <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: var(--text-muted);">02:35:41 PM</span>
+              </div>
+              <span class="event-tag event-tag-red">CRITICAL BREACH</span>
+            </div>
+            <div class="event-text" style="color: var(--red-300);">
+              HEAT SPIKE DETECTED: Threshold breached for Phoenix, AZ.
+            </div>
           </div>
         </div>
 
-        <!-- Card 3: LAST UPDATED -->
-        <div class="status-card">
-          <div class="icon-circle">
-            <i data-lucide="clock" style="width: 20px; height: 20px;"></i>
+        <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border-subtle); margin-top: 10px; font-family: 'JetBrains Mono'; font-size: 11px; color: var(--text-muted);">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span class="green-dot" style="width: 5px; height: 5px;"></span>
+            Telemetry: Active
           </div>
-          <div class="status-meta">
-            <span class="status-label">LAST UPDATED</span>
-            <div id="live-clock" class="status-main" style="font-family: 'JetBrains Mono';">02:35:44 PM</div>
-            <span class="status-sub">May 25, 2026</span>
-          </div>
+          <div>Events: 206</div>
         </div>
+      </div>
+    </section>
 
-        <!-- Card 4: SYSTEM UPTIME -->
-        <div class="status-card uptime-card">
-          <div class="icon-circle" style="background: rgba(255, 85, 0, 0.25); border-color: rgba(255, 85, 0, 0.5);">
-            <i data-lucide="shield" style="width: 20px; height: 20px; color: #FFF;"></i>
-          </div>
-          <div class="status-meta">
-            <span class="status-label" style="color: #FFA066;">SYSTEM UPTIME</span>
-            <div class="status-main" style="font-family: 'JetBrains Mono'; color: #FFF;">7d 14h 35m</div>
-            <span class="status-sub" style="color: #FFD4B2;">99.98% uptime</span>
-          </div>
+    <!-- BOTTOM ROW (4 Status Cards) -->
+    <section class="bottom-row">
+      <!-- Card 1: DATA CONNECTION -->
+      <div class="status-card">
+        <div class="icon-circle">
+          <i data-lucide="wifi" style="width: 18px; height: 18px;"></i>
         </div>
-      </section>
+        <div class="status-meta">
+          <span class="status-label">DATA CONNECTION</span>
+          <div class="status-main">
+            <span class="green-dot"></span>
+            Stable
+          </div>
+          <span class="status-sub">Latency: 28ms</span>
+        </div>
+      </div>
 
-    </main>
+      <!-- Card 2: API STATUS -->
+      <div class="status-card">
+        <div class="icon-circle yellow">
+          <i data-lucide="cloud" style="width: 18px; height: 18px;"></i>
+        </div>
+        <div class="status-meta">
+          <span class="status-label">API STATUS</span>
+          <div class="status-main">
+            <span class="green-dot"></span>
+            Connected
+          </div>
+          <span class="status-sub">FORTYGUARD API</span>
+        </div>
+      </div>
 
-  </div>
+      <!-- Card 3: LAST UPDATED -->
+      <div class="status-card">
+        <div class="icon-circle">
+          <i data-lucide="clock" style="width: 18px; height: 18px;"></i>
+        </div>
+        <div class="status-meta">
+          <span class="status-label">LAST UPDATED</span>
+          <div id="live-clock" class="status-main" style="font-family: 'JetBrains Mono';">02:35:44 PM</div>
+          <span class="status-sub">May 25, 2026</span>
+        </div>
+      </div>
+
+      <!-- Card 4: SYSTEM UPTIME -->
+      <div class="status-card">
+        <div class="icon-circle">
+          <i data-lucide="shield" style="width: 18px; height: 18px;"></i>
+        </div>
+        <div class="status-meta">
+          <span class="status-label">SYSTEM UPTIME</span>
+          <div class="status-main" style="font-family: 'JetBrains Mono'; color: #FFF;">7d 14h 35m</div>
+          <span class="status-sub" style="color: #FFA066;">99.98% uptime</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
 
   <script>
     lucide.createIcons();
@@ -1003,10 +847,10 @@
       series: [
         {},
         {
-          stroke: "#FF4500",
-          width: 3,
-          fill: "rgba(255, 69, 0, 0.15)",
-          points: { show: true, size: 4, fill: "#FF4500", stroke: "#07080A" },
+          stroke: "#FF6B2B",
+          width: 1.5,
+          fill: "rgba(255, 107, 43, 0.12)",
+          points: { show: false },
           smooth: true,
         }
       ],

@@ -14,22 +14,18 @@ import {
   Activity,
   AlertOctagon,
   AlertTriangle,
-  Bell,
   Check,
   ChevronDown,
   Clock,
   Cloud,
   FileCheck,
-  FileText,
   Flame,
-  Home,
   Layers,
   Link2,
   MapPin,
   Radio,
   RefreshCw,
   Send,
-  Settings,
   Shield,
   ShieldAlert,
   Sun,
@@ -48,7 +44,6 @@ const CITIES = [
 const MAX_DATA_POINTS = 20;
 
 export default function App() {
-  const [activeNav, setActiveNav] = useState("overview");
   const [selectedCity, setSelectedCity] = useState("Phoenix, AZ");
   const [telemetryData, setTelemetryData] = useState([]);
   const [eventLogs, setEventLogs] = useState([
@@ -375,498 +370,388 @@ export default function App() {
         </div>
       </header>
 
-      {/* DASHBOARD CONTAINER */}
-      <div className="flex-1 max-w-[1600px] w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 relative z-10">
-        {/* =========================================================================
-            LEFT COLUMN (NAV SIDEBAR + SYSTEM STATUS) - 2 cols
-            ========================================================================= */}
-        <aside className="lg:col-span-2 flex flex-col justify-between space-y-5">
-          {/* Navigation Links with Vercel/Palantir Minimalist Styling */}
-          <nav className="space-y-1">
-            {/* Overview */}
-            <button
-              onClick={() => setActiveNav("overview")}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-r-md text-xs transition-all cursor-pointer ${
-                activeNav === "overview"
-                  ? "bg-white/5 text-white border-l-2 border-[#FF6B2B] font-medium"
-                  : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02] border-l-2 border-transparent font-medium"
-              }`}
-            >
-              <Home className="w-4 h-4" />
-              <span>Overview</span>
-            </button>
-
-            {/* Telemetry */}
-            <button
-              onClick={() => setActiveNav("telemetry")}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-r-md text-xs transition-all cursor-pointer ${
-                activeNav === "telemetry"
-                  ? "bg-white/5 text-white border-l-2 border-[#FF6B2B] font-medium"
-                  : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02] border-l-2 border-transparent font-medium"
-              }`}
-            >
-              <Activity className="w-4 h-4" />
-              <span>Telemetry</span>
-            </button>
-
-            {/* Risk Matrix */}
-            <button
-              onClick={() => setActiveNav("risk_matrix")}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-r-md text-xs transition-all cursor-pointer ${
-                activeNav === "risk_matrix"
-                  ? "bg-white/5 text-white border-l-2 border-[#FF6B2B] font-medium"
-                  : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02] border-l-2 border-transparent font-medium"
-              }`}
-            >
-              <ShieldAlert className="w-4 h-4" />
-              <span>Risk Matrix</span>
-            </button>
-
-            {/* Events */}
-            <button
-              onClick={() => setActiveNav("events")}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-r-md text-xs transition-all cursor-pointer ${
-                activeNav === "events"
-                  ? "bg-white/5 text-white border-l-2 border-[#FF6B2B] font-medium"
-                  : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02] border-l-2 border-transparent font-medium"
-              }`}
-            >
-              <Bell className="w-4 h-4" />
-              <span>Events</span>
-            </button>
-
-            {/* Reports */}
-            <button
-              onClick={() => setActiveNav("reports")}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-r-md text-xs transition-all cursor-pointer ${
-                activeNav === "reports"
-                  ? "bg-white/5 text-white border-l-2 border-[#FF6B2B] font-medium"
-                  : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02] border-l-2 border-transparent font-medium"
-              }`}
-            >
-              <FileText className="w-4 h-4" />
-              <span>Reports</span>
-            </button>
-
-            {/* Settings */}
-            <button
-              onClick={() => setActiveNav("settings")}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-r-md text-xs transition-all cursor-pointer ${
-                activeNav === "settings"
-                  ? "bg-white/5 text-white border-l-2 border-[#FF6B2B] font-medium"
-                  : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02] border-l-2 border-transparent font-medium"
-              }`}
-            >
-              <Settings className="w-4 h-4" />
-              <span>Settings</span>
-            </button>
-          </nav>
-
-          {/* SYSTEM STATUS Widget */}
-          <div className="bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-4 flex flex-col items-center text-center shadow-lg">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 font-bold mb-3">
-              SYSTEM STATUS
-            </span>
-
-            {/* Circular Gauge Ring */}
-            <div className="relative w-14 h-14 rounded-full border-2 border-[#FF6B2B] flex items-center justify-center shadow-[0_0_15px_rgba(255,107,43,0.3)] mb-2.5">
-              <Check className="w-5 h-5 text-[#FF6B2B] stroke-[2.5]" />
+      {/* DASHBOARD CONTAINER (FULL WIDTH WORKSPACE) */}
+      <main className="flex-1 max-w-[1600px] w-full mx-auto p-4 sm:p-6 flex flex-col space-y-5 relative z-10">
+        {/* TOP KPI ROW (3 Cards — strictly numeric & clean) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Card 1: SURFACE TEMP */}
+          <div className="bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-4 flex flex-col justify-between shadow-lg hover:border-zinc-700/60 transition-colors">
+            <div className="flex items-center justify-between text-zinc-400 text-xs font-medium">
+              <span className="uppercase tracking-wider text-[11px]">SURFACE TEMP</span>
+              <Thermometer className="w-3.5 h-3.5 text-zinc-500" />
             </div>
-
-            <span className="text-xs font-bold font-mono tracking-wider text-[#10B981] uppercase">
-              OPERATIONAL
-            </span>
-            <span className="text-[11px] text-zinc-500 mt-0.5">
-              All systems normal
-            </span>
-          </div>
-        </aside>
-
-        {/* =========================================================================
-            CENTER & RIGHT WORKSPACE - 10 cols
-            ========================================================================= */}
-        <div className="lg:col-span-10 flex flex-col space-y-5">
-          {/* TOP KPI ROW (3 Cards — Sparklines removed, strictly numeric & clean) */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Card 1: SURFACE TEMP */}
-            <div className="bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-4 flex flex-col justify-between shadow-lg hover:border-zinc-700/60 transition-colors">
-              <div className="flex items-center justify-between text-zinc-400 text-xs font-medium">
-                <span className="uppercase tracking-wider text-[11px]">SURFACE TEMP</span>
-                <Thermometer className="w-3.5 h-3.5 text-zinc-500" />
-              </div>
-              <div className="my-3 flex items-baseline gap-1">
-                <span className="font-sans text-4xl text-white font-light tracking-tight">
-                  {currentReading ? currentReading.temperature_f : 102}
-                </span>
-                <span className="font-sans text-lg text-zinc-500">°F</span>
-              </div>
-              <div>
-                <span className="font-mono text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-[#FF6B2B]/10 text-[#FF6B2B] border border-[#FF6B2B]/30">
-                  {currentReading?.temperature_f >= 105 ? "EXTREME" : "HIGH"}
-                </span>
-              </div>
+            <div className="my-3 flex items-baseline gap-1">
+              <span className="font-sans text-4xl text-white font-light tracking-tight">
+                {currentReading ? currentReading.temperature_f : 102}
+              </span>
+              <span className="font-sans text-lg text-zinc-500">°F</span>
             </div>
-
-            {/* Card 2: RISK MATRIX */}
-            <div className="bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-4 flex flex-col justify-between shadow-lg hover:border-zinc-700/60 transition-colors">
-              <div className="flex items-center justify-between text-zinc-400 text-xs font-medium">
-                <span className="uppercase tracking-wider text-[11px]">RISK MATRIX</span>
-                <Shield className="w-3.5 h-3.5 text-zinc-500" />
-              </div>
-              <div className="my-3 flex items-center gap-2">
-                <span className="font-sans text-4xl text-white font-light tracking-tight">
-                  {currentReading?.temperature_f >= 105 ? "CRIT" : "HIGH"}
-                </span>
-                <span
-                  className={`font-mono text-[10px] uppercase font-semibold px-2 py-0.5 rounded border ${
-                    currentReading?.temperature_f >= 105
-                      ? "bg-[#FF3B3B]/10 text-[#FF3B3B] border-[#FF3B3B]/30"
-                      : "bg-[#FF6B2B]/10 text-[#FF6B2B] border-[#FF6B2B]/30"
-                  }`}
-                >
-                  {currentReading?.temperature_f >= 105 ? "EXTREME" : "HIGH"}
-                </span>
-              </div>
-              <div>
-                <span className="font-mono text-[11px] text-zinc-500">
-                  Crit Floor: <span className="text-[#FF3B3B] font-medium">105°F</span>
-                </span>
-              </div>
-            </div>
-
-            {/* Card 3: RESOLUTION */}
-            <div className="bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-4 flex flex-col justify-between shadow-lg hover:border-zinc-700/60 transition-colors">
-              <div className="flex items-center justify-between text-zinc-400 text-xs font-medium">
-                <span className="uppercase tracking-wider text-[11px]">RESOLUTION</span>
-                <Radio className="w-3.5 h-3.5 text-zinc-500" />
-              </div>
-              <div className="my-3">
-                <span className="font-sans text-4xl text-white font-light tracking-tight">
-                  10m²
-                </span>
-              </div>
-              <div>
-                <span className="text-[11px] text-zinc-500">
-                  2m above ground
-                </span>
-              </div>
+            <div>
+              <span className="font-mono text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-[#FF6B2B]/10 text-[#FF6B2B] border border-[#FF6B2B]/30">
+                {currentReading?.temperature_f >= 105 ? "EXTREME" : "HIGH"}
+              </span>
             </div>
           </div>
 
-          {/* MAIN WORKSPACE ROW (Telemetry Chart Left + Event Log Right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            {/* =========================================================================
-                TELEMETRY STREAM CHART PANEL - 8 cols
-                ========================================================================= */}
-            <div className="lg:col-span-8 bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-5 flex flex-col shadow-2xl">
-              {/* Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#1A1E26]/60">
-                <div>
-                  <div className="flex items-center gap-2.5">
-                    <Activity className="w-4 h-4 text-[#FF6B2B]" />
-                    <h2 className="font-display text-sm font-bold uppercase tracking-tight text-white">
-                      TELEMETRY STREAM • {selectedCity}
-                    </h2>
-                  </div>
-                  <p className="text-xs text-zinc-400 mt-0.5">
-                    Dynamic micro-climate temperature readings (rolling 20-sample window)
-                  </p>
-                </div>
-
-                {/* Critical Badge Right */}
-                <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-red-500/10 border border-red-500/30 text-red-400 font-mono text-xs font-semibold">
-                  <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
-                  <span>CRITICAL: 105°F</span>
-                </div>
-              </div>
-
-              {/* Refined Minimalist Recharts Area Chart */}
-              <div className="w-full h-80 relative">
-                <span className="absolute top-1 left-2 font-mono text-[10px] text-zinc-500 uppercase z-10">
-                  Temp (°F)
-                </span>
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart
-                    data={
-                      telemetryData.length > 0
-                        ? telemetryData
-                        : [
-                            { time: "02:35:17 PM", temperature_f: 110 },
-                            { time: "02:35:20 PM", temperature_f: 106 },
-                            { time: "02:35:23 PM", temperature_f: 108 },
-                            { time: "02:35:26 PM", temperature_f: 95 },
-                            { time: "02:35:29 PM", temperature_f: 112 },
-                            { time: "02:35:32 PM", temperature_f: 104 },
-                            { time: "02:35:35 PM", temperature_f: 108 },
-                            { time: "02:35:38 PM", temperature_f: 96 },
-                            { time: "02:35:41 PM", temperature_f: 108 },
-                            { time: "02:35:44 PM", temperature_f: 92 },
-                          ]
-                    }
-                    margin={{ top: 20, right: 15, left: -20, bottom: 0 }}
-                  >
-                    <defs>
-                      <linearGradient id="neonGlowRedOrange" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#FF6B2B" stopOpacity={0.15} />
-                        <stop offset="100%" stopColor="#FF6B2B" stopOpacity={0.0} />
-                      </linearGradient>
-                    </defs>
-
-                    {/* Extremely faint horizontal-only grid */}
-                    <CartesianGrid
-                      strokeDasharray="2 2"
-                      stroke="#1E2330"
-                      strokeOpacity={0.15}
-                      vertical={false}
-                    />
-
-                    {/* Lightened X and Y Axis Text */}
-                    <XAxis
-                      dataKey="time"
-                      stroke="#1A1E26"
-                      tick={{ fill: "#71717A", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
-                      tickLine={false}
-                      axisLine={{ stroke: "#1A1E26" }}
-                    />
-
-                    <YAxis
-                      domain={[90, 125]}
-                      ticks={[90, 99, 108, 117, 125]}
-                      stroke="#1A1E26"
-                      tick={{ fill: "#71717A", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
-                      tickLine={false}
-                      axisLine={{ stroke: "#1A1E26" }}
-                      tickFormatter={(val) => `${val}°`}
-                    />
-
-                    <Tooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const item = payload[0].payload;
-                          const isBreached = item.temperature_f >= 105;
-                          return (
-                            <div className="bg-[#0B0D12]/95 border border-[#1A1E26] p-3 rounded-lg shadow-2xl backdrop-blur-md font-mono text-xs">
-                              <div className="text-[10px] text-zinc-500 uppercase">{item.time}</div>
-                              <div className="text-base font-bold text-white mt-0.5">
-                                {item.temperature_f}°F
-                              </div>
-                              <div className="text-[11px] mt-1 text-zinc-400">
-                                Matrix:{" "}
-                                <span className={isBreached ? "text-[#FF3B3B] font-bold" : "text-zinc-200"}>
-                                  {isBreached ? "EXTREME" : "HIGH"}
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-
-                    {/* Critical Threshold 105°F Line */}
-                    <ReferenceLine
-                      y={105}
-                      stroke="#FF3B3B"
-                      strokeDasharray="4 4"
-                      strokeWidth={1}
-                      label={{
-                        value: "CRITICAL FLOOR 105°F",
-                        fill: "#FF3B3B",
-                        position: "insideBottomRight",
-                        fontSize: 10,
-                        fontFamily: "JetBrains Mono, monospace",
-                        fontWeight: 600,
-                        offset: 10,
-                      }}
-                    />
-
-                    {/* Subtle Gradient Area Fill */}
-                    <Area
-                      type="monotone"
-                      dataKey="temperature_f"
-                      fill="url(#neonGlowRedOrange)"
-                      stroke="none"
-                    />
-
-                    {/* Thin 1.5px stroke with NO dots */}
-                    <Area
-                      type="monotone"
-                      dataKey="temperature_f"
-                      stroke="#FF6B2B"
-                      strokeWidth={1.5}
-                      fill="none"
-                      dot={false}
-                      activeDot={{ r: 4, strokeWidth: 0, fill: "#FF6B2B" }}
-                      isAnimationActive={true}
-                      animationDuration={300}
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Chart Footer Bar */}
-              <div className="mt-3 pt-3 border-t border-[#1A1E26]/60 flex items-center justify-between font-mono text-xs text-zinc-400">
-                <div className="flex items-center gap-2">
-                  <Activity className="w-3.5 h-3.5 text-[#FF6B2B]" />
-                  <span>Sampling: 1500ms</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Layers className="w-3.5 h-3.5 text-zinc-500" />
-                  <span>
-                    Frames Ingested: <strong className="text-white">{pollCount}</strong>
-                  </span>
-                </div>
-              </div>
+          {/* Card 2: RISK MATRIX */}
+          <div className="bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-4 flex flex-col justify-between shadow-lg hover:border-zinc-700/60 transition-colors">
+            <div className="flex items-center justify-between text-zinc-400 text-xs font-medium">
+              <span className="uppercase tracking-wider text-[11px]">RISK MATRIX</span>
+              <Shield className="w-3.5 h-3.5 text-zinc-500" />
             </div>
+            <div className="my-3 flex items-center gap-2">
+              <span className="font-sans text-4xl text-white font-light tracking-tight">
+                {currentReading?.temperature_f >= 105 ? "CRIT" : "HIGH"}
+              </span>
+              <span
+                className={`font-mono text-[10px] uppercase font-semibold px-2 py-0.5 rounded border ${
+                  currentReading?.temperature_f >= 105
+                    ? "bg-[#FF3B3B]/10 text-[#FF3B3B] border-[#FF3B3B]/30"
+                    : "bg-[#FF6B2B]/10 text-[#FF6B2B] border-[#FF6B2B]/30"
+                }`}
+              >
+                {currentReading?.temperature_f >= 105 ? "EXTREME" : "HIGH"}
+              </span>
+            </div>
+            <div>
+              <span className="font-mono text-[11px] text-zinc-500">
+                Crit Floor: <span className="text-[#FF3B3B] font-medium">105°F</span>
+              </span>
+            </div>
+          </div>
 
-            {/* =========================================================================
-                RIGHT SIDEBAR (AGENT EVENT LOG) - 4 cols (Continuous Terminal Stream)
-                ========================================================================= */}
-            <div className="lg:col-span-4 bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-5 flex flex-col shadow-2xl h-full">
-              {/* Header */}
-              <div className="flex items-center justify-between pb-3.5 border-b border-[#1A1E26]/60 mb-2">
-                <div className="flex items-center gap-2">
-                  <Link2 className="w-4 h-4 text-zinc-400" />
-                  <h2 className="font-display text-xs font-bold uppercase tracking-wider text-white">
-                    AGENT EVENT LOG
+          {/* Card 3: RESOLUTION */}
+          <div className="bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-4 flex flex-col justify-between shadow-lg hover:border-zinc-700/60 transition-colors">
+            <div className="flex items-center justify-between text-zinc-400 text-xs font-medium">
+              <span className="uppercase tracking-wider text-[11px]">RESOLUTION</span>
+              <Radio className="w-3.5 h-3.5 text-zinc-500" />
+            </div>
+            <div className="my-3">
+              <span className="font-sans text-4xl text-white font-light tracking-tight">
+                10m²
+              </span>
+            </div>
+            <div>
+              <span className="text-[11px] text-zinc-500">
+                2m above ground
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* MAIN WORKSPACE ROW (Telemetry Chart Left + Event Log Right) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          {/* =========================================================================
+              TELEMETRY STREAM CHART PANEL - 8 cols
+              ========================================================================= */}
+          <div className="lg:col-span-8 bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-5 flex flex-col shadow-2xl">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#1A1E26]/60">
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <Activity className="w-4 h-4 text-[#FF6B2B]" />
+                  <h2 className="font-display text-sm font-bold uppercase tracking-tight text-white">
+                    TELEMETRY STREAM • {selectedCity}
                   </h2>
                 </div>
-                <span className="text-[10px] font-mono text-[#10B981] uppercase px-2 py-0.5 rounded-full bg-[#10B981]/10 border border-[#10B981]/30 font-bold">
-                  LIVE FEED
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Dynamic micro-climate temperature readings (rolling 20-sample window)
+                </p>
+              </div>
+
+              {/* Critical Badge Right */}
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-red-500/10 border border-red-500/30 text-red-400 font-mono text-xs font-semibold">
+                <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
+                <span>CRITICAL: 105°F</span>
+              </div>
+            </div>
+
+            {/* Refined Minimalist Recharts Area Chart */}
+            <div className="w-full h-80 relative">
+              <span className="absolute top-1 left-2 font-mono text-[10px] text-zinc-500 uppercase z-10">
+                Temp (°F)
+              </span>
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart
+                  data={
+                    telemetryData.length > 0
+                      ? telemetryData
+                      : [
+                          { time: "02:35:17 PM", temperature_f: 110 },
+                          { time: "02:35:20 PM", temperature_f: 106 },
+                          { time: "02:35:23 PM", temperature_f: 108 },
+                          { time: "02:35:26 PM", temperature_f: 95 },
+                          { time: "02:35:29 PM", temperature_f: 112 },
+                          { time: "02:35:32 PM", temperature_f: 104 },
+                          { time: "02:35:35 PM", temperature_f: 108 },
+                          { time: "02:35:38 PM", temperature_f: 96 },
+                          { time: "02:35:41 PM", temperature_f: 108 },
+                          { time: "02:35:44 PM", temperature_f: 92 },
+                        ]
+                  }
+                  margin={{ top: 20, right: 15, left: -20, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="neonGlowRedOrange" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#FF6B2B" stopOpacity={0.15} />
+                      <stop offset="100%" stopColor="#FF6B2B" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Extremely faint horizontal-only grid */}
+                  <CartesianGrid
+                    strokeDasharray="2 2"
+                    stroke="#1E2330"
+                    strokeOpacity={0.15}
+                    vertical={false}
+                  />
+
+                  {/* Lightened X and Y Axis Text */}
+                  <XAxis
+                    dataKey="time"
+                    stroke="#1A1E26"
+                    tick={{ fill: "#71717A", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
+                    tickLine={false}
+                    axisLine={{ stroke: "#1A1E26" }}
+                  />
+
+                  <YAxis
+                    domain={[90, 125]}
+                    ticks={[90, 99, 108, 117, 125]}
+                    stroke="#1A1E26"
+                    tick={{ fill: "#71717A", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
+                    tickLine={false}
+                    axisLine={{ stroke: "#1A1E26" }}
+                    tickFormatter={(val) => `${val}°`}
+                  />
+
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const item = payload[0].payload;
+                        const isBreached = item.temperature_f >= 105;
+                        return (
+                          <div className="bg-[#0B0D12]/95 border border-[#1A1E26] p-3 rounded-lg shadow-2xl backdrop-blur-md font-mono text-xs">
+                            <div className="text-[10px] text-zinc-500 uppercase">{item.time}</div>
+                            <div className="text-base font-bold text-white mt-0.5">
+                              {item.temperature_f}°F
+                            </div>
+                            <div className="text-[11px] mt-1 text-zinc-400">
+                              Matrix:{" "}
+                              <span className={isBreached ? "text-[#FF3B3B] font-bold" : "text-zinc-200"}>
+                                {isBreached ? "EXTREME" : "HIGH"}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+
+                  {/* Critical Threshold 105°F Line */}
+                  <ReferenceLine
+                    y={105}
+                    stroke="#FF3B3B"
+                    strokeDasharray="4 4"
+                    strokeWidth={1}
+                    label={{
+                      value: "CRITICAL FLOOR 105°F",
+                      fill: "#FF3B3B",
+                      position: "insideBottomRight",
+                      fontSize: 10,
+                      fontFamily: "JetBrains Mono, monospace",
+                      fontWeight: 600,
+                      offset: 10,
+                    }}
+                  />
+
+                  {/* Subtle Gradient Area Fill */}
+                  <Area
+                    type="monotone"
+                    dataKey="temperature_f"
+                    fill="url(#neonGlowRedOrange)"
+                    stroke="none"
+                  />
+
+                  {/* Thin 1.5px stroke with NO dots */}
+                  <Area
+                    type="monotone"
+                    dataKey="temperature_f"
+                    stroke="#FF6B2B"
+                    strokeWidth={1.5}
+                    fill="none"
+                    dot={false}
+                    activeDot={{ r: 4, strokeWidth: 0, fill: "#FF6B2B" }}
+                    isAnimationActive={true}
+                    animationDuration={300}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Chart Footer Bar */}
+            <div className="mt-3 pt-3 border-t border-[#1A1E26]/60 flex items-center justify-between font-mono text-xs text-zinc-400">
+              <div className="flex items-center gap-2">
+                <Activity className="w-3.5 h-3.5 text-[#FF6B2B]" />
+                <span>Sampling: 1500ms</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Layers className="w-3.5 h-3.5 text-zinc-500" />
+                <span>
+                  Frames Ingested: <strong className="text-white">{pollCount}</strong>
                 </span>
-              </div>
-
-              {/* Continuous Terminal List Feed (No bulky borders/boxes) */}
-              <div
-                ref={logsEndRef}
-                className="flex-1 overflow-y-auto space-y-0 max-h-[340px] pr-1 font-mono text-xs"
-              >
-                {eventLogs.map((log) => {
-                  const isBreach = log.type === "extreme";
-                  return (
-                    <div
-                      key={log.id}
-                      className="py-2.5 border-b border-[#1E2330]/50 space-y-1 hover:bg-white/[0.01] transition-colors"
-                    >
-                      {/* Top row: Icon + Timestamp + Badge */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          {isBreach ? (
-                            <AlertOctagon className="w-3.5 h-3.5 text-[#FF3B3B] flex-shrink-0" />
-                          ) : (
-                            <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                          )}
-                          <span className="text-[11px] text-zinc-500 font-mono">
-                            {log.timestamp}
-                          </span>
-                        </div>
-                        <span
-                          className={`text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded border font-mono ${
-                            isBreach
-                              ? "bg-[#FF3B3B]/10 text-[#FF3B3B] border-[#FF3B3B]/30"
-                              : "bg-amber-400/10 text-amber-400 border-amber-400/30"
-                          }`}
-                        >
-                          {log.badge}
-                        </span>
-                      </div>
-
-                      {/* Raw Data Message Text */}
-                      <p
-                        className={`text-xs leading-relaxed font-mono ${
-                          isBreach ? "text-[#FF6B74]" : "text-amber-300/90"
-                        }`}
-                      >
-                        {log.text}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Sidebar Footer */}
-              <div className="mt-3 pt-3 border-t border-[#1A1E26]/60 flex items-center justify-between text-[11px] font-mono text-zinc-500">
-                <div className="flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
-                  <span>Telemetry: Active</span>
-                </div>
-                <span>Events: 206</span>
               </div>
             </div>
           </div>
 
           {/* =========================================================================
-              BOTTOM STATUS ROW (4 Refined Minimal Indicator Cards)
+              RIGHT SIDEBAR (AGENT EVENT LOG) - 4 cols (Continuous Terminal Stream)
               ========================================================================= */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Card 1: DATA CONNECTION */}
-            <div className="bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-4 flex items-center gap-4 shadow-lg hover:border-zinc-700/60 transition-colors">
-              <div className="h-10 w-10 rounded-lg bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 flex items-center justify-center flex-shrink-0">
-                <Wifi className="w-4 h-4 text-[#FF6B2B]" />
+          <div className="lg:col-span-4 bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-5 flex flex-col shadow-2xl h-full">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3.5 border-b border-[#1A1E26]/60 mb-2">
+              <div className="flex items-center gap-2">
+                <Link2 className="w-4 h-4 text-zinc-400" />
+                <h2 className="font-display text-xs font-bold uppercase tracking-wider text-white">
+                  AGENT EVENT LOG
+                </h2>
               </div>
-              <div className="min-w-0">
-                <span className="text-[10px] font-mono uppercase text-zinc-500 font-semibold block tracking-wider">
-                  DATA CONNECTION
-                </span>
-                <div className="flex items-center gap-1.5 my-0.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
-                  <span className="text-sm font-semibold text-white">Stable</span>
-                </div>
-                <span className="text-[11px] text-zinc-500">Latency: 28ms</span>
-              </div>
+              <span className="text-[10px] font-mono text-[#10B981] uppercase px-2 py-0.5 rounded-full bg-[#10B981]/10 border border-[#10B981]/30 font-bold">
+                LIVE FEED
+              </span>
             </div>
 
-            {/* Card 2: API STATUS */}
-            <div className="bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-4 flex items-center gap-4 shadow-lg hover:border-zinc-700/60 transition-colors">
-              <div className="h-10 w-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
-                <Cloud className="w-4 h-4 text-amber-400" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[10px] font-mono uppercase text-zinc-500 font-semibold block tracking-wider">
-                  API STATUS
-                </span>
-                <div className="flex items-center gap-1.5 my-0.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
-                  <span className="text-sm font-semibold text-white">Connected</span>
-                </div>
-                <span className="text-[11px] text-zinc-500">FORTYGUARD API</span>
-              </div>
+            {/* Continuous Terminal List Feed (No bulky borders/boxes) */}
+            <div
+              ref={logsEndRef}
+              className="flex-1 overflow-y-auto space-y-0 max-h-[340px] pr-1 font-mono text-xs"
+            >
+              {eventLogs.map((log) => {
+                const isBreach = log.type === "extreme";
+                return (
+                  <div
+                    key={log.id}
+                    className="py-2.5 border-b border-[#1E2330]/50 space-y-1 hover:bg-white/[0.01] transition-colors"
+                  >
+                    {/* Top row: Icon + Timestamp + Badge */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        {isBreach ? (
+                          <AlertOctagon className="w-3.5 h-3.5 text-[#FF3B3B] flex-shrink-0" />
+                        ) : (
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                        )}
+                        <span className="text-[11px] text-zinc-500 font-mono">
+                          {log.timestamp}
+                        </span>
+                      </div>
+                      <span
+                        className={`text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded border font-mono ${
+                          isBreach
+                            ? "bg-[#FF3B3B]/10 text-[#FF3B3B] border-[#FF3B3B]/30"
+                            : "bg-amber-400/10 text-amber-400 border-amber-400/30"
+                        }`}
+                      >
+                        {log.badge}
+                      </span>
+                    </div>
+
+                    {/* Raw Data Message Text */}
+                    <p
+                      className={`text-xs leading-relaxed font-mono ${
+                        isBreach ? "text-[#FF6B74]" : "text-amber-300/90"
+                      }`}
+                    >
+                      {log.text}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
 
-            {/* Card 3: LAST UPDATED */}
-            <div className="bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-4 flex items-center gap-4 shadow-lg hover:border-zinc-700/60 transition-colors">
-              <div className="h-10 w-10 rounded-lg bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 flex items-center justify-center flex-shrink-0">
-                <Clock className="w-4 h-4 text-[#FF6B2B]" />
+            {/* Sidebar Footer */}
+            <div className="mt-3 pt-3 border-t border-[#1A1E26]/60 flex items-center justify-between text-[11px] font-mono text-zinc-500">
+              <div className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
+                <span>Telemetry: Active</span>
               </div>
-              <div className="min-w-0">
-                <span className="text-[10px] font-mono uppercase text-zinc-500 font-semibold block tracking-wider">
-                  LAST UPDATED
-                </span>
-                <div className="text-sm font-semibold font-mono text-white my-0.5">
-                  {currentTime}
-                </div>
-                <span className="text-[11px] text-zinc-500">May 25, 2026</span>
-              </div>
-            </div>
-
-            {/* Card 4: SYSTEM UPTIME */}
-            <div className="bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-4 flex items-center gap-4 shadow-lg hover:border-zinc-700/60 transition-colors">
-              <div className="h-10 w-10 rounded-lg bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 flex items-center justify-center flex-shrink-0">
-                <Shield className="w-4 h-4 text-[#FF6B2B]" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[10px] font-mono uppercase text-zinc-500 font-semibold block tracking-wider">
-                  SYSTEM UPTIME
-                </span>
-                <div className="text-sm font-semibold font-mono text-white my-0.5">
-                  7d 14h 35m
-                </div>
-                <span className="text-[11px] text-[#FFA066]">99.98% uptime</span>
-              </div>
+              <span>Events: 206</span>
             </div>
           </div>
         </div>
-      </div>
+
+        {/* =========================================================================
+            BOTTOM STATUS ROW (4 Refined Minimal Indicator Cards)
+            ========================================================================= */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Card 1: DATA CONNECTION */}
+          <div className="bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-4 flex items-center gap-4 shadow-lg hover:border-zinc-700/60 transition-colors">
+            <div className="h-10 w-10 rounded-lg bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 flex items-center justify-center flex-shrink-0">
+              <Wifi className="w-4 h-4 text-[#FF6B2B]" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[10px] font-mono uppercase text-zinc-500 font-semibold block tracking-wider">
+                DATA CONNECTION
+              </span>
+              <div className="flex items-center gap-1.5 my-0.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
+                <span className="text-sm font-semibold text-white">Stable</span>
+              </div>
+              <span className="text-[11px] text-zinc-500">Latency: 28ms</span>
+            </div>
+          </div>
+
+          {/* Card 2: API STATUS */}
+          <div className="bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-4 flex items-center gap-4 shadow-lg hover:border-zinc-700/60 transition-colors">
+            <div className="h-10 w-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
+              <Cloud className="w-4 h-4 text-amber-400" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[10px] font-mono uppercase text-zinc-500 font-semibold block tracking-wider">
+                API STATUS
+              </span>
+              <div className="flex items-center gap-1.5 my-0.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
+                <span className="text-sm font-semibold text-white">Connected</span>
+              </div>
+              <span className="text-[11px] text-zinc-500">FORTYGUARD API</span>
+            </div>
+          </div>
+
+          {/* Card 3: LAST UPDATED */}
+          <div className="bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-4 flex items-center gap-4 shadow-lg hover:border-zinc-700/60 transition-colors">
+            <div className="h-10 w-10 rounded-lg bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 flex items-center justify-center flex-shrink-0">
+              <Clock className="w-4 h-4 text-[#FF6B2B]" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[10px] font-mono uppercase text-zinc-500 font-semibold block tracking-wider">
+                LAST UPDATED
+              </span>
+              <div className="text-sm font-semibold font-mono text-white my-0.5">
+                {currentTime}
+              </div>
+              <span className="text-[11px] text-zinc-500">May 25, 2026</span>
+            </div>
+          </div>
+
+          {/* Card 4: SYSTEM UPTIME */}
+          <div className="bg-[#0B0D12] border border-[#1A1E26] rounded-xl p-4 flex items-center gap-4 shadow-lg hover:border-zinc-700/60 transition-colors">
+            <div className="h-10 w-10 rounded-lg bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 flex items-center justify-center flex-shrink-0">
+              <Shield className="w-4 h-4 text-[#FF6B2B]" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[10px] font-mono uppercase text-zinc-500 font-semibold block tracking-wider">
+                SYSTEM UPTIME
+              </span>
+              <div className="text-sm font-semibold font-mono text-white my-0.5">
+                7d 14h 35m
+              </div>
+              <span className="text-[11px] text-[#FFA066]">99.98% uptime</span>
+            </div>
+          </div>
+        </div>
+      </main>
 
       {/* =========================================================================
           AGENT 1 COMPLIANCE AUDIT MODAL
