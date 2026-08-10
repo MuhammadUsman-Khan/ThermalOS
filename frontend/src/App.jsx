@@ -669,14 +669,13 @@ export default function App() {
     if (currentTemp >= 105 && !hasAutoTriggered) {
       setHasAutoTriggered(true);
       setIsEmergencyMode(true);
-      // Only pop open modal if user is not actively auditing or viewing another modal
-      const shouldOpenModal = !isAuditOpen && !isInfraModalOpen;
-      fetchCivicData(shouldOpenModal);
+      // Execute Agent 3 silently in the background without modal popup
+      fetchCivicData(false);
     } else if (currentTemp < 100 && hasAutoTriggered) {
       setHasAutoTriggered(false);
       setIsEmergencyMode(false);
     }
-  }, [currentTemp, hasAutoTriggered, isAuditOpen, isInfraModalOpen]);
+  }, [currentTemp, hasAutoTriggered]);
 
   return (
     <div className={`min-h-screen bg-[#F8F9FA] dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden transition-colors duration-300 flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white ${
