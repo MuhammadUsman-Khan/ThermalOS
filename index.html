@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ThermalOS — Autonomous Urban Micro-Climate OS</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Chart library: uPlot -->
+  <script src="https://cdn.jsdelivr.net/npm/uplot@1.6.31/dist/uPlot.iife.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uplot@1.6.31/dist/uPlot.min.css">
+
+  <!-- Animation: GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <!-- Icons: Lucide -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* ==========================================================================
+       DESIGN TOKENS
+       ========================================================================== */
+    :root {
+      --bg-base: #0C0D0F;
+      --bg-surface: #141619;
+      --bg-elevated: #1C1F24;
+      --border-subtle: #232830;
+      --border-default: #2E3440;
+
+      --orange-900: #7A2800;
+      --orange-700: #C44A00;
+      --orange-500: #F26419;
+      --orange-400: #FF7A30;
+      --orange-300: #FFA060;
+      --orange-100: rgba(242,100,25,0.10);
+
+      --red-500: #E63946;
+      --red-300: #FF6B74;
+      --red-bg: rgba(230,57,70,0.10);
+
+      --green-500: #2DC98E;
+      --green-300: #5FDDAC;
+      --green-bg: rgba(45,201,142,0.10);
+
+      --text-primary: #F0F2F5;
+      --text-secondary: #8B95A8;
+      --text-muted: #4E5668;
+      --text-inverse: #0C0D0F;
+
+      --shadow-glow-orange: 0 0 24px rgba(242,100,25,0.20);
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px var(--border-subtle);
+    }
+
+    [data-theme="light"] {
+      --bg-base: #F5F5F0;
+      --bg-surface: #FFFFFF;
+      --bg-elevated: #FAFAFA;
+      --border-subtle: #E8E8E2;
+      --border-default: #D8D8D0;
+
+      --orange-900: #7A2800;
+      --orange-700: #C44A00;
+      --orange-500: #F26419;
+      --orange-400: #E05810;
+      --orange-300: #C04808;
+      --orange-100: rgba(242,100,25,0.08);
+
+      --red-500: #D62B38;
+      --red-300: #B01E28;
+      --red-bg: rgba(214,43,56,0.08);
+
+      --green-500: #1A9E6E;
+      --green-300: #147A54;
+      --green-bg: rgba(26,158,110,0.08);
+
+      --text-primary: #111318;
+      --text-secondary: #4A5568;
+      --text-muted: #9AA3B2;
+      --text-inverse: #F0F2F5;
+
+      --shadow-glow-orange: 0 0 24px rgba(242,100,25,0.12);
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px var(--border-subtle);
+    }
+
+    /* ==========================================================================
+       GLOBAL & RESET
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: 52px 1fr;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ==========================================================================
+       TYPOGRAPHY SYSTEM
+       ========================================================================== */
+    .text-display {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      color: var(--text-primary);
+    }
+
+    .text-heading {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+
+    .text-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .text-mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .text-mono-bold {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .text-body {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 1.5;
+    }
+
+    /* ==========================================================================
+       TOPBAR
+       ========================================================================== */
+    header.topbar {
+      height: 52px;
+      background-color: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 100;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: var(--text-primary);
+    }
+
+    .brand-separator {
+      width: 1px;
+      height: 18px;
+      background-color: var(--border-default);
+    }
+
+    .brand-sub {
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .topbar-center {
+      display: flex;
+      align-items: center;
+    }
+
+    .api-badge {
+      background-color: var(--orange-100);
+      border: 1px solid var(--orange-400);
+      color: var(--orange-400);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Live indicator with pulse dot */
+    .live-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+
+    .pulse-dot-container {
+      position: relative;
+      width: 8px;
+      height: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--green-500);
+      border-radius: 50%;
+    }
+
+    .pulse-ring {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background-color: var(--green-500);
+      border-radius: 50%;
+      animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+
+    @keyframes pulse-ring {
+      0% {
+        transform: scale(0.95);
+        opacity: 0.8;
+      }
+      70% {
+        transform: scale(2.4);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(2.4);
+        opacity: 0;
+      }
+    }
+
+    .live-text {
+      color: var(--green-500);
+      font-weight: 600;
+    }
+
+    .latency-text {
+      color: var(--text-muted);
+      font-size: 10px;
+    }
+
+    /* City Select Pill */
+    .city-select-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .city-select {
+      appearance: none;
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 28px 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .city-select:hover {
+      border-color: var(--orange-400);
+    }
+
+    .city-select-arrow {
+      position: absolute;
+      right: 10px;
+      pointer-events: none;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+    }
+
+    /* Theme Toggle Button */
+    .theme-toggle-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .theme-toggle-btn:hover {
+      color: var(--orange-400);
+      border-color: var(--orange-400);
+    }
+
+    /* ==========================================================================
+       MAIN DASHBOARD LAYOUT
+       ========================================================================== */
+    main.dashboard-container {
+      height: calc(100vh - 52px);
+      padding: 16px;
+      display: grid;
+      grid-template-rows: 116px 1fr;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    /* ==========================================================================
+       KPI ROW (4 Equal Cards)
+       ========================================================================== */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      height: 116px;
+    }
+
+    .kpi-card {
+      background-color: var(--bg-surface);
+      box-shadow: var(--shadow-card);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid transparent;
+    }
+
+    .kpi-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .kpi-body {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .kpi-unit {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .kpi-footer {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* KPI Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .badge-green {
+      background-color: var(--green-bg);
+      border: 1px solid var(--green-500);
+      color: var(--green-500);
+    }
+
+    .badge-orange {
+      background-color: var(--orange-100);
+      border: 1px solid var(--orange-400);
+      color: var(--orange-400);
+    }
+
+    .badge-red {
+      background-color: var(--red-bg);
+      border: 1px solid var(--red-500);
+      color: var(--red-500);
+    }
+
+    /* Critical state for Card 1 */
+    .kpi-card.critical-state {
+      border-color: var(--orange-500);
+      box-shadow: var(--shadow-glow-orange), var(--shadow-card);
+    }
+
+    /* ==========================================================================
+       BOTTOM WORKSPACE: CHART + EVENT LOG
+       ========================================================================== */
+    .workspace-row {
+      display: grid;
+      grid-template-columns: 1.65fr 1fr;
+      gap: 12px;
+      height: 100%;
+      min-height: 0;
+    }
+
+    /* Panel Common Styles */
+    .panel {
+      background-color: var(--bg-surface);
+      box-shadow: var(--shadow-card);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .panel-header {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: var(--bg-surface);
+    }
+
+    .panel-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--text-primary);
+      text-transform: uppercase;
+    }
+
+    /* ==========================================================================
+       CHART PANEL (uPlot)
+       ========================================================================== */
+    .chart-panel-body {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+      padding: 10px 14px 4px 10px;
+      overflow: hidden;
+    }
+
+    #chart-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    /* Make uPlot background completely transparent */
+    .uplot, .uplot canvas {
+      background: transparent !important;
+    }
+
+    /* Critical threshold overlay line */
+    .critical-threshold-overlay {
+      position: absolute;
+      left: 45px;
+      right: 14px;
+      border-top: 1.5px dashed var(--red-500);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      z-index: 10;
+      transform: translateY(-50%);
+    }
+
+    .critical-threshold-tag {
+      background-color: var(--red-bg);
+      border: 1px solid var(--red-500);
+      color: var(--red-300);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: -18px;
+    }
+
+    .critical-dot {
+      width: 5px;
+      height: 5px;
+      background-color: var(--red-500);
+      border-radius: 50%;
+    }
+
+    /* Bottom Status Bar */
+    .status-bar {
+      height: 32px;
+      background-color: var(--bg-elevated);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+
+    .status-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+    }
+
+    .status-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+    }
+
+    /* ==========================================================================
+       EVENT LOG PANEL
+       ========================================================================== */
+    .log-panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Custom Scrollbar */
+    .log-panel-body::-webkit-scrollbar {
+      width: 4px;
+    }
+    .log-panel-body::-webkit-scrollbar-track {
+      background: var(--bg-elevated);
+      border-radius: 2px;
+    }
+    .log-panel-body::-webkit-scrollbar-thumb {
+      background: var(--orange-500);
+      border-radius: 2px;
+    }
+
+    /* Log Entry Card */
+    .log-entry {
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 8px 12px 8px 10px;
+      display: flex;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .log-severity-bar {
+      width: 3px;
+      border-radius: 2px;
+      flex-shrink: 0;
+      align-self: stretch;
+    }
+
+    .log-severity-bar.info {
+      background-color: var(--text-muted);
+    }
+    .log-severity-bar.warning {
+      background-color: var(--orange-400);
+    }
+    .log-severity-bar.critical {
+      background-color: var(--red-500);
+    }
+
+    .log-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .log-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .log-timestamp {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .log-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .log-badge.warning {
+      background-color: rgba(255, 122, 48, 0.15);
+      border: 1px solid var(--orange-400);
+      color: var(--orange-300);
+    }
+
+    .log-badge.critical {
+      background-color: var(--red-bg);
+      border: 1px solid var(--red-500);
+      color: var(--red-300);
+    }
+
+    .log-message {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: var(--text-primary);
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    .log-message strong {
+      font-weight: 600;
+    }
+    .log-message strong.highlight-orange {
+      color: var(--orange-400);
+    }
+    .log-message strong.highlight-red {
+      color: var(--red-300);
+    }
+
+    /* ==========================================================================
+       UTILITIES & ICONS
+       ========================================================================== */
+    .lucide {
+      stroke-width: 2;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <i data-lucide="flame" style="width: 18px; height: 18px; color: var(--orange-400);"></i>
+      <span class="brand-title">THERMALOS</span>
+      <div class="brand-separator"></div>
+      <span class="brand-sub">URBAN MICRO-CLIMATE OS</span>
+    </div>
+
+    <div class="topbar-center">
+      <div class="api-badge">
+        <i data-lucide="zap" style="width: 11px; height: 11px;"></i>
+        FORTYGUARD API
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <!-- Live Indicator -->
+      <div class="live-status">
+        <div class="pulse-dot-container">
+          <div class="pulse-ring"></div>
+          <div class="pulse-dot"></div>
+        </div>
+        <span class="live-text">LIVE</span>
+        <span class="latency-text">(1.5S)</span>
+      </div>
+
+      <!-- City Selector -->
+      <div class="city-select-wrapper">
+        <select id="city-selector" class="city-select">
+          <option value="Phoenix, AZ" selected>Phoenix, AZ</option>
+          <option value="Houston, TX">Houston, TX</option>
+          <option value="Las Vegas, NV">Las Vegas, NV</option>
+          <option value="Dallas, TX">Dallas, TX</option>
+        </select>
+        <div class="city-select-arrow">
+          <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>
+        </div>
+      </div>
+
+      <!-- Theme Toggle Button -->
+      <button id="theme-toggle" class="theme-toggle-btn" title="Toggle Light/Dark Theme">
+        <i id="theme-icon" data-lucide="sun" style="width: 16px; height: 16px;"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN DASHBOARD -->
+  <main class="dashboard-container">
+    
+    <!-- KPI ROW -->
+    <section class="kpi-row">
+      <!-- Card 1: Surface Temp -->
+      <div id="card-surface-temp" class="kpi-card">
+        <div class="kpi-header">
+          <span class="text-label">SURFACE TEMP</span>
+          <i data-lucide="thermometer" style="width: 15px; height: 15px; color: var(--text-muted);"></i>
+        </div>
+        <div class="kpi-body">
+          <span id="kpi-temp-val" class="text-display">104.2</span>
+          <span class="kpi-unit">°F</span>
+        </div>
+        <div class="kpi-footer">
+          <span id="kpi-temp-badge" class="badge badge-orange">HIGH</span>
+        </div>
+      </div>
+
+      <!-- Card 2: Risk Matrix -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="text-label">RISK MATRIX</span>
+          <i data-lucide="shield-alert" style="width: 15px; height: 15px; color: var(--text-muted);"></i>
+        </div>
+        <div class="kpi-body">
+          <span id="kpi-risk-val" class="text-display" style="font-size: 32px; color: var(--orange-500);">HIGH</span>
+        </div>
+        <div class="kpi-footer">
+          <span class="text-label" style="font-family: 'JetBrains Mono', monospace; color: var(--text-muted);">Crit Floor: 105°F</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Resolution -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="text-label">RESOLUTION</span>
+          <i data-lucide="radio" style="width: 15px; height: 15px; color: var(--text-muted);"></i>
+        </div>
+        <div class="kpi-body">
+          <span class="text-display">10mi²</span>
+        </div>
+        <div class="kpi-footer">
+          <i data-lucide="disc" style="width: 11px; height: 11px; color: var(--text-muted);"></i>
+          <span class="text-label">2m above ground</span>
+        </div>
+      </div>
+
+      <!-- Card 4: Quota Remaining -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="text-label">QUOTA REMAINING</span>
+          <i data-lucide="cpu" style="width: 15px; height: 15px; color: var(--text-muted);"></i>
+        </div>
+        <div class="kpi-body">
+          <span class="text-display" style="color: var(--green-500);">999,999</span>
+        </div>
+        <div class="kpi-footer">
+          <span class="badge badge-green">Enterprise Active</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- WORKSPACE ROW (Chart + Event Log) -->
+    <section class="workspace-row">
+      
+      <!-- Chart Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-header-left">
+            <i data-lucide="activity" style="width: 15px; height: 15px; color: var(--orange-400);"></i>
+            <span id="chart-panel-title" class="panel-title">TELEMETRY STREAM • PHOENIX, AZ</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 5px; font-family: 'JetBrains Mono'; font-size: 11px; color: var(--red-300);">
+              <span style="width: 8px; height: 2px; background: var(--red-500); display: inline-block;"></span>
+              CRITICAL: 105°F
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px; font-family: 'JetBrains Mono'; font-size: 11px; color: var(--orange-400);">
+              <span style="width: 8px; height: 2px; background: var(--orange-400); display: inline-block;"></span>
+              SURFACE TEMP
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-panel-body">
+          <div id="chart-container"></div>
+          
+          <!-- Critical threshold overlay tag -->
+          <div id="critical-overlay" class="critical-threshold-overlay">
+            <div class="critical-threshold-tag">
+              <div class="critical-dot"></div>
+              CRITICAL 105°F
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Status Bar -->
+        <div class="status-bar">
+          <div class="status-bar-left">
+            <div class="pulse-dot" style="width: 6px; height: 6px; background-color: var(--green-500);"></div>
+            <span>Sampling: 1500ms</span>
+          </div>
+          <div class="status-bar-right">
+            <i data-lucide="sparkles" style="width: 12px; height: 12px; color: var(--orange-400);"></i>
+            <span>Frames Ingested: <strong id="frame-counter" style="color: var(--text-primary);">20</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agent Event Log Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-header-left">
+            <i data-lucide="terminal" style="width: 15px; height: 15px; color: var(--orange-400);"></i>
+            <span class="panel-title">AGENT EVENT LOG</span>
+          </div>
+          <div class="api-badge" style="padding: 2px 8px; font-size: 9px;">
+            LIVE FEED
+          </div>
+        </div>
+
+        <div id="event-log-list" class="log-panel-body">
+          <!-- Entries will be dynamically prepended via JS with GSAP motion -->
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ==========================================================================
+       APPLICATION LOGIC & ANIMATIONS
+       ========================================================================== -->
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Check reduced motion preference
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* --------------------------------------------------------------------------
+       STATE & NOISE GENERATOR
+       -------------------------------------------------------------------------- */
+    let currentCity = "Phoenix, AZ";
+    let frameCount = 20;
+    let phase = 0;
+
+    function nextTemp() {
+      phase += 0.18 + (Math.random() - 0.5) * 0.06;
+      const base = 103;
+      const wave = Math.sin(phase) * 9;
+      const noise = (Math.random() - 0.5) * 3;
+      return Math.round((base + wave + noise) * 10) / 10;
+    }
+
+    // Format epoch second to hh:mm:ss AM/PM
+    function formatTimestamp(epochSec) {
+      const d = new Date(epochSec * 1000);
+      return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    }
+
+    /* --------------------------------------------------------------------------
+       INITIALIZE DATA ARRAYS (20 Points)
+       -------------------------------------------------------------------------- */
+    const now = Math.floor(Date.now() / 1000);
+    const timestamps = [];
+    const temps = [];
+
+    for (let i = 19; i >= 0; i--) {
+      timestamps.push(now - i * 1.5);
+      temps.push(nextTemp());
+    }
+
+    /* --------------------------------------------------------------------------
+       THEME MANAGEMENT
+       -------------------------------------------------------------------------- */
+    const htmlEl = document.documentElement;
+    const themeBtn = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+
+    function getThemeColor(varName) {
+      return getComputedStyle(htmlEl).getPropertyValue(varName).trim();
+    }
+
+    function toggleTheme() {
+      const currentTheme = htmlEl.getAttribute('data-theme') || 'dark';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      htmlEl.setAttribute('data-theme', newTheme);
+      
+      themeIcon.setAttribute('data-lucide', newTheme === 'dark' ? 'sun' : 'moon');
+      lucide.createIcons();
+
+      // Rebuild chart to refresh colors
+      setTimeout(initOrUpdateChart, 50);
+    }
+
+    themeBtn.addEventListener('click', toggleTheme);
+
+    /* --------------------------------------------------------------------------
+       uPlot TRADING CHART INITIALIZATION
+       -------------------------------------------------------------------------- */
+    const chartContainer = document.getElementById('chart-container');
+    const criticalOverlay = document.getElementById('critical-overlay');
+    let uplot = null;
+
+    function getUPlotOpts() {
+      const w = chartContainer.clientWidth || 600;
+      const h = chartContainer.clientHeight || 280;
+
+      const orangeStroke = getThemeColor('--orange-400') || "#FF7A30";
+      const textMuted = getThemeColor('--text-muted') || "#4E5668";
+      const borderSubtle = getThemeColor('--border-subtle') || "#232830";
+
+      return {
+        width: w,
+        height: h,
+        cursor: {
+          show: true,
+          sync: { key: "thermos" },
+          drag: { x: false, y: false },
+          focus: { prox: 16 },
+        },
+        legend: { show: false },
+        scales: {
+          x: { time: false },
+          y: { range: [88, 125] }
+        },
+        axes: [
+          {
+            stroke: textMuted,
+            grid: { stroke: borderSubtle, width: 1 },
+            ticks: { stroke: borderSubtle },
+            font: "11px JetBrains Mono",
+            values: (u, vals) => vals.map(v => formatTimestamp(v)),
+            gap: 6,
+          },
+          {
+            stroke: textMuted,
+            grid: { stroke: borderSubtle, width: 1, dash: [4, 4] },
+            ticks: { stroke: "transparent" },
+            font: "11px JetBrains Mono",
+            values: (u, vals) => vals.map(v => Math.round(v) + "°"),
+            gap: 8,
+            size: 42,
+          }
+        ],
+        series: [
+          {},
+          {
+            stroke: orangeStroke,
+            width: 2.5,
+            fill: "rgba(242,100,25,0.12)",
+            points: { show: false },
+            smooth: true,
+          }
+        ],
+      };
+    }
+
+    function updateCriticalLinePosition() {
+      if (!uplot) return;
+      // y=105 in uPlot pixel coordinates
+      const yVal = 105;
+      const topPos = uplot.valToPos(yVal, 'y', true);
+      criticalOverlay.style.top = `${topPos}px`;
+    }
+
+    function initOrUpdateChart() {
+      if (uplot) {
+        uplot.destroy();
+      }
+      const opts = getUPlotOpts();
+      uplot = new uPlot(opts, [timestamps, temps], chartContainer);
+      updateCriticalLinePosition();
+    }
+
+    // Responsive chart resize handler
+    const resizeObserver = new ResizeObserver(() => {
+      if (chartContainer.clientWidth > 0 && chartContainer.clientHeight > 0) {
+        initOrUpdateChart();
+      }
+    });
+    resizeObserver.observe(chartContainer);
+
+    /* --------------------------------------------------------------------------
+       EVENT LOG GENERATOR & GSAP ANIMATIONS
+       -------------------------------------------------------------------------- */
+    const logList = document.getElementById('event-log-list');
+
+    function createEntryElement(event) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+
+      let severityClass = 'info';
+      let badgeHtml = '';
+      let formattedMsg = event.message;
+
+      if (event.level === 'critical') {
+        severityClass = 'critical';
+        badgeHtml = `
+          <span class="log-badge critical">
+            <i data-lucide="alert-circle" style="width: 10px; height: 10px;"></i>
+            CRITICAL BREACH
+          </span>
+        `;
+        formattedMsg = formattedMsg.replace(currentCity, `<strong class="highlight-red">${currentCity}</strong>`);
+      } else if (event.level === 'warning') {
+        severityClass = 'warning';
+        badgeHtml = `
+          <span class="log-badge warning">
+            <i data-lucide="alert-triangle" style="width: 10px; height: 10px;"></i>
+            HIGH HEAT ELEVATION
+          </span>
+        `;
+        formattedMsg = formattedMsg.replace(currentCity, `<strong class="highlight-orange">${currentCity}</strong>`);
+      } else {
+        formattedMsg = formattedMsg.replace(currentCity, `<strong>${currentCity}</strong>`);
+      }
+
+      if (event.temp) {
+        formattedMsg = formattedMsg.replace(`${event.temp}°F`, `<strong class="${event.level === 'critical' ? 'highlight-red' : 'highlight-orange'}">${event.temp}°F</strong>`);
+      }
+
+      entry.innerHTML = `
+        <div class="log-severity-bar ${severityClass}"></div>
+        <div class="log-content">
+          <div class="log-meta">
+            <span class="log-timestamp">${event.time}</span>
+            ${badgeHtml}
+          </div>
+          <div class="log-message">${formattedMsg}</div>
+        </div>
+      `;
+
+      return entry;
+    }
+
+    function addLogEntry(event) {
+      const el = createEntryElement(event);
+      logList.insertBefore(el, logList.firstChild);
+      lucide.createIcons({ root: el });
+
+      if (!prefersReducedMotion) {
+        gsap.from(el, {
+          y: -20,
+          opacity: 0,
+          duration: 0.35,
+          ease: "power2.out"
+        });
+      }
+
+      // Max 12 entries
+      if (logList.children.length > 12) {
+        const last = logList.lastChild;
+        if (!prefersReducedMotion) {
+          gsap.to(last, {
+            opacity: 0,
+            height: 0,
+            marginBottom: 0,
+            duration: 0.25,
+            onComplete: () => last.remove()
+          });
+        } else {
+          last.remove();
+        }
+      }
+    }
+
+    /* --------------------------------------------------------------------------
+       KPI UPDATE ENGINE
+       -------------------------------------------------------------------------- */
+    const tempValEl = document.getElementById('kpi-temp-val');
+    const tempBadgeEl = document.getElementById('kpi-temp-badge');
+    const riskValEl = document.getElementById('kpi-risk-val');
+    const surfaceTempCard = document.getElementById('card-surface-temp');
+    const frameCounterEl = document.getElementById('frame-counter');
+
+    function updateKPIs(temp) {
+      // 1. Surface Temp Hero
+      tempValEl.textContent = temp.toFixed(1);
+      if (!prefersReducedMotion) {
+        gsap.from(tempValEl, { y: 8, opacity: 0, duration: 0.2, ease: "back.out(1.2)" });
+      }
+
+      // Severity levels
+      let isCritical = temp >= 108;
+      let isHigh = temp >= 100 && temp < 108;
+
+      if (isCritical) {
+        tempBadgeEl.className = 'badge badge-red';
+        tempBadgeEl.textContent = 'CRITICAL';
+        riskValEl.textContent = 'CRITICAL';
+        riskValEl.style.color = 'var(--red-500)';
+        surfaceTempCard.classList.add('critical-state');
+
+        if (!prefersReducedMotion) {
+          gsap.to(surfaceTempCard, {
+            boxShadow: "0 0 0 1.5px var(--orange-500), 0 0 28px rgba(242,100,25,0.3)",
+            duration: 0.3
+          });
+        }
+      } else if (isHigh) {
+        tempBadgeEl.className = 'badge badge-orange';
+        tempBadgeEl.textContent = 'HIGH';
+        riskValEl.textContent = 'HIGH';
+        riskValEl.style.color = 'var(--orange-500)';
+        surfaceTempCard.classList.remove('critical-state');
+
+        if (!prefersReducedMotion) {
+          gsap.to(surfaceTempCard, {
+            boxShadow: "var(--shadow-card)",
+            duration: 0.3
+          });
+        }
+      } else {
+        tempBadgeEl.className = 'badge badge-green';
+        tempBadgeEl.textContent = 'NORMAL';
+        riskValEl.textContent = 'MODERATE';
+        riskValEl.style.color = 'var(--green-500)';
+        surfaceTempCard.classList.remove('critical-state');
+
+        if (!prefersReducedMotion) {
+          gsap.to(surfaceTempCard, {
+            boxShadow: "var(--shadow-card)",
+            duration: 0.3
+          });
+        }
+      }
+
+      // Frame counter
+      frameCount++;
+      frameCounterEl.textContent = frameCount;
+    }
+
+    /* --------------------------------------------------------------------------
+       CITY SWITCHING
+       -------------------------------------------------------------------------- */
+    const citySelector = document.getElementById('city-selector');
+    const chartPanelTitle = document.getElementById('chart-panel-title');
+
+    citySelector.addEventListener('change', (e) => {
+      currentCity = e.target.value;
+      chartPanelTitle.textContent = `TELEMETRY STREAM • ${currentCity.toUpperCase()}`;
+
+      addLogEntry({
+        time: formatTimestamp(Math.floor(Date.now() / 1000)),
+        level: 'info',
+        message: `Spatial target switched to ${currentCity}. Re-indexing micro-climate sensor array.`
+      });
+    });
+
+    /* --------------------------------------------------------------------------
+       POLLING & REAL-TIME STREAM LOOP (1500ms)
+       -------------------------------------------------------------------------- */
+    function tick() {
+      const newTimestamp = Math.floor(Date.now() / 1000);
+      const newTemp = nextTemp();
+
+      // Update data arrays
+      timestamps.push(newTimestamp);
+      timestamps.shift();
+
+      temps.push(newTemp);
+      temps.shift();
+
+      // Redraw uPlot
+      if (uplot) {
+        uplot.setData([timestamps, temps]);
+        updateCriticalLinePosition();
+      }
+
+      // Update KPIs
+      updateKPIs(newTemp);
+
+      // Evaluate Event Logging
+      const timeStr = formatTimestamp(newTimestamp);
+      if (newTemp >= 108) {
+        addLogEntry({
+          time: timeStr,
+          level: 'critical',
+          temp: newTemp,
+          message: `HEAT SPIKE DETECTED: Threshold critically exceeded for ${currentCity} (${newTemp}°F).`
+        });
+      } else if (newTemp >= 100) {
+        // Log warnings periodically (avoid flood, every ~3s)
+        if (Math.random() > 0.45) {
+          addLogEntry({
+            time: timeStr,
+            level: 'warning',
+            temp: newTemp,
+            message: `HIGH HEAT ELEVATION: ${currentCity} at ${newTemp}°F. Monitoring thermal plume.`
+          });
+        }
+      } else {
+        if (Math.random() > 0.7) {
+          addLogEntry({
+            time: timeStr,
+            level: 'info',
+            temp: newTemp,
+            message: `Telemetry nominal. ${currentCity} reading within safe parameters.`
+          });
+        }
+      }
+    }
+
+    // Seed initial event logs
+    const initTimes = [now - 12, now - 8, now - 3];
+    addLogEntry({
+      time: formatTimestamp(initTimes[0]),
+      level: 'info',
+      message: `ThermalOS kernel v26.4 initialized. Telemetry stream locked on FortyGuard endpoint.`
+    });
+    addLogEntry({
+      time: formatTimestamp(initTimes[1]),
+      level: 'warning',
+      temp: 104.2,
+      message: `HIGH HEAT ELEVATION: ${currentCity} at 104.2°F. Monitoring thermal plume.`
+    });
+    addLogEntry({
+      time: formatTimestamp(initTimes[2]),
+      level: 'critical',
+      temp: 109.8,
+      message: `HEAT SPIKE DETECTED: Threshold critically exceeded for ${currentCity} (109.8°F).`
+    });
+
+    // Start 1500ms ticker
+    setInterval(tick, 1500);
+
+    /* --------------------------------------------------------------------------
+       PAGE LOAD STAGGER ANIMATIONS (GSAP)
+       -------------------------------------------------------------------------- */
+    window.addEventListener('DOMContentLoaded', () => {
+      if (!prefersReducedMotion) {
+        gsap.from(".kpi-card", {
+          y: 16,
+          opacity: 0,
+          duration: 0.4,
+          stagger: 0.07,
+          ease: "power2.out"
+        });
+        gsap.from(".panel", {
+          y: 20,
+          opacity: 0,
+          duration: 0.5,
+          delay: 0.2,
+          stagger: 0.1,
+          ease: "power2.out"
+        });
+      }
+    });
+  </script>
+</body>
+</html>
