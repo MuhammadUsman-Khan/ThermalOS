@@ -265,7 +265,7 @@ export default function App() {
       timestamp: getPastTimeString(12),
       type: "nominal",
       badge: "NOMINAL",
-      text: "FortyGuard micro-climate grid stream active. Normal radiative heat profile.",
+      text: "Mock Telemetry micro-climate grid stream active. Normal radiative heat profile.",
     },
     {
       id: "log-3",
@@ -726,9 +726,9 @@ export default function App() {
                 <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white leading-none">
                   ThermalOS
                 </h1>
-                <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 tracking-widest uppercase flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                  FORTYGUARD API
+                <span className="px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-[10px] font-bold text-amber-600 dark:text-amber-400 tracking-widest uppercase flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div>
+                  MOCK DATA
                 </span>
               </div>
               <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] mt-1">
@@ -1243,7 +1243,7 @@ export default function App() {
                 </span>
               </div>
               <span className="text-[11px] text-gray-500 dark:text-zinc-500">
-                FortyGuard Ingest ({pollCount} frames)
+                Mock Telemetry ({pollCount} frames)
               </span>
             </div>
           </div>
@@ -1361,6 +1361,9 @@ export default function App() {
                           1. ASHRAE 55 Thermal Comfort Standard
                         </span>
                       </div>
+                      <p className="text-xs opacity-60 font-mono text-slate-500 dark:text-zinc-400 pl-6">
+                        Ref: ASHRAE 55-2023 §5.3 — Operative Temperature Limits
+                      </p>
                       <p className="text-xs leading-relaxed font-mono text-slate-700 dark:text-zinc-300 pl-6">
                         {auditReport.ashrae_compliance_status}
                       </p>
@@ -1374,6 +1377,9 @@ export default function App() {
                           2. IECC Building Envelope & Insulation Warning
                         </span>
                       </div>
+                      <p className="text-xs opacity-60 font-mono text-slate-500 dark:text-zinc-400 pl-6">
+                        Ref: IECC 2021 §C402 — Building Envelope Requirements
+                      </p>
                       <p className="text-xs leading-relaxed font-mono text-slate-700 dark:text-zinc-300 pl-6">
                         {auditReport.iecc_envelope_warning}
                       </p>
@@ -1387,6 +1393,9 @@ export default function App() {
                           3. Recommended HVAC Mitigation Plan
                         </span>
                       </div>
+                      <p className="text-xs opacity-60 font-mono text-slate-500 dark:text-zinc-400 pl-6">
+                        Ref: ASHRAE 90.1-2019 §6.5 — HVAC System Requirements
+                      </p>
                       <p className="text-xs leading-relaxed font-mono text-slate-700 dark:text-zinc-300 pl-6">
                         {auditReport.recommended_hvac_action}
                       </p>
@@ -1508,8 +1517,10 @@ export default function App() {
                           HVAC Pre-Cooling Action Plan
                         </span>
                       </div>
-                      <pre className="font-mono text-xs leading-relaxed p-3.5 rounded-xl border border-cyan-500/20 bg-white/70 dark:bg-black/60 text-slate-800 dark:text-zinc-200 overflow-x-auto">
-                        {infraData.hvac_action_plan}
+                      <pre className="font-mono text-xs leading-relaxed p-3.5 rounded-xl border border-cyan-500/20 bg-white/70 dark:bg-black/60 text-slate-800 dark:text-zinc-200 overflow-x-auto whitespace-pre-wrap">
+                        {currentTemp != null
+                          ? `Current ambient ${Math.round(currentTemp)}°F is ${Math.round(currentTemp - 68)}°F above target. Initiating Stage 2 pre-cooling sequence at 03:00 AM to reach 68°F before 2 PM peak load window.`
+                          : (infraData.hvac_action_plan || "Current ambient 96°F is 28°F above target. Initiating Stage 2 pre-cooling sequence at 03:00 AM to reach 68°F before 2 PM peak load window.")}
                       </pre>
                     </div>
                   </div>
@@ -1575,7 +1586,7 @@ export default function App() {
                 {isCivicLoading ? (
                   <div className="py-12 flex flex-col items-center justify-center gap-3 font-mono text-xs text-gray-500 dark:text-zinc-400">
                     <RefreshCw className="w-8 h-8 animate-spin text-rose-500" />
-                    <span>Fusing Open-Meteo humidity with FortyGuard thermal models...</span>
+                    <span>Fusing Open-Meteo humidity with Mock Telemetry models...</span>
                   </div>
                 ) : civicError ? (
                   <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 font-mono text-xs space-y-2">
@@ -1623,7 +1634,7 @@ export default function App() {
                           Emergency Civic & Field Dispatch Protocol
                         </span>
                       </div>
-                      <pre className="font-mono text-xs leading-relaxed p-3.5 rounded-xl border border-rose-500/20 bg-white/70 dark:bg-black/60 text-slate-800 dark:text-zinc-200 overflow-x-auto">
+                      <pre className="font-mono text-xs leading-relaxed p-3.5 rounded-xl border border-rose-500/20 bg-white/70 dark:bg-black/60 text-slate-800 dark:text-zinc-200 overflow-y-auto max-h-[120px] whitespace-pre-wrap">
                         {civicData.emergency_protocol}
                       </pre>
                     </div>
