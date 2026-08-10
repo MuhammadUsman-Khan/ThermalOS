@@ -1,0 +1,122 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 1647 >>
+stream
+BT
+/F1 14 Tf
+50 740 Td
+(2021 International Energy Conservation Code (IECC) - Commercial Provisions) Tj
+ET
+BT
+/F1 11 Tf
+50 700 Td
+(Section C402 - Building Envelope Thermal Performance) Tj
+ET
+BT
+/F1 9 Tf
+60 682 Td
+(Commercial building thermal envelopes in high cooling degree-day climate zones) Tj
+ET
+BT
+/F1 9 Tf
+60 668 Td
+((Climate Zones 1, 2, and 3) must meet stringent thermal resistance standards.) Tj
+ET
+BT
+/F1 9 Tf
+60 648 Td
+(Continuous insulation (ci) is mandatory across above-grade opaque mass walls) Tj
+ET
+BT
+/F1 9 Tf
+60 634 Td
+(and steel-framed wall assemblies to prevent conductive heat flux during peak) Tj
+ET
+BT
+/F1 9 Tf
+60 620 Td
+(solar radiation.) Tj
+ET
+BT
+/F1 11 Tf
+50 590 Td
+(Section C402.1.4 - Fenestration and Solar Heat Gain Coefficient) Tj
+ET
+BT
+/F1 9 Tf
+60 572 Td
+(Vertical fenestration and glazing assemblies must maintain maximum Solar Heat) Tj
+ET
+BT
+/F1 9 Tf
+60 558 Td
+(Gain Coefficients (SHGC <= 0.25) and low U-factors to minimize radiant heat) Tj
+ET
+BT
+/F1 9 Tf
+60 544 Td
+(ingress.) Tj
+ET
+BT
+/F1 9 Tf
+60 524 Td
+(Mitigation of thermal bridging across building envelope joints is required to) Tj
+ET
+BT
+/F1 9 Tf
+60 510 Td
+(eliminate localized structural hotspots.) Tj
+ET
+BT
+/F1 11 Tf
+50 480 Td
+(Section C403 - Mechanical System Modulation & Economizers) Tj
+ET
+BT
+/F1 9 Tf
+60 462 Td
+(HVAC equipment must include automated air and water economizers to leverage) Tj
+ET
+BT
+/F1 9 Tf
+60 448 Td
+(night-time ambient cooling.) Tj
+ET
+BT
+/F1 9 Tf
+60 428 Td
+(Demand-responsive temperature controls must be capable of automatically) Tj
+ET
+BT
+/F1 9 Tf
+60 414 Td
+(resetting cooling setpoints during peak urban thermal emergencies.) Tj
+ET
+
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001940 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2010
+%%EOF

@@ -1,9 +1,12 @@
 import os
+import logging
 from dotenv import load_dotenv
 import chromadb
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 load_dotenv()
 
@@ -27,30 +30,95 @@ class ComplianceReport(BaseModel):
 _collection = None
 
 
+def _resolve_pdf_path(path: str) -> str:
+    """Helper to locate PDF files whether running from workspace root or backend dir."""
+    if os.path.exists(path):
+        return path
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    candidate1 = os.path.join(script_dir, "data", os.path.basename(path))
+    if os.path.exists(candidate1):
+        return candidate1
+    candidate2 = os.path.join(script_dir, path)
+    if os.path.exists(candidate2):
+        return candidate2
+    return path
+
+
 def initialize_vector_db():
     """
-    Initializes a local ChromaDB client and adds ASHRAE 55 & IECC building code standards.
+    Initializes a local ChromaDB client and chunks/embeds ASHRAE 55 and IECC 2021 PDF documents.
     """
     global _collection
     client = chromadb.Client()
     
     collection = client.get_or_create_collection(name="energy_codes")
     
-    if collection.count() == 0:
+    # Idempotency Guard: If collection already seeded, skip
+    if collection.count() > 0:
+        print("ChromaDB already seeded. Skipping.")
+        _collection = collection
+        return _collection
+
+    ashrae_pdf_path = _resolve_pdf_path("backend/data/ashrae_55.pdf")
+    iecc_pdf_path = _resolve_pdf_path("backend/data/iecc_2021.pdf")
+
+    documents = []
+    ids = []
+    metadatas = []
+
+    # Check if both PDF files exist
+    if os.path.exists(ashrae_pdf_path) and os.path.exists(iecc_pdf_path):
+        try:
+            splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+
+            # 1. Load & chunk ASHRAE 55
+            ashrae_loader = PyPDFLoader(ashrae_pdf_path)
+            ashrae_docs = ashrae_loader.load()
+            ashrae_chunks = splitter.split_documents(ashrae_docs)
+
+            for i, chunk in enumerate(ashrae_chunks):
+                documents.append(chunk.page_content)
+                ids.append(f"ashrae_chunk_{i}")
+                metadatas.append({"source": "ASHRAE-55-2023"})
+
+            # 2. Load & chunk IECC 2021
+            iecc_loader = PyPDFLoader(iecc_pdf_path)
+            iecc_docs = iecc_loader.load()
+            iecc_chunks = splitter.split_documents(iecc_docs)
+
+            for i, chunk in enumerate(iecc_chunks):
+                documents.append(chunk.page_content)
+                ids.append(f"iecc_chunk_{i}")
+                metadatas.append({"source": "IECC-2021"})
+
+            print(f"Loaded and split PDFs successfully: {len(ashrae_chunks)} ASHRAE chunks, {len(iecc_chunks)} IECC chunks.")
+        except Exception as e:
+            print(f"WARNING: Error parsing PDF documents: {e}. Falling back to default baseline chunks.")
+            documents = []
+            ids = []
+            metadatas = []
+
+    # Graceful Fallback if PDFs missing or error occurred
+    if not documents:
+        if not (os.path.exists(ashrae_pdf_path) and os.path.exists(iecc_pdf_path)):
+            print(f"WARNING: PDF files not found at '{ashrae_pdf_path}' or '{iecc_pdf_path}'. Falling back to default strings.")
+        
         documents = [
             "ASHRAE 55 Standard: The acceptable summer operative temperature range for building occupants wearing 0.5 clo is 73°F to 79°F. Temperatures above 79°F require mechanical pre-cooling.",
             "IECC Building Envelope Code: In extreme heat climate zones, continuous insulation (ci) and strict U-factor compliance are mandatory to prevent thermal bridging during heat spikes."
         ]
-        ids = ["chunk_ashrae_55", "chunk_iecc_envelope"]
+        ids = ["ashrae_chunk_fallback", "iecc_chunk_fallback"]
         metadatas = [
-            {"source": "ASHRAE-55-2023", "topic": "Thermal Comfort"},
-            {"source": "IECC-2024", "topic": "Building Envelope & Insulation"}
+            {"source": "ASHRAE-55-2023"},
+            {"source": "IECC-2021"}
         ]
-        collection.add(
-            documents=documents,
-            ids=ids,
-            metadatas=metadatas
-        )
+
+    # Add all chunks to ChromaDB
+    collection.add(
+        documents=documents,
+        ids=ids,
+        metadatas=metadatas
+    )
     
     _collection = collection
     return _collection
