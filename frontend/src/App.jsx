@@ -472,8 +472,8 @@ export default function App() {
             {/* Dynamic Live Status Indicator Pill */}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-50/70 dark:bg-[#0B1015] font-mono text-xs shadow-inner">
               <Activity className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-mono">
-                LIVE ({pollTimer}s)
+              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-mono tabular-nums">
+                LIVE ({uptime})
               </span>
             </div>
 
