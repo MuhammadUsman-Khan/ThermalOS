@@ -410,7 +410,7 @@ export default function App() {
     };
 
     fetchHeatIntelligence();
-    const intervalId = setInterval(fetchHeatIntelligence, 1500);
+    const intervalId = setInterval(fetchHeatIntelligence, 1000);
 
     return () => {
       isMounted = false;
@@ -901,7 +901,7 @@ export default function App() {
             <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-between font-mono text-xs text-gray-500 dark:text-zinc-400">
               <div className="flex items-center gap-2">
                 <Activity className="w-3.5 h-3.5 text-[#FF6B2B]" />
-                <span>Sampling: 1500ms</span>
+                <span>Sampling: 1000ms</span>
               </div>
               <div className="flex items-center gap-2">
                 <Layers className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />

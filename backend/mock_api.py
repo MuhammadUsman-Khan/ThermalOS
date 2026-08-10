@@ -19,20 +19,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Realistic micro-climate baseline temperatures and bounds per city
-CITY_BASELINES = {
-    "Phoenix, AZ": {"base": 96.0, "min": 91.0, "max": 107.0},
-    "Houston, TX": {"base": 88.0, "min": 82.0, "max": 96.0},
-    "Las Vegas, NV": {"base": 92.0, "min": 86.0, "max": 102.0},
-    "Dallas, TX": {"base": 87.0, "min": 81.0, "max": 95.0},
+# City temperature configuration: normal active range and rare spike ceiling
+CITY_CONFIGS = {
+    "Phoenix, AZ": {"min": 93, "max": 103, "spike_chance": 0.05, "spike_val": 106},
+    "Houston, TX": {"min": 85, "max": 95, "spike_chance": 0.03, "spike_val": 101},
+    "Las Vegas, NV": {"min": 90, "max": 101, "spike_chance": 0.04, "spike_val": 105},
+    "Dallas, TX": {"min": 84, "max": 94, "spike_chance": 0.03, "spike_val": 100},
 }
 
-# In-memory smooth temperature tracking
-CITY_CURRENT_TEMPS = {
-    "Phoenix, AZ": 96.0,
-    "Houston, TX": 88.0,
-    "Las Vegas, NV": 92.0,
-    "Dallas, TX": 87.0,
+# In-memory last temperature tracking per city
+LAST_CITY_TEMPS = {
+    "Phoenix, AZ": 96,
+    "Houston, TX": 88,
+    "Las Vegas, NV": 93,
+    "Dallas, TX": 87,
 }
 
 
@@ -48,34 +48,41 @@ class AuditRequest(BaseModel):
 @app.post("/v1/heat-intelligence")
 async def get_heat_intelligence(request: HeatIntelligenceRequest):
     city = request.location
-    config = CITY_BASELINES.get(city, {"base": 90.0, "min": 80.0, "max": 105.0})
-    current = CITY_CURRENT_TEMPS.get(city, config["base"])
+    cfg = CITY_CONFIGS.get(
+        city,
+        {"min": 88, "max": 100, "spike_chance": 0.04, "spike_val": 105},
+    )
+    last_temp = LAST_CITY_TEMPS.get(city, 96)
 
-    # Natural smooth drift (-0.8 to +0.8 deg F per sample)
-    drift = random.uniform(-0.8, 0.8)
-    # Gentle mean-reversion toward base temperature
-    drift += (config["base"] - current) * 0.12
+    # 4-5% chance of an occasional transient heat spike
+    if random.random() < cfg["spike_chance"]:
+        new_temp = random.randint(105, cfg["spike_val"])
+    else:
+        # Guarantee a visible change of +/- 1 to 3 degrees each second
+        step_options = [-3, -2, -1, 1, 2, 3]
+        step = random.choice(step_options)
+        new_temp = last_temp + step
 
-    # Rare 5% microclimate transient heat plume
-    if random.random() < 0.05:
-        drift += random.uniform(1.5, 3.5)
+        # Keep strictly bounded in normal active range
+        if new_temp < cfg["min"]:
+            new_temp = cfg["min"] + random.randint(0, 2)
+        elif new_temp > cfg["max"]:
+            new_temp = cfg["max"] - random.randint(0, 2)
 
-    new_temp = round(max(config["min"], min(config["max"], current + drift)), 1)
-    CITY_CURRENT_TEMPS[city] = new_temp
-    temp_int = int(round(new_temp))
+    LAST_CITY_TEMPS[city] = new_temp
 
-    if temp_int >= 105:
+    if new_temp >= 105:
         risk_level = "extreme"
-    elif temp_int >= 100:
+    elif new_temp >= 100:
         risk_level = "high"
-    elif temp_int >= 92:
+    elif new_temp >= 92:
         risk_level = "elevated"
     else:
         risk_level = "nominal"
 
     return {
         "location": city,
-        "temperature_f": temp_int,
+        "temperature_f": new_temp,
         "risk_level": risk_level,
         "resolution": "10m²",
         "measured_at": "2m above ground",
@@ -86,12 +93,10 @@ async def get_heat_intelligence(request: HeatIntelligenceRequest):
 
 @app.post("/v1/agents/audit", response_model=ComplianceReport)
 async def audit_endpoint(request: AuditRequest):
-    # Default temperature to current reading or baseline
     if request.temperature_f is not None:
         temp_f = request.temperature_f
     else:
-        config = CITY_BASELINES.get(request.location, {"base": 96.0})
-        temp_f = int(round(config["base"]))
+        temp_f = LAST_CITY_TEMPS.get(request.location, 96)
 
     report = run_compliance_audit(
         city=request.location,
