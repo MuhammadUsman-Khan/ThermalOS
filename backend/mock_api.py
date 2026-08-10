@@ -149,7 +149,7 @@ async def civic_dispatch_endpoint(request: AgentRequest):
         wbgt_index=92.5,
         heat_stress_risk="EXTREME",
         civic_alert_dispatched=True,
-        emergency_protocol="Activate cooling centers and route automated Vapi.ai voice alerts to field managers.",
+        emergency_protocol="Activate cooling centers and dispatch automated high-priority email alerts to regional field managers via n8n orchestration.",
     )
 
 
