@@ -539,10 +539,12 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden transition-colors duration-300 flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white">
       
-      {/* Top Right Orange Glow */}
-      <div className="hidden dark:block fixed top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-orange-600/20 blur-[120px] pointer-events-none z-0" />
-      {/* Bottom Center Red Glow */}
-      <div className="hidden dark:block fixed bottom-[-10%] left-[20%] w-[800px] h-[500px] rounded-full bg-red-900/10 blur-[150px] pointer-events-none z-0" />
+      {/* Top Right Orange Glow (Dual-Theme) */}
+      <div className="fixed top-[-10%] right-[-5%] w-[650px] h-[650px] rounded-full bg-orange-400/15 dark:bg-orange-600/20 blur-[130px] pointer-events-none z-0" />
+      {/* Bottom Center Red-Amber Glow (Dual-Theme) */}
+      <div className="fixed bottom-[-10%] left-[15%] w-[850px] h-[550px] rounded-full bg-red-400/10 dark:bg-red-900/10 blur-[150px] pointer-events-none z-0" />
+      {/* Top Left Subtle Peach Aura for Light Theme */}
+      <div className="fixed top-[20%] left-[-5%] w-[500px] h-[500px] rounded-full bg-amber-300/10 dark:bg-amber-600/5 blur-[140px] pointer-events-none z-0" />
 
       {/* =========================================================================
           TOPBAR
