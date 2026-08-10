@@ -375,16 +375,15 @@ export default function App() {
           return updated;
         });
 
-        // Trigger log alerts when threshold breaches or heat elevation occurs
+        // Trigger log entries across all operational temperature tiers
         if (data.temperature_f >= 105 || data.risk_level === "extreme") {
-          const alertMessage = `CRITICAL HEAT SPIKE: Threshold breached for ${selectedCity} (${data.temperature_f}°F).`;
           setEventLogs((prevLogs) => [
             {
               id: `${Date.now()}-${Math.random()}`,
               timestamp,
               type: "extreme",
               badge: "CRITICAL BREACH",
-              text: alertMessage,
+              text: `CRITICAL HEAT SPIKE: Threshold breached for ${selectedCity} (${data.temperature_f}°F). Emergency protocol active.`,
             },
             ...prevLogs.slice(0, 15),
           ]);
@@ -395,8 +394,32 @@ export default function App() {
               id: `${Date.now()}-${Math.random()}`,
               timestamp,
               type: "high",
-              badge: "ELEVATED",
+              badge: "HIGH HEAT",
               text: `HIGH HEAT ELEVATION: ${selectedCity} at ${data.temperature_f}°F. Monitoring thermal plume.`,
+            },
+            ...prevLogs.slice(0, 15),
+          ]);
+          setTotalEventsCount((c) => c + 1);
+        } else if (data.temperature_f >= 92 || data.risk_level === "elevated") {
+          setEventLogs((prevLogs) => [
+            {
+              id: `${Date.now()}-${Math.random()}`,
+              timestamp,
+              type: "elevated",
+              badge: "ELEVATED",
+              text: `MODERATE BOUNDARY: ${selectedCity} telemetry at ${data.temperature_f}°F. Micro-climate grid stable.`,
+            },
+            ...prevLogs.slice(0, 15),
+          ]);
+          setTotalEventsCount((c) => c + 1);
+        } else {
+          setEventLogs((prevLogs) => [
+            {
+              id: `${Date.now()}-${Math.random()}`,
+              timestamp,
+              type: "nominal",
+              badge: "NOMINAL",
+              text: `NOMINAL AMBIENT: ${selectedCity} surface reading at ${data.temperature_f}°F within ASHRAE 55 comfort zone.`,
             },
             ...prevLogs.slice(0, 15),
           ]);
