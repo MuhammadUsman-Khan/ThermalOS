@@ -1509,6 +1509,17 @@ export default function App() {
                       </div>
                     </div>
 
+                    {/* Trigger Condition (visible only when fired) */}
+                    {infraData.grid_load_shift_active && infraData.trigger_reason && (
+                      <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/5 flex items-start gap-2 font-mono text-xs">
+                        <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Trigger Condition:</span>
+                          <span className="ml-2 text-slate-800 dark:text-zinc-200">{infraData.trigger_reason}</span>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Action Plan Code Box */}
                     <div className="p-4 rounded-xl border border-cyan-500/30 bg-cyan-500/5 space-y-2">
                       <div className="flex items-center gap-2">
