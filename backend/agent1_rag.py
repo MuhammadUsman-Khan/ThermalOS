@@ -21,6 +21,8 @@ except ImportError:
 
 load_dotenv()
 
+logger = logging.getLogger("thermalos.agent1")
+
 
 # Pydantic schema for structured output
 class ComplianceReport(BaseModel):
@@ -89,8 +91,8 @@ def initialize_vector_db():
         if os.path.exists(ashrae55_path):
             try:
                 loader = PyPDFLoader(ashrae55_path)
-                docs = loader.load()
-                chunks = splitter.split_documents(docs)
+                docs = loader.load()[:15]
+                chunks = splitter.split_documents(docs)[:20]
                 for i, chunk in enumerate(chunks):
                     documents.append(chunk.page_content)
                     ids.append(f"ashrae55_chunk_{i}")
@@ -105,8 +107,8 @@ def initialize_vector_db():
         if os.path.exists(iecc_path):
             try:
                 loader = PyPDFLoader(iecc_path)
-                docs = loader.load()
-                chunks = splitter.split_documents(docs)
+                docs = loader.load()[:15]
+                chunks = splitter.split_documents(docs)[:20]
                 for i, chunk in enumerate(chunks):
                     documents.append(chunk.page_content)
                     ids.append(f"iecc_chunk_{i}")
@@ -121,8 +123,8 @@ def initialize_vector_db():
         if os.path.exists(ashrae901_path):
             try:
                 loader = PyPDFLoader(ashrae901_path)
-                docs = loader.load()
-                chunks = splitter.split_documents(docs)
+                docs = loader.load()[:15]
+                chunks = splitter.split_documents(docs)[:20]
                 for i, chunk in enumerate(chunks):
                     documents.append(chunk.page_content)
                     ids.append(f"ashrae901_chunk_{i}")
@@ -167,6 +169,15 @@ def initialize_vector_db():
     return _collection
 
 
+def _clean_schema_for_gemini(schema_dict):
+    """Strips 'title' metadata from JSON schema to eliminate Gemini API schema conversion warnings."""
+    if isinstance(schema_dict, dict):
+        return {k: _clean_schema_for_gemini(v) for k, v in schema_dict.items() if k != "title"}
+    elif isinstance(schema_dict, list):
+        return [_clean_schema_for_gemini(item) for item in schema_dict]
+    return schema_dict
+
+
 def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
     """
     Executes the Agent 1 RAG pipeline:
@@ -187,7 +198,7 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
     
     # Resolve Gemini API Key from environment
     api_key = os.getenv("GEMINI_API_KEY")
-    
+
     if api_key and api_key != "insert_your_actual_key_here" and api_key != "mock_key":
         try:
             llm = ChatGoogleGenerativeAI(
@@ -195,9 +206,11 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
                 google_api_key=api_key,
                 temperature=0.2,
             )
-            
-            structured_llm = llm.with_structured_output(ComplianceReport)
-            
+
+            # Strip 'title' keys to prevent noisy schema parser warnings
+            clean_schema = _clean_schema_for_gemini(ComplianceReport.model_json_schema())
+            structured_llm = llm.with_structured_output(clean_schema)
+
             prompt = ChatPromptTemplate.from_messages([
                 (
                     "system",
@@ -211,17 +224,35 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
                     "Conduct energy and thermal comfort compliance audit for {city} currently registering {temp_f}°F."
                 )
             ])
-            
+
             chain = prompt | structured_llm
-            result: ComplianceReport = chain.invoke({
+            raw_result = chain.invoke({
                 "context": context_str,
                 "city": city,
                 "temp_f": temp_f
             })
+
+            if isinstance(raw_result, dict):
+                result = ComplianceReport(**raw_result)
+            elif isinstance(raw_result, ComplianceReport):
+                result = raw_result
+            else:
+                result = ComplianceReport.model_validate(raw_result)
+
+            logger.info("Agent 1: Gemini RAG inference succeeded for %s (%s°F).", city, temp_f)
             return result
         except Exception as e:
-            print(f"Gemini API invocation error: {e}. Falling back to deterministic code evaluation.")
-    
+            logger.warning(
+                "Agent 1: Gemini inference failed (%s). Falling back to DETERMINISTIC compliance engine.",
+                e,
+            )
+    else:
+        logger.warning(
+            "Agent 1: GEMINI_API_KEY not configured. Using DETERMINISTIC compliance engine for %s (%s°F).",
+            city,
+            temp_f,
+        )
+
     # Fallback rule evaluation strictly adhering to ASHRAE 55 and IECC chunks
     is_exceeded = temp_f > 79
     status = (
