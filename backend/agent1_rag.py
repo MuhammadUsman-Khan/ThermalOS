@@ -169,6 +169,15 @@ def initialize_vector_db():
     return _collection
 
 
+def _clean_schema_for_gemini(schema_dict):
+    """Strips 'title' metadata from JSON schema to eliminate Gemini API schema conversion warnings."""
+    if isinstance(schema_dict, dict):
+        return {k: _clean_schema_for_gemini(v) for k, v in schema_dict.items() if k != "title"}
+    elif isinstance(schema_dict, list):
+        return [_clean_schema_for_gemini(item) for item in schema_dict]
+    return schema_dict
+
+
 def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
     """
     Executes the Agent 1 RAG pipeline:
@@ -198,7 +207,9 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
                 temperature=0.2,
             )
 
-            structured_llm = llm.with_structured_output(ComplianceReport)
+            # Strip 'title' keys to prevent noisy schema parser warnings
+            clean_schema = _clean_schema_for_gemini(ComplianceReport.model_json_schema())
+            structured_llm = llm.with_structured_output(clean_schema)
 
             prompt = ChatPromptTemplate.from_messages([
                 (
@@ -215,11 +226,19 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
             ])
 
             chain = prompt | structured_llm
-            result: ComplianceReport = chain.invoke({
+            raw_result = chain.invoke({
                 "context": context_str,
                 "city": city,
                 "temp_f": temp_f
             })
+
+            if isinstance(raw_result, dict):
+                result = ComplianceReport(**raw_result)
+            elif isinstance(raw_result, ComplianceReport):
+                result = raw_result
+            else:
+                result = ComplianceReport.model_validate(raw_result)
+
             logger.info("Agent 1: Gemini RAG inference succeeded for %s (%s°F).", city, temp_f)
             return result
         except Exception as e:
