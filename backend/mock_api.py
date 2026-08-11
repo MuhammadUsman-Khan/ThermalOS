@@ -1,7 +1,13 @@
+import sys
+import os
 import time
 import random
 import logging
 from typing import Optional
+
+# Ensure backend directory is in python search path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -164,15 +170,13 @@ async def infrastructure_precool_endpoint(request: AgentRequest):
     )
 
 
+import agent3_dispatcher
+from agent3_dispatcher import evaluate_civic_dispatch, CivicDispatchReport
+
+
 @app.post("/v1/agents/civic", response_model=CivicDispatchReport)
 async def civic_dispatch_endpoint(request: AgentRequest):
-    return CivicDispatchReport(
-        city=request.city,
-        wbgt_index=92.5,
-        heat_stress_risk="EXTREME",
-        civic_alert_dispatched=True,
-        emergency_protocol="Activate cooling centers and dispatch automated high-priority email alerts to regional field managers via n8n orchestration.",
-    )
+    return evaluate_civic_dispatch(city=request.city, temp_f=request.temperature_f)
 
 
 if __name__ == "__main__":

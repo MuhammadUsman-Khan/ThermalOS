@@ -91,8 +91,8 @@ def initialize_vector_db():
         if os.path.exists(ashrae55_path):
             try:
                 loader = PyPDFLoader(ashrae55_path)
-                docs = loader.load()
-                chunks = splitter.split_documents(docs)
+                docs = loader.load()[:15]
+                chunks = splitter.split_documents(docs)[:20]
                 for i, chunk in enumerate(chunks):
                     documents.append(chunk.page_content)
                     ids.append(f"ashrae55_chunk_{i}")
@@ -107,8 +107,8 @@ def initialize_vector_db():
         if os.path.exists(iecc_path):
             try:
                 loader = PyPDFLoader(iecc_path)
-                docs = loader.load()
-                chunks = splitter.split_documents(docs)
+                docs = loader.load()[:15]
+                chunks = splitter.split_documents(docs)[:20]
                 for i, chunk in enumerate(chunks):
                     documents.append(chunk.page_content)
                     ids.append(f"iecc_chunk_{i}")
@@ -123,8 +123,8 @@ def initialize_vector_db():
         if os.path.exists(ashrae901_path):
             try:
                 loader = PyPDFLoader(ashrae901_path)
-                docs = loader.load()
-                chunks = splitter.split_documents(docs)
+                docs = loader.load()[:15]
+                chunks = splitter.split_documents(docs)[:20]
                 for i, chunk in enumerate(chunks):
                     documents.append(chunk.page_content)
                     ids.append(f"ashrae901_chunk_{i}")
