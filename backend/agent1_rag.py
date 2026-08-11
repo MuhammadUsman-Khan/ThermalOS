@@ -21,6 +21,8 @@ except ImportError:
 
 load_dotenv()
 
+logger = logging.getLogger("thermalos.agent1")
+
 
 # Pydantic schema for structured output
 class ComplianceReport(BaseModel):
@@ -187,7 +189,7 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
     
     # Resolve Gemini API Key from environment
     api_key = os.getenv("GEMINI_API_KEY")
-    
+
     if api_key and api_key != "insert_your_actual_key_here" and api_key != "mock_key":
         try:
             llm = ChatGoogleGenerativeAI(
@@ -195,9 +197,9 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
                 google_api_key=api_key,
                 temperature=0.2,
             )
-            
+
             structured_llm = llm.with_structured_output(ComplianceReport)
-            
+
             prompt = ChatPromptTemplate.from_messages([
                 (
                     "system",
@@ -211,17 +213,27 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
                     "Conduct energy and thermal comfort compliance audit for {city} currently registering {temp_f}°F."
                 )
             ])
-            
+
             chain = prompt | structured_llm
             result: ComplianceReport = chain.invoke({
                 "context": context_str,
                 "city": city,
                 "temp_f": temp_f
             })
+            logger.info("Agent 1: Gemini RAG inference succeeded for %s (%s°F).", city, temp_f)
             return result
         except Exception as e:
-            print(f"Gemini API invocation error: {e}. Falling back to deterministic code evaluation.")
-    
+            logger.warning(
+                "Agent 1: Gemini inference failed (%s). Falling back to DETERMINISTIC compliance engine.",
+                e,
+            )
+    else:
+        logger.warning(
+            "Agent 1: GEMINI_API_KEY not configured. Using DETERMINISTIC compliance engine for %s (%s°F).",
+            city,
+            temp_f,
+        )
+
     # Fallback rule evaluation strictly adhering to ASHRAE 55 and IECC chunks
     is_exceeded = temp_f > 79
     status = (

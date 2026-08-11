@@ -1,10 +1,14 @@
 import time
 import random
+import logging
 from typing import Optional
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import agent1_rag
 from agent1_rag import run_compliance_audit, ComplianceReport
+
+logger = logging.getLogger("thermalos.api")
 
 app = FastAPI(title="FortyGuard Mock Temperature API & ThermalOS Agents")
 
@@ -45,51 +49,69 @@ class AuditRequest(BaseModel):
     temperature_f: Optional[int] = None
 
 
+@app.get("/health")
+async def health():
+    """System status, uptime and per-agent readiness."""
+    rag_ready = getattr(agent1_rag, "_collection", None) is not None
+    return {
+        "status": "ok",
+        "uptime_seconds": int(time.time() - SERVER_START_TIME),
+        "agents": {
+            "agent1_compliance": "ready" if rag_ready else "initializing",
+            "agent2_infrastructure": "ready",
+            "agent3_civic": "ready",
+        },
+    }
+
+
 @app.post("/v1/heat-intelligence")
 async def get_heat_intelligence(request: HeatIntelligenceRequest):
-    city = request.location
-    cfg = CITY_CONFIGS.get(
-        city,
-        {"min": 85, "max": 100, "spike_chance": 0.03, "spike_val": 105},
-    )
-    last_temp = LAST_CITY_TEMPS.get(city, 95)
+    try:
+        city = request.location
+        cfg = CITY_CONFIGS.get(
+            city,
+            {"min": 85, "max": 100, "spike_chance": 0.03, "spike_val": 105},
+        )
+        last_temp = LAST_CITY_TEMPS.get(city, 95)
 
-    # 3-4% chance of an occasional transient heat spike
-    if random.random() < cfg["spike_chance"]:
-        new_temp = random.randint(105, cfg["spike_val"])
-    else:
-        # Visible fluctuation of +/- 1 to 3 degrees each second
-        step_options = [-3, -2, -1, 1, 2, 3]
-        step = random.choice(step_options)
-        new_temp = last_temp + step
+        # 3-4% chance of an occasional transient heat spike
+        if random.random() < cfg["spike_chance"]:
+            new_temp = random.randint(105, cfg["spike_val"])
+        else:
+            # Visible fluctuation of +/- 1 to 3 degrees each second
+            step = random.choice([-3, -2, -1, 1, 2, 3])
+            new_temp = last_temp + step
 
-        # Keep bounded in normal active range
-        if new_temp < cfg["min"]:
-            new_temp = cfg["min"] + random.randint(0, 2)
-        elif new_temp > cfg["max"]:
-            new_temp = cfg["max"] - random.randint(0, 2)
+            # Keep bounded in normal active range
+            if new_temp < cfg["min"]:
+                new_temp = cfg["min"] + random.randint(0, 2)
+            elif new_temp > cfg["max"]:
+                new_temp = cfg["max"] - random.randint(0, 2)
 
-    LAST_CITY_TEMPS[city] = new_temp
+        LAST_CITY_TEMPS[city] = new_temp
 
-    # Dynamic risk categories calibrated to urban thermal thresholds
-    if new_temp >= 105:
-        risk_level = "extreme"
-    elif new_temp >= 103:
-        risk_level = "high"
-    elif new_temp >= 98:
-        risk_level = "elevated"
-    else:
-        risk_level = "nominal"
+        # Dynamic risk categories calibrated to urban thermal thresholds
+        if new_temp >= 105:
+            risk_level = "extreme"
+        elif new_temp >= 103:
+            risk_level = "high"
+        elif new_temp >= 98:
+            risk_level = "elevated"
+        else:
+            risk_level = "nominal"
 
-    return {
-        "location": city,
-        "temperature_f": new_temp,
-        "risk_level": risk_level,
-        "resolution": "10m²",
-        "measured_at": "2m above ground",
-        "credits_remaining": 999999,
-        "server_uptime_seconds": int(time.time() - SERVER_START_TIME),
-    }
+        return {
+            "location": city,
+            "temperature_f": new_temp,
+            "risk_level": risk_level,
+            "resolution": "10m²",
+            "measured_at": "2m above ground",
+            "credits_remaining": 999999,
+            "server_uptime_seconds": int(time.time() - SERVER_START_TIME),
+        }
+    except Exception as e:
+        logger.exception("heat-intelligence generation failed")
+        raise HTTPException(status_code=500, detail=f"Telemetry generation failed: {e}")
 
 
 @app.post("/v1/agents/audit", response_model=ComplianceReport)
@@ -99,11 +121,11 @@ async def audit_endpoint(request: AuditRequest):
     else:
         temp_f = LAST_CITY_TEMPS.get(request.location, 95)
 
-    report = run_compliance_audit(
-        city=request.location,
-        temp_f=temp_f,
-    )
-    return report
+    try:
+        return run_compliance_audit(city=request.location, temp_f=temp_f)
+    except Exception as e:
+        logger.exception("Agent 1 compliance audit failed")
+        raise HTTPException(status_code=502, detail=f"Compliance audit failed: {e}")
 
 
 # =========================================================================

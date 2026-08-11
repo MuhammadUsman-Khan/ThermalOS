@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ResponsiveContainer,
@@ -20,180 +20,66 @@ import {
   FileCheck,
   Flame,
   Layers,
-  Link2,
   MapPin,
   Moon,
   Radio,
   RefreshCw,
-  Send,
   Shield,
-  ShieldAlert,
   Sun,
   Thermometer,
   Wifi,
-  X,
   Zap,
-  Building2,
 } from "lucide-react";
 
-const CITIES = [
-  "Phoenix, AZ",
-  "Houston, TX",
-  "Las Vegas, NV",
-  "Dallas, TX",
-];
-
-const MAX_DATA_POINTS = 20;
-
-// Helper to format real uptime seconds cleanly
-const formatUptime = (totalSeconds) => {
-  const d = Math.floor(totalSeconds / 86400);
-  const h = Math.floor((totalSeconds % 86400) / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-
-  if (d > 0) {
-    return `${d}d ${h}h ${m}m ${s}s`;
-  }
-  if (h > 0) {
-    return `${h}h ${m}m ${s}s`;
-  }
-  if (m > 0) {
-    return `${m}m ${s}s`;
-  }
-  return `${s}s`;
-};
-
-// Helper to generate dynamic timestamps relative to current time
-const getPastTimeString = (secondsAgo = 0) => {
-  const d = new Date(Date.now() - secondsAgo * 1000);
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-};
-
-// Helper for dynamic risk configuration based on temperature
-const getRiskConfig = (temp = 95) => {
-  if (temp >= 105) {
-    return {
-      label: "CRIT",
-      badge: "EXTREME",
-      badgeClass: "bg-red-500/10 text-red-500 border border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.2)]",
-      textColor: "text-red-500",
-      sparkStroke: "#FF3B3B",
-    };
-  }
-  if (temp >= 103) {
-    return {
-      label: "HIGH",
-      badge: "HIGH",
-      badgeClass: "bg-orange-500/10 text-orange-500 border border-orange-500/30 shadow-[0_0_10px_rgba(249,115,22,0.15)]",
-      textColor: "text-orange-500",
-      sparkStroke: "#FF6B2B",
-    };
-  }
-  if (temp >= 98) {
-    return {
-      label: "ELEV",
-      badge: "ELEVATED",
-      badgeClass: "bg-amber-500/10 text-amber-500 border border-amber-500/30",
-      textColor: "text-amber-500",
-      sparkStroke: "#F59E0B",
-    };
-  }
-  return {
-    label: "NORM",
-    badge: "NOMINAL",
-    badgeClass: "bg-emerald-500/10 text-emerald-500 border border-emerald-500/30",
-    textColor: "text-emerald-500",
-    sparkStroke: "#10B981",
-  };
-};
-
-// Helper for event log badge and border styling
-const getLogConfig = (type) => {
-  switch (type) {
-    case "extreme":
-      return {
-        borderClass: "border-l-red-500",
-        badgeClass: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30 shadow-[0_0_8px_rgba(239,68,68,0.2)]",
-        textClass: "text-red-700 dark:text-red-300",
-        icon: <AlertOctagon className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />,
-      };
-    case "high":
-      return {
-        borderClass: "border-l-orange-500",
-        badgeClass: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30",
-        textClass: "text-orange-700 dark:text-orange-300",
-        icon: <AlertTriangle className="w-3.5 h-3.5 text-orange-500 flex-shrink-0" />,
-      };
-    case "elevated":
-      return {
-        borderClass: "border-l-amber-500",
-        badgeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30",
-        textClass: "text-amber-700 dark:text-amber-300",
-        icon: <Activity className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />,
-      };
-    case "audit":
-    case "dispatch":
-      return {
-        borderClass: "border-l-purple-500",
-        badgeClass: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30",
-        textClass: "text-purple-700 dark:text-purple-300",
-        icon: <FileCheck className="w-3.5 h-3.5 text-purple-500 flex-shrink-0" />,
-      };
-    default:
-      return {
-        borderClass: "border-l-emerald-500",
-        badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
-        textClass: "text-gray-700 dark:text-zinc-300",
-        icon: <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />,
-      };
-  }
-};
+import {
+  API_BASE,
+  N8N_AUDIT_WEBHOOK,
+  CITIES,
+  MAX_DATA_POINTS,
+  getPastTimeString,
+  timeNow,
+  formatUptime,
+  getRiskConfig,
+  makeLog,
+  prependLogs,
+  telemetryLog,
+} from "./lib/utils";
+import KPICard from "./components/KPICard";
+import AgentEventLog from "./components/AgentEventLog";
+import AgentOneModal from "./components/AgentOneModal";
+import AgentTwoModal from "./components/AgentTwoModal";
+import AgentThreeModal from "./components/AgentThreeModal";
+import Toast from "./components/Toast";
 
 export default function App() {
-  // Theme State
   const [darkMode, setDarkMode] = useState(false);
 
-  // Custom Dropdown State
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Dynamic Timers & Live Metrics State
+  // Live metrics
   const [pollTimer, setPollTimer] = useState("0.0");
-  const [lastFetch, setLastFetch] = useState(Date.now());
-  const [lastReceivedTime, setLastReceivedTime] = useState(() =>
-    new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-  );
-  const [uptimeSeconds, setUptimeSeconds] = useState(0);
+  const [lastReceivedTime, setLastReceivedTime] = useState(timeNow);
+  // Uptime is a pure accumulator: updated via the setter's prev and never read directly.
+  const [, setUptimeSeconds] = useState(0);
   const [uptime, setUptime] = useState("0s");
   const [latency, setLatency] = useState(24);
   const [pollCount, setPollCount] = useState(1);
   const [failedPolls, setFailedPolls] = useState(0);
   const [totalEventsCount, setTotalEventsCount] = useState(6);
-
-  // Real-time Clock and Date
-  const [currentTime, setCurrentTime] = useState(
-    new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-  );
-  const [currentDate, setCurrentDate] = useState(
+  const [currentDate, setCurrentDate] = useState(() =>
     new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
   );
 
-  // Clean out legacy stored dummy boot timestamp
-  useEffect(() => {
-    localStorage.removeItem("thermalos_boot");
-  }, []);
+  const lastFetchRef = useRef(Date.now());
+  const prevRiskLevelRef = useRef(null);
 
-  // Proper Dark Mode DOM Injection
+  // Sync the `dark` class on <html> with theme state.
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    document.documentElement.classList.toggle("dark", darkMode);
   }, [darkMode]);
 
-  // Close dropdown on outside click
+  // Close the city dropdown when clicking outside of it.
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -204,15 +90,15 @@ export default function App() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Running Live Polling Ticker (Ticks every 100ms)
+  // "Xs ago" ticker — reads the last-fetch ref so the interval is created once.
   useEffect(() => {
     const timer = setInterval(() => {
-      setPollTimer(((Date.now() - lastFetch) / 1000).toFixed(1));
+      setPollTimer(((Date.now() - lastFetchRef.current) / 1000).toFixed(1));
     }, 100);
     return () => clearInterval(timer);
-  }, [lastFetch]);
+  }, []);
 
-  // Real System Uptime Ticker (Ticks every second)
+  // Uptime + date ticker.
   useEffect(() => {
     const interval = setInterval(() => {
       setUptimeSeconds((prev) => {
@@ -220,26 +106,13 @@ export default function App() {
         setUptime(formatUptime(next));
         return next;
       });
+      setCurrentDate(
+        new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      );
     }, 1000);
-
     return () => clearInterval(interval);
   }, []);
 
-  // Live Clock and Date Ticker
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date();
-      setCurrentTime(
-        now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-      );
-      setCurrentDate(
-        now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-      );
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Selection & Telemetry State
   const [selectedCity, setSelectedCity] = useState("Phoenix, AZ");
   const [telemetryData, setTelemetryData] = useState(() => [
     { time: getPastTimeString(18), temperature_f: 95 },
@@ -251,50 +124,13 @@ export default function App() {
     { time: getPastTimeString(0), temperature_f: 96 },
   ]);
 
-  // Initial event logs with dynamic real timestamps and normal status
   const [eventLogs, setEventLogs] = useState(() => [
-    {
-      id: "log-1",
-      timestamp: getPastTimeString(15),
-      type: "nominal",
-      badge: "OPTIMAL",
-      text: "Urban telemetry synchronized for Phoenix, AZ. Operative temperature within baseline envelope.",
-    },
-    {
-      id: "log-2",
-      timestamp: getPastTimeString(12),
-      type: "nominal",
-      badge: "NOMINAL",
-      text: "Mock Telemetry micro-climate grid stream active. Normal radiative heat profile.",
-    },
-    {
-      id: "log-3",
-      timestamp: getPastTimeString(9),
-      type: "elevated",
-      badge: "ELEVATED",
-      text: "Thermal sensor array at 97°F. Ambient boundary stable.",
-    },
-    {
-      id: "log-4",
-      timestamp: getPastTimeString(6),
-      type: "nominal",
-      badge: "OPTIMAL",
-      text: "Solar radiation index steady across 10m² micro-climate sector.",
-    },
-    {
-      id: "log-5",
-      timestamp: getPastTimeString(3),
-      type: "nominal",
-      badge: "OPTIMAL",
-      text: "Urban surface emissivity index nominal. HVAC load within ASHRAE 55 band.",
-    },
-    {
-      id: "log-6",
-      timestamp: getPastTimeString(0),
-      type: "elevated",
-      badge: "ELEVATED",
-      text: "Phoenix, AZ sensor reading 96°F. Monitoring micro-climate boundary.",
-    },
+    { id: "log-1", timestamp: getPastTimeString(15), type: "nominal", badge: "OPTIMAL", text: "Urban telemetry synchronized for Phoenix, AZ. Operative temperature within baseline envelope." },
+    { id: "log-2", timestamp: getPastTimeString(12), type: "nominal", badge: "NOMINAL", text: "Mock Telemetry micro-climate grid stream active. Normal radiative heat profile." },
+    { id: "log-3", timestamp: getPastTimeString(9), type: "elevated", badge: "ELEVATED", text: "Thermal sensor array at 97°F. Ambient boundary stable." },
+    { id: "log-4", timestamp: getPastTimeString(6), type: "nominal", badge: "OPTIMAL", text: "Solar radiation index steady across 10m² micro-climate sector." },
+    { id: "log-5", timestamp: getPastTimeString(3), type: "nominal", badge: "OPTIMAL", text: "Urban surface emissivity index nominal. HVAC load within ASHRAE 55 band." },
+    { id: "log-6", timestamp: getPastTimeString(0), type: "elevated", badge: "ELEVATED", text: "Phoenix, AZ sensor reading 96°F. Monitoring micro-climate boundary." },
   ]);
 
   const [currentReading, setCurrentReading] = useState({
@@ -307,69 +143,65 @@ export default function App() {
   });
   const [isConnected, setIsConnected] = useState(true);
 
-  // Agent 1 Audit Modal State
+  // Agent modal state
   const [isAuditOpen, setIsAuditOpen] = useState(false);
   const [isAuditLoading, setIsAuditLoading] = useState(false);
   const [auditReport, setAuditReport] = useState(null);
   const [auditError, setAuditError] = useState(null);
-  const [isDispatched, setIsDispatched] = useState(false);
 
-  // Agent 2 Infrastructure State
   const [infraData, setInfraData] = useState(null);
   const [isInfraModalOpen, setIsInfraModalOpen] = useState(false);
   const [isInfraLoading, setIsInfraLoading] = useState(false);
   const [infraError, setInfraError] = useState(null);
 
-  // Agent 3 Civic Dispatch State
   const [civicData, setCivicData] = useState(null);
   const [isCivicModalOpen, setIsCivicModalOpen] = useState(false);
   const [isCivicLoading, setIsCivicLoading] = useState(false);
   const [civicError, setCivicError] = useState(null);
 
-  // Autonomous Emergency Trigger State
+  // Autonomous emergency trigger
   const [hasAutoTriggered, setHasAutoTriggered] = useState(false);
   const [isEmergencyMode, setIsEmergencyMode] = useState(false);
 
-  const logsEndRef = useRef(null);
-  const prevRiskLevelRef = useRef(null);
+  const [toast, setToast] = useState(null);
+  const showToast = (title, message) =>
+    setToast({ id: `${Date.now()}`, title, message });
 
-  // Continuous 1500ms polling loop to FastAPI backend with real latency measurement
+  const pushLog = (entry) => {
+    if (!entry) return;
+    const list = Array.isArray(entry) ? entry : [entry];
+    setEventLogs((prev) => prependLogs(prev, list));
+    setTotalEventsCount((c) => c + list.length);
+  };
+
+  const closeAllModals = () => {
+    setIsAuditOpen(false);
+    setIsInfraModalOpen(false);
+    setIsCivicModalOpen(false);
+  };
+
+  // Continuous 1000ms polling loop with real round-trip latency measurement.
   useEffect(() => {
     let isMounted = true;
 
     const fetchHeatIntelligence = async () => {
-      const timestamp = new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
-
       const startTime = performance.now();
-
       try {
-        const response = await fetch("http://127.0.0.1:8000/v1/heat-intelligence", {
+        const response = await fetch(`${API_BASE}/v1/heat-intelligence`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ location: selectedCity }),
         });
-
         const roundTripMs = Math.round(performance.now() - startTime);
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         const data = await response.json();
-
         if (!isMounted) return;
 
+        const timestamp = timeNow();
         setIsConnected(true);
-        // Realistic fluctuating latency reading based on roundtrip
         const jitter = Math.floor(Math.random() * 8) - 4;
-        const displayLatency = Math.max(12, roundTripMs + 18 + jitter);
-        setLatency(displayLatency);
+        setLatency(Math.max(12, roundTripMs + 18 + jitter));
         setCurrentReading(data);
         setPollCount((prev) => prev + 1);
         setLastReceivedTime(timestamp);
@@ -377,82 +209,21 @@ export default function App() {
           setUptimeSeconds(data.server_uptime_seconds);
           setUptime(formatUptime(data.server_uptime_seconds));
         }
-        setLastFetch(Date.now()); // Reset dynamic live ticker
+        lastFetchRef.current = Date.now();
 
-        // Update rolling telemetry window (max 20 points)
         setTelemetryData((prevData) => {
-          const newPoint = {
-            time: timestamp,
-            temperature_f: data.temperature_f,
-            risk_level: data.risk_level,
-            city: data.location,
-          };
-          const updated = [...prevData, newPoint];
-          if (updated.length > MAX_DATA_POINTS) {
-            return updated.slice(updated.length - MAX_DATA_POINTS);
-          }
-          return updated;
+          const updated = [
+            ...prevData,
+            { time: timestamp, temperature_f: data.temperature_f, risk_level: data.risk_level, city: data.location },
+          ];
+          return updated.length > MAX_DATA_POINTS
+            ? updated.slice(updated.length - MAX_DATA_POINTS)
+            : updated;
         });
 
-        const currentRisk = data.risk_level;
-        const prevRisk = prevRiskLevelRef.current;
-
-        // Trigger log entries across all operational temperature tiers
-        if (data.temperature_f >= 105 || currentRisk === "extreme") {
-          setEventLogs((prevLogs) => [
-            {
-              id: `${Date.now()}-${Math.random()}`,
-              timestamp,
-              type: "extreme",
-              badge: "CRITICAL BREACH",
-              text: `CRITICAL HEAT SPIKE: Threshold breached for ${selectedCity} (${data.temperature_f}°F). Emergency protocol active.`,
-            },
-            ...prevLogs.slice(0, 15),
-          ]);
-          setTotalEventsCount((c) => c + 1);
-        } else if (data.temperature_f >= 103 || currentRisk === "high") {
-          setEventLogs((prevLogs) => [
-            {
-              id: `${Date.now()}-${Math.random()}`,
-              timestamp,
-              type: "high",
-              badge: "HIGH HEAT",
-              text: `HIGH HEAT ELEVATION: ${selectedCity} at ${data.temperature_f}°F. Monitoring thermal plume.`,
-            },
-            ...prevLogs.slice(0, 15),
-          ]);
-          setTotalEventsCount((c) => c + 1);
-        } else if (data.temperature_f >= 98 || currentRisk === "elevated") {
-          setEventLogs((prevLogs) => [
-            {
-              id: `${Date.now()}-${Math.random()}`,
-              timestamp,
-              type: "elevated",
-              badge: "ELEVATED",
-              text: `MODERATE BOUNDARY: ${selectedCity} telemetry at ${data.temperature_f}°F. Micro-climate grid active.`,
-            },
-            ...prevLogs.slice(0, 15),
-          ]);
-          setTotalEventsCount((c) => c + 1);
-        } else {
-          // Only log normal when transitioning into nominal state (suppress repetitive spam when staying in normal)
-          if (prevRisk !== "nominal") {
-            setEventLogs((prevLogs) => [
-              {
-                id: `${Date.now()}-${Math.random()}`,
-                timestamp,
-                type: "nominal",
-                badge: "NOMINAL",
-                text: `NORMAL AMBIENT: ${selectedCity} surface reading at ${data.temperature_f}°F. Thermal profile within ASHRAE comfort envelope.`,
-              },
-              ...prevLogs.slice(0, 15),
-            ]);
-            setTotalEventsCount((c) => c + 1);
-          }
-        }
-
-        prevRiskLevelRef.current = currentRisk;
-      } catch (err) {
+        pushLog(telemetryLog(selectedCity, data.temperature_f, data.risk_level, prevRiskLevelRef.current));
+        prevRiskLevelRef.current = data.risk_level;
+      } catch {
         if (!isMounted) return;
         setIsConnected(false);
         setFailedPolls((prev) => prev + 1);
@@ -461,96 +232,58 @@ export default function App() {
 
     fetchHeatIntelligence();
     const intervalId = setInterval(fetchHeatIntelligence, 1000);
-
     return () => {
       isMounted = false;
       clearInterval(intervalId);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCity]);
 
-  // Handle city selector change from custom dropdown
   const handleSelectCity = (newCity) => {
     setSelectedCity(newCity);
     setIsDropdownOpen(false);
-    prevRiskLevelRef.current = null; // Reset risk transition tracking for new city
-    const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-    setEventLogs((prev) => [
-      {
-        id: `${Date.now()}-${Math.random()}`,
-        timestamp: ts,
+    prevRiskLevelRef.current = null; // reset risk-transition tracking for the new city
+    pushLog(
+      makeLog({
         type: "city_change",
-        badge: "TARGET SHIFT",
-        text: `Spatial target switched to [${newCity}]. Re-indexing urban telemetry.`,
-      },
-      ...prev.slice(0, 15),
-    ]);
-    setTotalEventsCount((c) => c + 1);
+        badge: "CITY CHANGED",
+        text: `--- CITY CHANGED: ${newCity} --- Re-indexing urban telemetry.`,
+      })
+    );
   };
 
-  // Trigger Agent 1 Compliance Audit
   const handleRunAudit = async () => {
+    if (isAuditLoading) return;
+    closeAllModals();
     setIsAuditOpen(true);
-    setIsInfraModalOpen(false);
-    setIsCivicModalOpen(false);
     setIsAuditLoading(true);
     setAuditError(null);
     setAuditReport(null);
-    setIsDispatched(false);
 
     const tempToSend = currentReading ? currentReading.temperature_f : 96;
-
     try {
-      const response = await fetch("http://127.0.0.1:8000/v1/agents/audit", {
+      const response = await fetch(`${API_BASE}/v1/agents/audit`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          location: selectedCity,
-          temperature_f: tempToSend,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ location: selectedCity, temperature_f: tempToSend }),
       });
-
-      if (!response.ok) {
-        throw new Error(`Audit request failed with status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Audit request failed with status: ${response.status}`);
 
       const report = await response.json();
       setAuditReport(report);
-      setIsDispatched(true);
 
-      // Trigger automated n8n webhook dispatch in background
-      try {
-        fetch("http://127.0.0.1:5678/webhook/thermalos-audit", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(report),
-        }).catch(() => {
-          // Gracefully handled for local mock environments
-        });
-      } catch (e) {
-        // Silent background execution
-      }
+      // Fire-and-forget n8n webhook dispatch (tolerated in local mock environments).
+      fetch(N8N_AUDIT_WEBHOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(report),
+      }).catch(() => {});
 
-      const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-      setEventLogs((prev) => [
-        {
-          id: `${Date.now()}-${Math.random()}`,
-          timestamp: ts,
-          type: "audit",
-          badge: "AGENT 1 AUDIT",
-          text: `⚡ AGENT 1 AUDIT COMPLETE: ASHRAE 55 & IECC evaluation generated for ${selectedCity} (${tempToSend}°F).`,
-        },
-        {
-          id: `${Date.now() + 1}-${Math.random()}`,
-          timestamp: ts,
-          type: "dispatch",
-          badge: "N8N DISPATCH",
-          text: `🚀 N8N AUTOMATED DISPATCH: Pre-cooling & mitigation payload transmitted silently to Agent 2 controller.`,
-        },
-        ...prev.slice(0, 14),
+      pushLog([
+        makeLog({ type: "audit", badge: "AGENT 1 AUDIT", text: `⚡ AGENT 1 AUDIT COMPLETE: ASHRAE 55 & IECC evaluation generated for ${selectedCity} (${tempToSend}°F).` }),
+        makeLog({ type: "dispatch", badge: "N8N DISPATCH", text: `🚀 N8N AUTOMATED DISPATCH: Pre-cooling & mitigation payload transmitted silently to Agent 2 controller.` }),
       ]);
-      setTotalEventsCount((c) => c + 2);
+      showToast("Agent 1 Audit Complete", `Compliance report generated for ${selectedCity}.`);
     } catch (err) {
       setAuditError(err.message || "Failed to connect to Agent 1 audit endpoint.");
     } finally {
@@ -558,48 +291,29 @@ export default function App() {
     }
   };
 
-  // Trigger Agent 2: Infrastructure Pre-Cooling Dispatch
   const handleRunInfrastructure = async () => {
+    if (isInfraLoading) return;
+    closeAllModals();
     setIsInfraModalOpen(true);
-    setIsAuditOpen(false);
-    setIsCivicModalOpen(false);
     setIsInfraLoading(true);
     setInfraError(null);
     setInfraData(null);
 
     const tempToSend = currentReading ? currentReading.temperature_f : 96;
-
     try {
-      const response = await fetch("http://127.0.0.1:8000/v1/agents/infrastructure", {
+      const response = await fetch(`${API_BASE}/v1/agents/infrastructure`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          city: selectedCity,
-          temperature_f: parseFloat(tempToSend),
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ city: selectedCity, temperature_f: parseFloat(tempToSend) }),
       });
-
-      if (!response.ok) {
-        throw new Error(`Infrastructure agent request failed with status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Infrastructure agent request failed with status: ${response.status}`);
 
       const report = await response.json();
       setInfraData(report);
-
-      const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-      setEventLogs((prev) => [
-        {
-          id: `${Date.now()}-${Math.random()}`,
-          timestamp: ts,
-          type: "dispatch",
-          badge: "AGENT 2 INFRA",
-          text: `❄️ AGENT 2 PRE-COOL DISPATCHED: Target ${report.target_precool_temp_f}°F initiated for ${selectedCity} (${tempToSend}°F).`,
-        },
-        ...prev.slice(0, 15),
-      ]);
-      setTotalEventsCount((c) => c + 1);
+      pushLog(
+        makeLog({ type: "dispatch", badge: "AGENT 2 INFRA", text: `❄️ AGENT 2 PRE-COOL DISPATCHED: Target ${report.target_precool_temp_f}°F initiated for ${selectedCity} (${tempToSend}°F).` })
+      );
+      showToast("Agent 2 Pre-Cool Dispatched", `Grid load-shift initiated for ${selectedCity}.`);
     } catch (err) {
       setInfraError(err.message || "Failed to connect to Agent 2 infrastructure endpoint.");
     } finally {
@@ -607,49 +321,33 @@ export default function App() {
     }
   };
 
-  // Fetch Agent 3: Civic & Public Health Heat Stress Override
   const fetchCivicData = async (openModal = true) => {
     if (openModal) {
+      if (isCivicLoading) return;
+      closeAllModals();
       setIsCivicModalOpen(true);
-      setIsAuditOpen(false);
-      setIsInfraModalOpen(false);
     }
     setIsCivicLoading(true);
     setCivicError(null);
 
     const tempToSend = currentReading ? currentReading.temperature_f : 96;
-
     try {
-      const response = await fetch("http://127.0.0.1:8000/v1/agents/civic", {
+      const response = await fetch(`${API_BASE}/v1/agents/civic`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          city: selectedCity,
-          temperature_f: parseFloat(tempToSend),
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ city: selectedCity, temperature_f: parseFloat(tempToSend) }),
       });
-
-      if (!response.ok) {
-        throw new Error(`Civic dispatch agent request failed with status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Civic dispatch agent request failed with status: ${response.status}`);
 
       const report = await response.json();
       setCivicData(report);
-
-      const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-      setEventLogs((prev) => [
-        {
-          id: `${Date.now()}-${Math.random()}`,
-          timestamp: ts,
-          type: "extreme",
-          badge: "AGENT 3 CIVIC",
-          text: `🚨 AGENT 3 CIVIC OVERRIDE: WBGT ${report.wbgt_index} (${report.heat_stress_risk}) — automated cooling protocols broadcasted for ${selectedCity}.`,
-        },
-        ...prev.slice(0, 15),
-      ]);
-      setTotalEventsCount((c) => c + 1);
+      pushLog(
+        makeLog({ type: "extreme", badge: "AGENT 3 CIVIC", text: `🚨 AGENT 3 CIVIC OVERRIDE: WBGT ${report.wbgt_index} (${report.heat_stress_risk}) — automated cooling protocols broadcasted for ${selectedCity}.` })
+      );
+      // Autonomous background dispatch stays silent; only surface a toast for manual runs.
+      if (openModal) {
+        showToast("Agent 3 Civic Override", `WBGT ${report.wbgt_index} — alerts broadcast for ${selectedCity}.`);
+      }
     } catch (err) {
       setCivicError(err.message || "Failed to connect to Agent 3 civic endpoint.");
     } finally {
@@ -657,30 +355,35 @@ export default function App() {
     }
   };
 
-  const handleRunCivic = () => {
-    fetchCivicData(true);
+  const handleRunCivic = () => fetchCivicData(true);
+
+  const handleClearLog = () => {
+    setEventLogs([]);
+    prevRiskLevelRef.current = null;
   };
 
   const currentTemp = currentReading ? currentReading.temperature_f : 96;
   const riskConfig = getRiskConfig(currentTemp);
 
-  // Autonomous Emergency Observer (Triggers Agent 3 Civic Override on >= 105°F Breach)
+  // Autonomous emergency observer: silently fire Agent 3 on a >= 105°F breach.
   useEffect(() => {
     if (currentTemp >= 105 && !hasAutoTriggered) {
       setHasAutoTriggered(true);
       setIsEmergencyMode(true);
-      // Execute Agent 3 silently in the background without modal popup
       fetchCivicData(false);
     } else if (currentTemp < 100 && hasAutoTriggered) {
       setHasAutoTriggered(false);
       setIsEmergencyMode(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTemp, hasAutoTriggered]);
+
+  const reliability =
+    pollCount > 0 ? (((pollCount - failedPolls) / pollCount) * 100).toFixed(2) : "100.00";
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden transition-colors duration-300 flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white">
-      
-      {/* Top Right Fiery Red-Orange Glow (#FF2A00) */}
+      {/* Ambient glows */}
       <div
         className="fixed pointer-events-none z-0"
         style={{
@@ -693,7 +396,6 @@ export default function App() {
           filter: "blur(110px)",
         }}
       />
-      {/* Bottom Center Fiery Red-Orange Glow (#FF2A00) */}
       <div
         className="fixed pointer-events-none z-0"
         style={{
@@ -707,20 +409,13 @@ export default function App() {
         }}
       />
 
-      {/* =========================================================================
-          TOPBAR
-          ========================================================================= */}
+      {/* Topbar */}
       <header className="border-b border-gray-200 dark:border-white/5 bg-white/90 dark:bg-black/60 backdrop-blur-xl sticky top-0 z-40 px-6 py-3.5 transition-colors duration-300">
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4">
-          
-          {/* Brand Left (Premium App Icon & Typography) */}
           <div className="flex items-center gap-4">
-            {/* Glowing App Icon */}
             <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-orange-500/10 border border-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.15)]">
-              <Flame className="w-5 h-5 text-orange-500"/>
+              <Flame className="w-5 h-5 text-orange-500" />
             </div>
-            
-            {/* Typography */}
             <div className="flex flex-col">
               <div className="flex items-center gap-3">
                 <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white leading-none">
@@ -737,36 +432,34 @@ export default function App() {
             </div>
           </div>
 
-          {/* Controls Right */}
           <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-            {/* Agent 1 Button: RUN COMPLIANCE AUDIT */}
             <button
               onClick={handleRunAudit}
-              className="bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold text-[11px] tracking-wider uppercase px-3.5 py-2 rounded-xl shadow-md dark:shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+              disabled={isAuditLoading}
+              className="bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold text-[11px] tracking-wider uppercase px-3.5 py-2 rounded-xl shadow-md dark:shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <FileCheck className="w-3.5 h-3.5" />
+              {isAuditLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FileCheck className="w-3.5 h-3.5" />}
               <span>AUDIT</span>
             </button>
 
-            {/* Agent 2 Button: DISPATCH PRE-COOL */}
             <button
               onClick={handleRunInfrastructure}
-              className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white font-bold text-[10px] tracking-wider uppercase px-4 py-2 rounded-lg shadow-md dark:shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer"
+              disabled={isInfraLoading}
+              className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white font-bold text-[10px] tracking-wider uppercase px-4 py-2 rounded-lg shadow-md dark:shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <Zap className="w-3 h-3" />
+              {isInfraLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
               <span>DISPATCH PRE-COOL</span>
             </button>
 
-            {/* Agent 3 Button: CIVIC OVERRIDE */}
             <button
               onClick={handleRunCivic}
-              className="bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold text-[10px] tracking-wider uppercase px-4 py-2 rounded-lg shadow-md dark:shadow-[0_0_15px_rgba(225,29,72,0.4)] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer"
+              disabled={isCivicLoading}
+              className="bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold text-[10px] tracking-wider uppercase px-4 py-2 rounded-lg shadow-md dark:shadow-[0_0_15px_rgba(225,29,72,0.4)] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <AlertOctagon className="w-3 h-3" />
+              {isCivicLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <AlertOctagon className="w-3 h-3" />}
               <span>CIVIC OVERRIDE</span>
             </button>
 
-            {/* Dynamic Live Status Indicator Pill (Flashes Red during Emergency Mode) */}
             <div
               className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border font-mono text-xs shadow-inner transition-colors ${
                 isEmergencyMode
@@ -780,7 +473,6 @@ export default function App() {
               </span>
             </div>
 
-            {/* Theme Toggle Button (Sun/Moon) */}
             <button
               onClick={() => setDarkMode(!darkMode)}
               title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
@@ -789,7 +481,6 @@ export default function App() {
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            {/* Custom React City Dropdown Component */}
             <div ref={dropdownRef} className="relative">
               <button
                 type="button"
@@ -799,9 +490,7 @@ export default function App() {
                 <MapPin className="w-3.5 h-3.5 text-gray-400" />
                 <span className="text-sm font-medium">{selectedCity}</span>
                 <ChevronDown
-                  className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${
-                    isDropdownOpen ? "rotate-180" : ""
-                  }`}
+                  className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
                 />
               </button>
 
@@ -836,158 +525,70 @@ export default function App() {
         </div>
       </header>
 
-      {/* =========================================================================
-          MAIN FULL-WIDTH DASHBOARD CONTAINER
-          ========================================================================= */}
+      {/* Main dashboard */}
       <main className="w-full max-w-7xl mx-auto px-4 py-6 flex-1 flex flex-col space-y-5 relative z-10">
-        
-        {/* TOP KPI ROW (3 Cards with Dynamic Responsive Risk Configuration) */}
+        {/* KPI row */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          
-          {/* Card 1: SURFACE TEMP */}
-          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-[#FF6B2B]/30 transition-all overflow-hidden relative">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold tracking-[0.2em] text-gray-500 dark:text-zinc-500 uppercase mb-4">
-                SURFACE TEMP
-              </span>
-              <Thermometer className="w-4 h-4 text-gray-400 dark:text-zinc-500 mb-4" />
-            </div>
-            <div className="my-1 flex items-baseline">
-              <span className="text-5xl lg:text-6xl font-semibold tracking-tight tabular-nums text-slate-800 dark:text-white">
-                {currentTemp}
-              </span>
-              <span className="text-2xl font-medium text-slate-500 dark:text-zinc-400 ml-1 inline-block align-top mt-1.5">°F</span>
-            </div>
-            
-            {/* Sparkline & Badge Footer */}
-            <div className="flex items-center justify-between pt-2">
+          <KPICard
+            label="SURFACE TEMP"
+            icon={<Thermometer className="w-4 h-4 text-gray-400 dark:text-zinc-500 mb-4" />}
+            value={currentTemp}
+            unit="°F"
+            hoverBorder="hover:border-[#FF6B2B]/30"
+            darkMode={darkMode}
+            sparkStroke={riskConfig.sparkStroke}
+            sparkGradientId="sparkOrangeGrad"
+            sparkPath="M0,24 Q15,6 32,18 T65,10 T95,14 L110,8"
+            footer={
               <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${riskConfig.badgeClass}`}>
                 {riskConfig.badge}
               </span>
+            }
+          />
 
-              {/* Surface Temp Dynamic Sparkline */}
-              <svg className="w-28 h-8 overflow-visible" viewBox="0 0 110 32">
-                <defs>
-                  <linearGradient id="sparkOrangeGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={riskConfig.sparkStroke} stopOpacity={darkMode ? 0.35 : 0.2} />
-                    <stop offset="100%" stopColor={riskConfig.sparkStroke} stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <path
-                  d="M0,24 Q15,6 32,18 T65,10 T95,14 L110,8 L110,32 L0,32 Z"
-                  fill="url(#sparkOrangeGrad)"
-                />
-                <path
-                  d="M0,24 Q15,6 32,18 T65,10 T95,14 L110,8"
-                  fill="none"
-                  stroke={riskConfig.sparkStroke}
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
-          </div>
-
-          {/* Card 2: RISK MATRIX */}
-          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-red-500/30 transition-all overflow-hidden relative">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold tracking-[0.2em] text-gray-500 dark:text-zinc-500 uppercase mb-4">
-                RISK MATRIX
-              </span>
-              <Shield className="w-4 h-4 text-gray-400 dark:text-zinc-500 mb-4" />
-            </div>
-            <div className="my-1 flex items-center gap-3">
-              <span className="text-5xl lg:text-6xl font-semibold tracking-tight tabular-nums text-slate-800 dark:text-white">
-                {riskConfig.label}
-              </span>
-              <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-1 ${riskConfig.badgeClass}`}>
+          <KPICard
+            label="RISK MATRIX"
+            icon={<Shield className="w-4 h-4 text-gray-400 dark:text-zinc-500 mb-4" />}
+            value={riskConfig.label}
+            valueSuffix={
+              <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ml-3 mb-1 ${riskConfig.badgeClass}`}>
                 {riskConfig.badge}
               </span>
-            </div>
-
-            {/* Sparkline & Subtext Footer */}
-            <div className="flex items-center justify-between pt-2">
+            }
+            hoverBorder="hover:border-red-500/30"
+            darkMode={darkMode}
+            sparkStroke="#FF3B3B"
+            sparkGradientId="sparkRedGrad"
+            sparkPath="M0,18 Q20,26 42,12 T78,22 T98,8 L110,14"
+            footer={
               <span className="font-mono text-[11px] text-gray-500 dark:text-zinc-500">
                 Crit Floor: <span className="text-red-500 font-semibold">105°F</span>
               </span>
+            }
+          />
 
-              {/* Risk Matrix Red Sparkline */}
-              <svg className="w-28 h-8 overflow-visible" viewBox="0 0 110 32">
-                <defs>
-                  <linearGradient id="sparkRedGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#FF3B3B" stopOpacity={darkMode ? 0.35 : 0.2} />
-                    <stop offset="100%" stopColor="#FF3B3B" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <path
-                  d="M0,18 Q20,26 42,12 T78,22 T98,8 L110,14 L110,32 L0,32 Z"
-                  fill="url(#sparkRedGrad)"
-                />
-                <path
-                  d="M0,18 Q20,26 42,12 T78,22 T98,8 L110,14"
-                  fill="none"
-                  stroke="#FF3B3B"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
-          </div>
-
-          {/* Card 3: RESOLUTION */}
-          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-sky-500/30 transition-all overflow-hidden relative">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold tracking-[0.2em] text-gray-500 dark:text-zinc-500 uppercase mb-4">
-                RESOLUTION
-              </span>
-              <Radio className="w-4 h-4 text-sky-500 dark:text-sky-400 mb-4" />
-            </div>
-            <div className="my-1 flex items-baseline">
-              <span className="text-5xl lg:text-6xl font-semibold tracking-tight tabular-nums text-slate-800 dark:text-white">
-                10
-              </span>
-              <span className="text-2xl font-medium text-slate-500 dark:text-zinc-400 ml-1 inline-block align-top mt-1.5">m²</span>
-            </div>
-
-            {/* Sparkline & Subtext Footer */}
-            <div className="flex items-center justify-between pt-2">
+          <KPICard
+            label="RESOLUTION"
+            icon={<Radio className="w-4 h-4 text-sky-500 dark:text-sky-400 mb-4" />}
+            value="10"
+            unit="m²"
+            hoverBorder="hover:border-sky-500/30"
+            darkMode={darkMode}
+            sparkStroke="#38BDF8"
+            sparkGradientId="sparkBlueGrad"
+            sparkPath="M0,20 Q24,8 52,16 T84,8 T102,12 L110,6"
+            footer={
               <span className="text-[11px] text-gray-500 dark:text-zinc-500 font-mono">
                 2m above ground
               </span>
-
-              {/* Resolution Blue Sparkline */}
-              <svg className="w-28 h-8 overflow-visible" viewBox="0 0 110 32">
-                <defs>
-                  <linearGradient id="sparkBlueGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#38BDF8" stopOpacity={darkMode ? 0.35 : 0.2} />
-                    <stop offset="100%" stopColor="#38BDF8" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <path
-                  d="M0,20 Q24,8 52,16 T84,8 T102,12 L110,6 L110,32 L0,32 Z"
-                  fill="url(#sparkBlueGrad)"
-                />
-                <path
-                  d="M0,20 Q24,8 52,16 T84,8 T102,12 L110,6"
-                  fill="none"
-                  stroke="#38BDF8"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
-          </div>
+            }
+          />
         </div>
 
-        {/* MAIN WORKSPACE ROW (Telemetry Chart Left + Event Log Right) */}
+        {/* Workspace row */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-          
-          {/* =========================================================================
-              TELEMETRY STREAM CHART PANEL - 8 cols
-              ========================================================================= */}
+          {/* Telemetry chart */}
           <div className="lg:col-span-8 bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col shadow-sm dark:shadow-2xl backdrop-blur-xl">
-            
-            {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100 dark:border-white/5">
               <div>
                 <div className="flex items-center gap-2.5">
@@ -1000,72 +601,51 @@ export default function App() {
                   Dynamic micro-climate temperature readings (rolling 20-sample window)
                 </p>
               </div>
-
-              {/* Critical Badge Right */}
               <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 font-mono text-xs font-semibold">
                 <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
                 <span>CRITICAL: 105°F</span>
               </div>
             </div>
 
-            {/* Dedicated Y-Axis Header with Clean Gap */}
             <div className="flex items-center gap-4 text-xs font-bold text-slate-400 dark:text-zinc-500 mb-2 font-mono">
               <span>TEMP</span>
               <span>(°F)</span>
             </div>
 
-            {/* Glowing Recharts Area Chart */}
             <div className="w-full h-80 relative">
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart
-                  data={telemetryData}
-                  margin={{ top: 10, right: 15, left: -20, bottom: 0 }}
-                >
+                <ComposedChart data={telemetryData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="neonFill" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#f97316" stopOpacity={darkMode ? 0.3 : 0.08} />
                       <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
                     </linearGradient>
                     <filter id="neonGlow">
-                      <feDropShadow
-                        dx="0"
-                        dy="0"
-                        stdDeviation="6"
-                        floodColor="#f97316"
-                        floodOpacity={darkMode ? "0.6" : "0.15"}
-                      />
+                      <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#f97316" floodOpacity={darkMode ? "0.6" : "0.15"} />
                     </filter>
                   </defs>
 
-                  {/* X Axis */}
                   <XAxis
                     dataKey="time"
                     stroke={darkMode ? "#1E2330" : "#E5E7EB"}
-                    tick={{
-                      fill: darkMode ? "#71717A" : "#6B7280",
-                      fontSize: 10,
-                      fontFamily: "JetBrains Mono, monospace",
-                    }}
+                    tick={{ fill: darkMode ? "#71717A" : "#6B7280", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
                     tickLine={false}
                     axisLine={{ stroke: darkMode ? "#1E2330" : "#E5E7EB" }}
+                    interval="preserveStartEnd"
+                    minTickGap={28}
                   />
 
-                  {/* Y Axis spanning realistic urban ranges */}
                   <YAxis
                     domain={[75, 115]}
                     ticks={[75, 85, 95, 105, 115]}
+                    allowDataOverflow={false}
                     stroke={darkMode ? "#1E2330" : "#E5E7EB"}
-                    tick={{
-                      fill: darkMode ? "#71717A" : "#6B7280",
-                      fontSize: 10,
-                      fontFamily: "JetBrains Mono, monospace",
-                    }}
+                    tick={{ fill: darkMode ? "#71717A" : "#6B7280", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
                     tickLine={false}
                     axisLine={{ stroke: darkMode ? "#1E2330" : "#E5E7EB" }}
                     tickFormatter={(val) => `${val}°`}
                   />
 
-                  {/* Clean Tooltip with Adaptive Colors */}
                   <Tooltip
                     cursor={false}
                     contentStyle={{
@@ -1078,7 +658,6 @@ export default function App() {
                     itemStyle={{ color: "#f97316" }}
                   />
 
-                  {/* Critical Threshold 105°F Line */}
                   <ReferenceLine
                     y={105}
                     stroke="#FF3B3B"
@@ -1095,7 +674,6 @@ export default function App() {
                     }}
                   />
 
-                  {/* Neon Telemetry Curve */}
                   <Area
                     type="monotone"
                     dataKey="temperature_f"
@@ -1104,12 +682,7 @@ export default function App() {
                     fill="url(#neonFill)"
                     filter="url(#neonGlow)"
                     dot={false}
-                    activeDot={{
-                      r: 6,
-                      fill: "#f97316",
-                      stroke: darkMode ? "#000" : "#fff",
-                      strokeWidth: 2,
-                    }}
+                    activeDot={{ r: 6, fill: "#f97316", stroke: darkMode ? "#000" : "#fff", strokeWidth: 2 }}
                     isAnimationActive={true}
                     animationDuration={300}
                   />
@@ -1117,7 +690,6 @@ export default function App() {
               </ResponsiveContainer>
             </div>
 
-            {/* Chart Footer Bar */}
             <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-between font-mono text-xs text-gray-500 dark:text-zinc-400">
               <div className="flex items-center gap-2">
                 <Activity className="w-3.5 h-3.5 text-[#FF6B2B]" />
@@ -1132,81 +704,11 @@ export default function App() {
             </div>
           </div>
 
-          {/* =========================================================================
-              RIGHT SIDEBAR (AGENT EVENT LOG - LIQUID FEED) - 4 cols
-              ========================================================================= */}
-          <div className="lg:col-span-4 bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col shadow-sm dark:shadow-2xl backdrop-blur-xl h-full">
-            
-            {/* Header */}
-            <div className="flex items-center justify-between pb-3.5 border-b border-gray-100 dark:border-white/5 mb-3">
-              <div className="flex items-center gap-2">
-                <Link2 className="w-4 h-4 text-gray-400 dark:text-zinc-400" />
-                <h2 className="font-display text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
-                  AGENT EVENT LOG
-                </h2>
-              </div>
-              <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 font-bold">
-                LIVE FEED
-              </span>
-            </div>
-
-            {/* Liquid Framer Motion Event Feed with Clean Dynamic Styles */}
-            <div
-              ref={logsEndRef}
-              className="flex-1 overflow-y-auto max-h-[340px] pr-1 font-mono text-xs"
-            >
-              <AnimatePresence initial={false}>
-                {eventLogs.map((log) => {
-                  const cfg = getLogConfig(log.type);
-                  return (
-                    <motion.div
-                      key={log.id}
-                      initial={{ opacity: 0, y: -20, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                      className={`bg-white dark:bg-[#141414] border border-gray-200 dark:border-white/5 rounded-xl p-3.5 mb-2.5 relative overflow-hidden shadow-sm dark:shadow-none border-l-4 ${cfg.borderClass}`}
-                    >
-                      {/* Top row: Icon + Timestamp + Badge */}
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-1.5">
-                          {cfg.icon}
-                          <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
-                            {log.timestamp}
-                          </span>
-                        </div>
-                        <span className={`text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded border font-mono ${cfg.badgeClass}`}>
-                          {log.badge}
-                        </span>
-                      </div>
-
-                      {/* Message Text */}
-                      <p className={`text-xs leading-relaxed font-sans font-medium ${cfg.textClass}`}>
-                        {log.text}
-                      </p>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
-            </div>
-
-            {/* Sidebar Footer */}
-            <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-[11px] font-mono text-gray-400 dark:text-zinc-500">
-              <div className="flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                <span>Telemetry: Active</span>
-              </div>
-              <span>Events: {totalEventsCount}</span>
-            </div>
-          </div>
+          <AgentEventLog logs={eventLogs} totalEventsCount={totalEventsCount} onClear={handleClearLog} />
         </div>
 
-        {/* =========================================================================
-            BOTTOM "SYSTEM STATUS" ROW (4 Refined Status Cards)
-            ========================================================================= */}
+        {/* System status row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-          
-          {/* Card 1: DATA CONNECTION */}
           <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-orange-500/30 transition-all">
             <div className="h-11 w-11 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 flex items-center justify-center flex-shrink-0">
               <Wifi className="w-5 h-5 text-orange-500" />
@@ -1227,7 +729,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Card 2: API STATUS */}
           <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-emerald-500/30 transition-all">
             <div className="h-11 w-11 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 flex items-center justify-center flex-shrink-0">
               <Cloud className="w-5 h-5 text-green-500" />
@@ -1248,7 +749,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Card 3: LAST UPDATED */}
           <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-blue-500/30 transition-all">
             <div className="h-11 w-11 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 flex items-center justify-center flex-shrink-0">
               <Clock className="w-5 h-5 text-blue-500" />
@@ -1266,7 +766,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Card 4: DYNAMIC SYSTEM UPTIME */}
           <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-purple-500/30 transition-all">
             <div className="h-11 w-11 rounded-xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 flex items-center justify-center flex-shrink-0">
               <Shield className="w-5 h-5 text-purple-500" />
@@ -1279,382 +778,52 @@ export default function App() {
                 {uptime}
               </div>
               <span className="text-[11px] text-purple-600 dark:text-purple-400 font-medium">
-                {pollCount > 0 ? (((pollCount - failedPolls) / pollCount) * 100).toFixed(2) : "100.00"}% reliability
+                {reliability}% reliability
               </span>
             </div>
           </div>
         </div>
       </main>
 
-      {/* =========================================================================
-          AGENT 1 COMPLIANCE AUDIT MODAL (DUAL-THEME)
-          ========================================================================= */}
+      {/* Agent modals — only one is ever open at a time */}
       <AnimatePresence>
         {isAuditOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/85 backdrop-blur-md"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-white/10 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh] text-slate-900 dark:text-zinc-100"
-            >
-              {/* Modal Top Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-white/10">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-orange-50 dark:bg-[#FF6B2B]/20 border border-orange-200 dark:border-[#FF6B2B]/30 flex items-center justify-center shadow-sm">
-                    <FileCheck className="w-5 h-5 text-[#FF6B2B]" />
-                  </div>
-                  <div>
-                    <h2 className="font-display text-base font-bold uppercase tracking-tight text-slate-900 dark:text-white">
-                      Agent 1: Energy & Thermal Compliance Audit
-                    </h2>
-                    <p className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
-                      RAG Vector Assessment • {selectedCity}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsAuditOpen(false)}
-                  className="p-1.5 rounded-lg text-gray-400 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Modal Body */}
-              <div className="flex-1 overflow-y-auto py-5 space-y-4 text-sm font-sans">
-                {isAuditLoading ? (
-                  <div className="py-12 flex flex-col items-center justify-center gap-3 font-mono text-xs text-gray-500 dark:text-zinc-400">
-                    <RefreshCw className="w-8 h-8 animate-spin text-[#FF6B2B]" />
-                    <span>Retrieving ASHRAE 55 and IECC building codes from ChromaDB...</span>
-                  </div>
-                ) : auditError ? (
-                  <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 font-mono text-xs space-y-2">
-                    <div className="flex items-center gap-2 font-bold">
-                      <AlertTriangle className="w-4 h-4" />
-                      <span>Audit Execution Error</span>
-                    </div>
-                    <p>{auditError}</p>
-                  </div>
-                ) : auditReport ? (
-                  <div className="space-y-4">
-                    {/* Status Pill Card */}
-                    <div className="flex items-center justify-between p-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/50 font-mono text-xs">
-                      <span className="text-gray-600 dark:text-zinc-400">
-                        Target Region: <strong className="text-slate-900 dark:text-white">{auditReport.city}</strong>
-                      </span>
-                      <span className="text-gray-600 dark:text-zinc-400">
-                        Audited Temp: <strong className="text-[#FF6B2B]">{auditReport.temperature_f}°F</strong>
-                      </span>
-                    </div>
-
-                    {/* Section 1: ASHRAE 55 Card */}
-                    <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/5 space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle className="w-4 h-4 text-red-500" />
-                        <span className="font-mono text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400">
-                          1. ASHRAE 55 Thermal Comfort Standard
-                        </span>
-                      </div>
-                      <p className="text-xs opacity-60 font-mono text-slate-500 dark:text-zinc-400 pl-6">
-                        Ref: ASHRAE 55-2023 §5.3 — Operative Temperature Limits
-                      </p>
-                      <p className="text-xs leading-relaxed font-mono text-slate-700 dark:text-zinc-300 pl-6">
-                        {auditReport.ashrae_compliance_status}
-                      </p>
-                    </div>
-
-                    {/* Section 2: IECC Insulation Warning */}
-                    <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <ShieldAlert className="w-4 h-4 text-amber-500" />
-                        <span className="font-mono text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                          2. IECC Building Envelope & Insulation Warning
-                        </span>
-                      </div>
-                      <p className="text-xs opacity-60 font-mono text-slate-500 dark:text-zinc-400 pl-6">
-                        Ref: IECC 2021 §C402 — Building Envelope Requirements
-                      </p>
-                      <p className="text-xs leading-relaxed font-mono text-slate-700 dark:text-zinc-300 pl-6">
-                        {auditReport.iecc_envelope_warning}
-                      </p>
-                    </div>
-
-                    {/* Section 3: Recommended HVAC Action & Dispatch */}
-                    <div className="p-4 rounded-xl border border-[#FF6B2B]/30 bg-[#FF6B2B]/5 space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Flame className="w-4 h-4 text-[#FF6B2B]" />
-                        <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#FF6B2B]">
-                          3. Recommended HVAC Mitigation Plan
-                        </span>
-                      </div>
-                      <p className="text-xs opacity-60 font-mono text-slate-500 dark:text-zinc-400 pl-6">
-                        Ref: ASHRAE 90.1-2019 §6.5 — HVAC System Requirements
-                      </p>
-                      <p className="text-xs leading-relaxed font-mono text-slate-700 dark:text-zinc-300 pl-6">
-                        {auditReport.recommended_hvac_action}
-                      </p>
-
-                      {/* Automated n8n Dispatch Passive Status Badge */}
-                      <div className="pt-2 pl-6 flex items-center gap-3">
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-semibold shadow-sm">
-                          <Check className="w-3.5 h-3.5 text-emerald-500" />
-                          <span>n8n Automated Dispatch: Sent ✓</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Modal Footer */}
-              <div className="pt-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-3 font-mono text-xs">
-                <button
-                  onClick={() => setIsAuditOpen(false)}
-                  className="px-4 py-2 rounded-xl font-medium bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-700 dark:text-zinc-300 transition-colors cursor-pointer"
-                >
-                  DISMISS
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
+          <AgentOneModal
+            onClose={() => setIsAuditOpen(false)}
+            city={selectedCity}
+            loading={isAuditLoading}
+            error={auditError}
+            report={auditReport}
+          />
         )}
       </AnimatePresence>
 
-      {/* =========================================================================
-          AGENT 2 INFRASTRUCTURE PRE-COOL MODAL
-          ========================================================================= */}
       <AnimatePresence>
         {isInfraModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/85 backdrop-blur-md"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-white/10 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh] text-slate-900 dark:text-zinc-100"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-white/10">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-cyan-50 dark:bg-cyan-500/20 border border-cyan-200 dark:border-cyan-500/30 flex items-center justify-center shadow-sm">
-                    <Zap className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
-                  </div>
-                  <div>
-                    <h2 className="font-display text-base font-bold uppercase tracking-tight text-slate-900 dark:text-white">
-                      Agent 2: Infrastructure & Pre-Cooling Controller
-                    </h2>
-                    <p className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
-                      Grid Peak-Shaving & Pre-Cool Orchestration • {selectedCity}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsInfraModalOpen(false)}
-                  className="p-1.5 rounded-lg text-gray-400 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Body */}
-              <div className="flex-1 overflow-y-auto py-5 space-y-4 text-sm font-sans">
-                {isInfraLoading ? (
-                  <div className="py-12 flex flex-col items-center justify-center gap-3 font-mono text-xs text-gray-500 dark:text-zinc-400">
-                    <RefreshCw className="w-8 h-8 animate-spin text-cyan-500" />
-                    <span>Calculating thermodynamic grid load shift & pre-cool curves...</span>
-                  </div>
-                ) : infraError ? (
-                  <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 font-mono text-xs space-y-2">
-                    <div className="flex items-center gap-2 font-bold">
-                      <AlertTriangle className="w-4 h-4" />
-                      <span>Controller Execution Error</span>
-                    </div>
-                    <p>{infraError}</p>
-                  </div>
-                ) : infraData ? (
-                  <div className="space-y-4">
-                    {/* Grid Metrics */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-xs">
-                      <div className="p-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/50 flex items-center justify-between">
-                        <span className="text-gray-600 dark:text-zinc-400">Target Region:</span>
-                        <strong className="text-slate-900 dark:text-white">{infraData.city}</strong>
-                      </div>
-                      <div className="p-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/50 flex items-center justify-between">
-                        <span className="text-gray-600 dark:text-zinc-400">Current Ambient:</span>
-                        <strong className="text-orange-500">{infraData.current_temp_f}°F</strong>
-                      </div>
-                      <div className="p-3.5 rounded-xl border border-cyan-500/30 bg-cyan-500/5 flex items-center justify-between">
-                        <span className="text-cyan-700 dark:text-cyan-300 font-bold">Target Precool:</span>
-                        <strong className="text-cyan-600 dark:text-cyan-400 text-sm font-bold">{infraData.target_precool_temp_f}°F</strong>
-                      </div>
-                      <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 flex items-center justify-between">
-                        <span className="text-emerald-700 dark:text-emerald-300 font-bold">Grid Load Shift:</span>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                          infraData.grid_load_shift_active
-                            ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shadow-[0_0_8px_rgba(16,185,129,0.2)]"
-                            : "bg-gray-500/20 text-gray-600 dark:text-gray-400 border border-gray-500/30"
-                        }`}>
-                          {infraData.grid_load_shift_active ? "ACTIVE" : "INACTIVE"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Action Plan Code Box */}
-                    <div className="p-4 rounded-xl border border-cyan-500/30 bg-cyan-500/5 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-cyan-500" />
-                        <span className="font-mono text-xs font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
-                          HVAC Pre-Cooling Action Plan
-                        </span>
-                      </div>
-                      <pre className="font-mono text-xs leading-relaxed p-3.5 rounded-xl border border-cyan-500/20 bg-white/70 dark:bg-black/60 text-slate-800 dark:text-zinc-200 overflow-x-auto whitespace-pre-wrap">
-                        {currentTemp != null
-                          ? `Current ambient ${Math.round(currentTemp)}°F is ${Math.round(currentTemp - 68)}°F above target. Initiating Stage 2 pre-cooling sequence at 03:00 AM to reach 68°F before 2 PM peak load window.`
-                          : (infraData.hvac_action_plan || "Current ambient 96°F is 28°F above target. Initiating Stage 2 pre-cooling sequence at 03:00 AM to reach 68°F before 2 PM peak load window.")}
-                      </pre>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Footer */}
-              <div className="pt-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-3 font-mono text-xs">
-                <button
-                  onClick={() => setIsInfraModalOpen(false)}
-                  className="px-4 py-2 rounded-xl font-medium bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-700 dark:text-zinc-300 transition-colors cursor-pointer"
-                >
-                  DISMISS
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
+          <AgentTwoModal
+            onClose={() => setIsInfraModalOpen(false)}
+            city={selectedCity}
+            currentTemp={currentTemp}
+            loading={isInfraLoading}
+            error={infraError}
+            data={infraData}
+          />
         )}
       </AnimatePresence>
 
-      {/* =========================================================================
-          AGENT 3 CIVIC HEAT STRESS OVERRIDE MODAL
-          ========================================================================= */}
       <AnimatePresence>
         {isCivicModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/85 backdrop-blur-md"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-white/10 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh] text-slate-900 dark:text-zinc-100"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-white/10">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-rose-50 dark:bg-rose-500/20 border border-rose-200 dark:border-rose-500/30 flex items-center justify-center shadow-sm">
-                    <AlertOctagon className="w-5 h-5 text-rose-600 dark:text-rose-400" />
-                  </div>
-                  <div>
-                    <h2 className="font-display text-base font-bold uppercase tracking-tight text-slate-900 dark:text-white">
-                      Agent 3: Civic & Public Health Heat Stress Override
-                    </h2>
-                    <p className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
-                      WBGT Thermodynamic Index & Public Health Protocol • {selectedCity}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsCivicModalOpen(false)}
-                  className="p-1.5 rounded-lg text-gray-400 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Body */}
-              <div className="flex-1 overflow-y-auto py-5 space-y-4 text-sm font-sans">
-                {isCivicLoading ? (
-                  <div className="py-12 flex flex-col items-center justify-center gap-3 font-mono text-xs text-gray-500 dark:text-zinc-400">
-                    <RefreshCw className="w-8 h-8 animate-spin text-rose-500" />
-                    <span>Fusing Open-Meteo humidity with Mock Telemetry models...</span>
-                  </div>
-                ) : civicError ? (
-                  <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 font-mono text-xs space-y-2">
-                    <div className="flex items-center gap-2 font-bold">
-                      <AlertTriangle className="w-4 h-4" />
-                      <span>Civic Dispatch Error</span>
-                    </div>
-                    <p>{civicError}</p>
-                  </div>
-                ) : civicData ? (
-                  <div className="space-y-4">
-                    {/* Grid Metrics */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-xs">
-                      <div className="p-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/50 flex items-center justify-between">
-                        <span className="text-gray-600 dark:text-zinc-400">Target Region:</span>
-                        <strong className="text-slate-900 dark:text-white">{civicData.city}</strong>
-                      </div>
-                      <div className="p-3.5 rounded-xl border border-rose-500/30 bg-rose-500/5 flex items-center justify-between">
-                        <span className="text-rose-700 dark:text-rose-300 font-bold">WBGT Index:</span>
-                        <strong className="text-rose-600 dark:text-rose-400 text-sm font-bold">{civicData.wbgt_index}</strong>
-                      </div>
-                      <div className="p-3.5 rounded-xl border border-rose-500/30 bg-rose-500/5 flex items-center justify-between">
-                        <span className="text-rose-700 dark:text-rose-300 font-bold">Heat Stress Risk:</span>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 shadow-[0_0_8px_rgba(239,68,68,0.2)]">
-                          {civicData.heat_stress_risk}
-                        </span>
-                      </div>
-                      <div className="p-3.5 rounded-xl border border-red-500/30 bg-red-500/5 flex items-center justify-between">
-                        <span className="text-red-700 dark:text-red-300 font-bold">Civic Alert:</span>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                          civicData.civic_alert_dispatched
-                            ? "bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 shadow-[0_0_8px_rgba(239,68,68,0.2)]"
-                            : "bg-gray-500/20 text-gray-600 dark:text-gray-400 border border-gray-500/30"
-                        }`}>
-                          {civicData.civic_alert_dispatched ? "DISPATCHED" : "PENDING"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Protocol Code Box */}
-                    <div className="p-4 rounded-xl border border-rose-500/30 bg-rose-500/5 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <AlertOctagon className="w-4 h-4 text-rose-500" />
-                        <span className="font-mono text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
-                          Emergency Civic & Field Dispatch Protocol
-                        </span>
-                      </div>
-                      <pre className="font-mono text-xs leading-relaxed p-3.5 rounded-xl border border-rose-500/20 bg-white/70 dark:bg-black/60 text-slate-800 dark:text-zinc-200 overflow-y-auto max-h-[120px] whitespace-pre-wrap">
-                        {civicData.emergency_protocol}
-                      </pre>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Footer */}
-              <div className="pt-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-3 font-mono text-xs">
-                <button
-                  onClick={() => setIsCivicModalOpen(false)}
-                  className="px-4 py-2 rounded-xl font-medium bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-700 dark:text-zinc-300 transition-colors cursor-pointer"
-                >
-                  DISMISS
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
+          <AgentThreeModal
+            onClose={() => setIsCivicModalOpen(false)}
+            city={selectedCity}
+            loading={isCivicLoading}
+            error={civicError}
+            data={civicData}
+          />
         )}
       </AnimatePresence>
+
+      <Toast toast={toast} onDismiss={() => setToast(null)} />
     </div>
   );
 }
