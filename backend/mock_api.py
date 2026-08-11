@@ -14,6 +14,7 @@ from pydantic import BaseModel
 import agent1_rag
 from agent1_rag import run_compliance_audit, ComplianceReport
 from agent2_controller import process_reading as agent2_process_reading
+from agent3_dispatcher import evaluate_civic_dispatch, CivicDispatchReport
 
 logger = logging.getLogger("thermalos.api")
 
@@ -54,6 +55,22 @@ class HeatIntelligenceRequest(BaseModel):
 class AuditRequest(BaseModel):
     location: str
     temperature_f: Optional[int] = None
+
+
+class InfrastructurePrecoolReport(BaseModel):
+    city: str
+    current_temp_f: float
+    target_precool_temp_f: float
+    grid_load_shift_active: bool
+    trigger_reason: Optional[str] = None
+    hvac_action_plan: str
+    n8n_dispatch: str
+
+
+class AgentRequest(BaseModel):
+    city: str
+    temperature_f: float
+    risk_level: Optional[str] = None
 
 
 @app.get("/health")
@@ -135,70 +152,47 @@ async def audit_endpoint(request: AuditRequest):
         raise HTTPException(status_code=502, detail=f"Compliance audit failed: {e}")
 
 
-# =========================================================================
-# AGENT 2 & AGENT 3 PYDANTIC CONTRACTS & STUB ENDPOINTS
-# =========================================================================
-
-class InfrastructurePrecoolReport(BaseModel):
-    city: str
-    current_temp_f: float
-    target_precool_temp_f: float
-    grid_load_shift_active: bool
-    trigger_reason: Optional[str] = None
-    hvac_action_plan: str
-    n8n_dispatch: str
-
-
-class CivicDispatchReport(BaseModel):
-    city: str
-    wbgt_index: float
-    heat_stress_risk: str
-    civic_alert_dispatched: bool
-    emergency_protocol: str
-
-
-class AgentRequest(BaseModel):
-    city: str
-    temperature_f: float
-    risk_level: Optional[str] = None
-
-
 @app.post("/v1/agents/infrastructure", response_model=InfrastructurePrecoolReport)
 async def infrastructure_precool_endpoint(request: AgentRequest):
-    agent2_result = agent2_process_reading(
-        {
-            "location": request.city,
-            "temperature_f": request.temperature_f,
-            "risk_level": request.risk_level or "nominal",
-        }
-    )
+    try:
+        agent2_result = agent2_process_reading(
+            {
+                "location": request.city,
+                "temperature_f": request.temperature_f,
+                "risk_level": request.risk_level or ("extreme" if request.temperature_f >= 105 else "nominal"),
+            }
+        )
 
-    report = agent2_result["report"]
-    dispatch = agent2_result["dispatch"]
+        report = agent2_result["report"]
+        dispatch = agent2_result["dispatch"]
 
-    return InfrastructurePrecoolReport(
-        city=report["city"],
-        current_temp_f=report["current_temp_f"],
-        target_precool_temp_f=report["target_precool_temp_f"],
-        grid_load_shift_active=report["grid_load_shift_active"],
-        trigger_reason=report["trigger_reason"],
-        hvac_action_plan=report["hvac_action_plan"],
-        n8n_dispatch=f"{dispatch['status_code']} {dispatch['reason']}"
-        if dispatch.get("status_code")
-        else dispatch["reason"],
-    )
-
-
-import agent3_dispatcher
-from agent3_dispatcher import evaluate_civic_dispatch, CivicDispatchReport
+        return InfrastructurePrecoolReport(
+            city=report["city"],
+            current_temp_f=report["current_temp_f"],
+            target_precool_temp_f=report["target_precool_temp_f"],
+            grid_load_shift_active=report["grid_load_shift_active"],
+            trigger_reason=report["trigger_reason"],
+            hvac_action_plan=report["hvac_action_plan"],
+            n8n_dispatch=f"{dispatch['status_code']} {dispatch['reason']}"
+            if dispatch.get("status_code")
+            else str(dispatch["reason"]),
+        )
+    except Exception as e:
+        logger.exception("Agent 2 infrastructure controller failed")
+        raise HTTPException(status_code=502, detail=f"Infrastructure controller failed: {e}")
 
 
 @app.post("/v1/agents/civic", response_model=CivicDispatchReport)
 async def civic_dispatch_endpoint(request: AgentRequest):
-    return evaluate_civic_dispatch(city=request.city, temp_f=request.temperature_f)
+    try:
+        return evaluate_civic_dispatch(city=request.city, temp_f=request.temperature_f)
+    except Exception as e:
+        logger.exception("Agent 3 civic dispatcher failed")
+        raise HTTPException(status_code=502, detail=f"Civic dispatcher failed: {e}")
 
 
 if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run("mock_api:app", host="0.0.0.0", port=8000, reload=True)
+
