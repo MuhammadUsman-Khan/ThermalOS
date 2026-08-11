@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import agent1_rag
 from agent1_rag import run_compliance_audit, ComplianceReport
+from agent2_controller import process_reading as agent2_process_reading
 
 logger = logging.getLogger("thermalos.api")
 
@@ -143,7 +144,9 @@ class InfrastructurePrecoolReport(BaseModel):
     current_temp_f: float
     target_precool_temp_f: float
     grid_load_shift_active: bool
+    trigger_reason: Optional[str] = None
     hvac_action_plan: str
+    n8n_dispatch: str
 
 
 class CivicDispatchReport(BaseModel):
@@ -157,16 +160,32 @@ class CivicDispatchReport(BaseModel):
 class AgentRequest(BaseModel):
     city: str
     temperature_f: float
+    risk_level: Optional[str] = None
 
 
 @app.post("/v1/agents/infrastructure", response_model=InfrastructurePrecoolReport)
 async def infrastructure_precool_endpoint(request: AgentRequest):
+    agent2_result = agent2_process_reading(
+        {
+            "location": request.city,
+            "temperature_f": request.temperature_f,
+            "risk_level": request.risk_level or "nominal",
+        }
+    )
+
+    report = agent2_result["report"]
+    dispatch = agent2_result["dispatch"]
+
     return InfrastructurePrecoolReport(
-        city=request.city,
-        current_temp_f=request.temperature_f,
-        target_precool_temp_f=68.0,
-        grid_load_shift_active=True,
-        hvac_action_plan="Initiate Stage 2 pre-cooling sequence to offset impending thermal peak.",
+        city=report["city"],
+        current_temp_f=report["current_temp_f"],
+        target_precool_temp_f=report["target_precool_temp_f"],
+        grid_load_shift_active=report["grid_load_shift_active"],
+        trigger_reason=report["trigger_reason"],
+        hvac_action_plan=report["hvac_action_plan"],
+        n8n_dispatch=f"{dispatch['status_code']} {dispatch['reason']}"
+        if dispatch.get("status_code")
+        else dispatch["reason"],
     )
 
 
