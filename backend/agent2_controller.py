@@ -18,7 +18,7 @@ TARGET_PRECOOL_TEMP_F = 68.0
 
 N8N_HVAC_WEBHOOK_URL = os.getenv(
     "N8N_HVAC_WEBHOOK_URL",
-    "https://usmankhan0.app.n8n.cloud/webhook-test/thermalos-hvac-precool",
+    "https://usmankhan0.app.n8n.cloud/webhook/thermalos-hvac-precool",
 )
 
 

@@ -59,7 +59,7 @@ if not logger.handlers:
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 DEFAULT_N8N_ALERT_WEBHOOK = os.getenv(
     "N8N_ALERT_WEBHOOK_URL",
-    "https://usmankhan0.app.n8n.cloud/webhook-test/thermalos-alert",
+    "https://usmankhan0.app.n8n.cloud/webhook/thermalos-alert",
 )
 
 # Safe human survivability WBGT index threshold in Fahrenheit
