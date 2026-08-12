@@ -1,7 +1,7 @@
 // Shared constants and pure helpers for the ThermalOS Mission Control dashboard.
 
 export const API_BASE = "http://127.0.0.1:8000";
-export const N8N_AUDIT_WEBHOOK = "http://127.0.0.1:5678/webhook/thermalos-audit";
+export const N8N_AUDIT_WEBHOOK = "https://usmankhan0.app.n8n.cloud/webhook-test/thermalos-audit";
 
 export const CITIES = ["Phoenix, AZ", "Houston, TX", "Las Vegas, NV", "Dallas, TX"];
 

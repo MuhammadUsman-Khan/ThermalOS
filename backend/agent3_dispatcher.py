@@ -11,6 +11,7 @@ This module implements Agent 3 (Civic Heat Stress & Emergency Dispatcher):
 4. Dispatches automated high-priority safety alert payloads to local n8n webhooks.
 """
 
+import os
 import math
 import time
 import json
@@ -18,6 +19,9 @@ import logging
 import urllib.request
 from typing import Dict, Any, Optional
 from datetime import datetime, timezone
+from dotenv import load_dotenv
+
+load_dotenv()
 
 try:
     import requests
@@ -53,7 +57,10 @@ if not logger.handlers:
 # =========================================================================
 
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
-DEFAULT_N8N_ALERT_WEBHOOK = "http://127.0.0.1:5678/webhook/thermalos-alert"
+DEFAULT_N8N_ALERT_WEBHOOK = os.getenv(
+    "N8N_ALERT_WEBHOOK_URL",
+    "https://usmankhan0.app.n8n.cloud/webhook-test/thermalos-alert",
+)
 
 # Safe human survivability WBGT index threshold in Fahrenheit
 WBGT_SURVIVABILITY_THRESHOLD_F = 85.0
@@ -168,7 +175,7 @@ def calculate_wbgt(temp_f: float, relative_humidity: float) -> float:
 def dispatch_n8n_safety_alert(
     payload: Dict[str, Any],
     webhook_url: str = DEFAULT_N8N_ALERT_WEBHOOK,
-    timeout_seconds: float = 0.4
+    timeout_seconds: float = 4.0
 ) -> bool:
     """
     Dispatches automated high-priority safety alert HTTP POST payload to local n8n webhook.
