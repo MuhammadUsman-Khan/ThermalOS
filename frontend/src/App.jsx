@@ -291,13 +291,15 @@ export default function App() {
     }
   };
 
-  const handleRunInfrastructure = async () => {
-    if (isInfraLoading) return;
-    closeAllModals();
-    setIsInfraModalOpen(true);
+  const fetchInfrastructureData = async (openModal = true) => {
+    if (openModal) {
+      if (isInfraLoading) return;
+      closeAllModals();
+      setIsInfraModalOpen(true);
+    }
     setIsInfraLoading(true);
     setInfraError(null);
-    setInfraData(null);
+    if (openModal) setInfraData(null);
 
     const tempToSend = currentReading ? currentReading.temperature_f : 96;
     try {
@@ -313,13 +315,17 @@ export default function App() {
       pushLog(
         makeLog({ type: "dispatch", badge: "AGENT 2 INFRA", text: `❄️ AGENT 2 PRE-COOL DISPATCHED: Target ${report.target_precool_temp_f}°F initiated for ${selectedCity} (${tempToSend}°F).` })
       );
-      showToast("Agent 2 Pre-Cool Dispatched", `Grid load-shift initiated for ${selectedCity}.`);
+      if (openModal) {
+        showToast("Agent 2 Pre-Cool Dispatched", `Grid load-shift initiated for ${selectedCity}.`);
+      }
     } catch (err) {
       setInfraError(err.message || "Failed to connect to Agent 2 infrastructure endpoint.");
     } finally {
       setIsInfraLoading(false);
     }
   };
+
+  const handleRunInfrastructure = () => fetchInfrastructureData(true);
 
   const fetchCivicData = async (openModal = true) => {
     if (openModal) {
@@ -365,11 +371,12 @@ export default function App() {
   const currentTemp = currentReading ? currentReading.temperature_f : 96;
   const riskConfig = getRiskConfig(currentTemp);
 
-  // Autonomous emergency observer: silently fire Agent 3 on a >= 105°F breach.
+  // Autonomous emergency observer: silently fire Agent 2 (Pre-cool) & Agent 3 (Civic) on a >= 105°F breach.
   useEffect(() => {
     if (currentTemp >= 105 && !hasAutoTriggered) {
       setHasAutoTriggered(true);
       setIsEmergencyMode(true);
+      fetchInfrastructureData(false);
       fetchCivicData(false);
     } else if (currentTemp < 100 && hasAutoTriggered) {
       setHasAutoTriggered(false);
