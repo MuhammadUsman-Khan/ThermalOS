@@ -163,6 +163,9 @@ def audit_endpoint(request: AuditRequest):
 def infrastructure_precool_endpoint(request: AgentRequest):
     # Sync `def`: Agent 2 fires a blocking requests.post to the n8n webhook.
     # Threadpool execution keeps the telemetry loop responsive.
+    # Simulate realistic SCADA telemetry handshake & thermodynamic grid curve computation (1.2s)
+    # to ensure a consistent, clear loading spinner across all three agents.
+    time.sleep(1.2)
     try:
         agent2_result = agent2_process_reading(
             {
