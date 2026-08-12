@@ -1,4 +1,15 @@
 import os
+
+# Force the HuggingFace/transformers stack onto the PyTorch backend BEFORE any
+# langchain import. langchain_text_splitters eagerly imports sentence_transformers,
+# which otherwise tries to import TensorFlow — and TF currently dies on a
+# google.protobuf version conflict, raising RuntimeError (NOT ImportError) that would
+# crash the entire FastAPI server at import time. Disabling the TF/Flax backends
+# sidesteps that import chain entirely; ChromaDB embeddings run on ONNX/PyTorch anyway.
+os.environ.setdefault("USE_TF", "0")
+os.environ.setdefault("USE_FLAX", "0")
+os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
+
 import logging
 from dotenv import load_dotenv
 import chromadb
@@ -6,17 +17,20 @@ from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+# Broad except (not just ImportError): transitively importing these can raise
+# RuntimeError from a broken TensorFlow/protobuf install. We must degrade to the
+# baseline-chunk fallback rather than take the whole backend down.
 try:
     from langchain_community.document_loaders import PyPDFLoader
-except ImportError:
+except Exception:  # noqa: BLE001 - defensive: keep the server bootable
     PyPDFLoader = None
 
 try:
     from langchain_text_splitters import RecursiveCharacterTextSplitter
-except ImportError:
+except Exception:  # noqa: BLE001
     try:
         from langchain.text_splitter import RecursiveCharacterTextSplitter
-    except ImportError:
+    except Exception:  # noqa: BLE001
         RecursiveCharacterTextSplitter = None
 
 load_dotenv()
@@ -202,7 +216,11 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
     if api_key and api_key != "insert_your_actual_key_here" and api_key != "mock_key":
         try:
             llm = ChatGoogleGenerativeAI(
-                model="gemini-3.5-flash",
+                # `gemini-flash-latest` is a rolling alias for the current Flash model.
+                # Pinned versions (gemini-2.5-flash, gemini-2.5-flash-lite) now 404 with
+                # "no longer available to new users"; the alias keeps this path alive
+                # across model retirements without another code change.
+                model="gemini-flash-latest",
                 google_api_key=api_key,
                 temperature=0.2,
             )
@@ -284,5 +302,10 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
     )
 
 
-# Pre-initialize vector DB on module import
-initialize_vector_db()
+# Pre-initialize vector DB on module import. Never let a vector-store failure crash
+# the FastAPI process: the compliance audit lazily re-initializes (and has a
+# deterministic fallback) if this best-effort seed does not complete.
+try:
+    initialize_vector_db()
+except Exception as _init_err:  # noqa: BLE001
+    logger.warning("Agent 1: deferred vector DB initialization (%s).", _init_err)

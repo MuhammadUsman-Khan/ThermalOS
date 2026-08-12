@@ -119,13 +119,21 @@ class N8nHvacDispatcher:
 
 def _parse_payload(payload: dict) -> Optional[TemperatureReading]:
     location = payload.get("location") or payload.get("city")
-    temperature_f = payload.get("temperature_f") or payload.get("temperature")
+    # Use explicit None checks, not `or`: a legitimate 0.0°F reading is falsy and
+    # would otherwise be discarded as "missing".
+    temperature_f = payload.get("temperature_f")
+    if temperature_f is None:
+        temperature_f = payload.get("temperature")
     risk_level = payload.get("risk_level", "nominal")
     if location is None or temperature_f is None:
         return None
+    try:
+        temperature_f = float(temperature_f)
+    except (TypeError, ValueError):
+        return None
     return TemperatureReading(
         location=location,
-        temperature_f=float(temperature_f),
+        temperature_f=temperature_f,
         risk_level=risk_level,
         timestamp=float(payload.get("timestamp") or time.time()),
     )

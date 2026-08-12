@@ -256,6 +256,10 @@ def evaluate_civic_dispatch(
     # Step 4: Mathematical Trigger Condition & Webhook Execution
     should_alert = wbgt_index > WBGT_SURVIVABILITY_THRESHOLD_F or temp_f >= 105.0
 
+    # Single timestamp shared by the dispatched payload and the returned report so
+    # they never disagree by a few microseconds.
+    event_timestamp = datetime.now(timezone.utc).isoformat()
+
     alert_dispatched = False
     if should_alert:
         alert_payload = {
@@ -267,7 +271,7 @@ def evaluate_civic_dispatch(
             "survivability_threshold_f": WBGT_SURVIVABILITY_THRESHOLD_F,
             "heat_stress_risk": heat_stress_risk,
             "emergency_protocol": emergency_protocol,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": event_timestamp
         }
         alert_dispatched = dispatch_n8n_safety_alert(alert_payload, webhook_url=target_webhook)
 
@@ -280,7 +284,7 @@ def evaluate_civic_dispatch(
         emergency_protocol=emergency_protocol,
         relative_humidity=humidity,
         ambient_temp_f=float(temp_f),
-        timestamp=datetime.now(timezone.utc).isoformat()
+        timestamp=event_timestamp
     )
 
 

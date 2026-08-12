@@ -98,9 +98,13 @@ async def get_heat_intelligence(request: HeatIntelligenceRequest):
         )
         last_temp = LAST_CITY_TEMPS.get(city, 95)
 
-        # 3-4% chance of an occasional transient heat spike
+        # 3-4% chance of an occasional transient heat spike. The spike sits just
+        # above the city's normal max, capped at its configured ceiling. Guard the
+        # lower bound: cities whose ceiling is < 105°F (Houston, Dallas) would
+        # otherwise hit random.randint(low > high) and raise ValueError -> 500.
         if random.random() < cfg["spike_chance"]:
-            new_temp = random.randint(105, cfg["spike_val"])
+            spike_low = min(cfg["max"] + 1, cfg["spike_val"])
+            new_temp = random.randint(spike_low, cfg["spike_val"])
         else:
             # Visible fluctuation of +/- 1 to 3 degrees each second
             step = random.choice([-3, -2, -1, 1, 2, 3])
@@ -139,7 +143,10 @@ async def get_heat_intelligence(request: HeatIntelligenceRequest):
 
 
 @app.post("/v1/agents/audit", response_model=ComplianceReport)
-async def audit_endpoint(request: AuditRequest):
+def audit_endpoint(request: AuditRequest):
+    # Sync `def` (not async): run_compliance_audit does blocking work (Gemini
+    # inference + ChromaDB query). FastAPI runs sync handlers in a threadpool, so
+    # this never stalls the event loop / the 1s telemetry poll.
     if request.temperature_f is not None:
         temp_f = request.temperature_f
     else:
@@ -153,7 +160,9 @@ async def audit_endpoint(request: AuditRequest):
 
 
 @app.post("/v1/agents/infrastructure", response_model=InfrastructurePrecoolReport)
-async def infrastructure_precool_endpoint(request: AgentRequest):
+def infrastructure_precool_endpoint(request: AgentRequest):
+    # Sync `def`: Agent 2 fires a blocking requests.post to the n8n webhook.
+    # Threadpool execution keeps the telemetry loop responsive.
     try:
         agent2_result = agent2_process_reading(
             {
@@ -183,7 +192,10 @@ async def infrastructure_precool_endpoint(request: AgentRequest):
 
 
 @app.post("/v1/agents/civic", response_model=CivicDispatchReport)
-async def civic_dispatch_endpoint(request: AgentRequest):
+def civic_dispatch_endpoint(request: AgentRequest):
+    # Sync `def`: Agent 3 makes a blocking Open-Meteo GET (up to 3s) plus an n8n
+    # POST. Running in the threadpool prevents a slow upstream from freezing the
+    # event loop and every concurrent telemetry request.
     try:
         return evaluate_civic_dispatch(city=request.city, temp_f=request.temperature_f)
     except Exception as e:
