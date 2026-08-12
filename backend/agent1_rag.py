@@ -1,4 +1,5 @@
 import os
+import time
 
 # Force the HuggingFace/transformers stack onto the PyTorch backend BEFORE any
 # langchain import. langchain_text_splitters eagerly imports sentence_transformers,
@@ -11,11 +12,20 @@ os.environ.setdefault("USE_FLAX", "0")
 os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
 
 import logging
+from typing import Optional
 from dotenv import load_dotenv
+import requests
 import chromadb
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
+
+load_dotenv()
+
+N8N_AUDIT_WEBHOOK_URL = os.getenv(
+    "N8N_AUDIT_WEBHOOK_URL",
+    "https://usmankhan0.app.n8n.cloud/webhook/thermalos-audit",
+)
 
 # Broad except (not just ImportError): transitively importing these can raise
 # RuntimeError from a broken TensorFlow/protobuf install. We must degrade to the
@@ -192,11 +202,54 @@ def _clean_schema_for_gemini(schema_dict):
     return schema_dict
 
 
+def dispatch_n8n_audit(report: ComplianceReport, webhook_url: Optional[str] = None) -> bool:
+    """
+    Dispatches the LLM-generated RAG compliance audit to the n8n webhook.
+    Unpacks and maps the Pydantic ComplianceReport into exact keys expected by n8n:
+      - 'compliance_summary': Combined ASHRAE 55 and IECC evaluation summary.
+      - 'action_items': Actionable mitigation steps and HVAC protocols.
+    """
+    target_url = webhook_url or N8N_AUDIT_WEBHOOK_URL
+
+    compliance_summary = f"{report.ashrae_compliance_status} | {report.iecc_envelope_warning}"
+    action_items = [
+        report.recommended_hvac_action,
+        f"Verify IECC continuous insulation (ci) and U-factor integrity for {report.city} envelope zone.",
+        f"Maintain operative temperature setpoint below 79°F per ASHRAE 55 standards."
+    ]
+
+    payload = {
+        "agent": "Agent 1 (Urban Heat & Energy Compliance Analyst)",
+        "city": str(report.city),
+        "temperature_f": int(report.temperature_f),
+        "ashrae_compliance_status": str(report.ashrae_compliance_status),
+        "iecc_envelope_warning": str(report.iecc_envelope_warning),
+        "recommended_hvac_action": str(report.recommended_hvac_action),
+        "compliance_summary": compliance_summary,
+        "action_items": action_items,
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
+
+    try:
+        response = requests.post(target_url, json=payload, timeout=5.0)
+        if 200 <= response.status_code < 300:
+            logger.info("🚀 Agent 1 n8n compliance audit dispatched successfully to %s", target_url)
+            return True
+        else:
+            logger.warning("Agent 1 n8n dispatch returned status %s: %s", response.status_code, response.text[:100])
+    except Exception as e:
+        logger.info("Agent 1 n8n webhook dispatch attempted for %s (%s)", report.city, e)
+        return False
+
+    return False
+
+
 def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
     """
     Executes the Agent 1 RAG pipeline:
     1. Queries local ChromaDB for relevant building/energy codes.
     2. Invokes ChatGoogleGenerativeAI with LCEL and structured output using GEMINI_API_KEY from environment.
+    3. Dispatches the full Pydantic report to the n8n webhook.
     """
     collection = _collection if _collection is not None else initialize_vector_db()
     
@@ -258,6 +311,7 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
                 result = ComplianceReport.model_validate(raw_result)
 
             logger.info("Agent 1: Gemini RAG inference succeeded for %s (%s°F).", city, temp_f)
+            dispatch_n8n_audit(result)
             return result
         except Exception as e:
             logger.warning(
@@ -293,13 +347,15 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
         else "STANDARD BASELINE: Maintain standard HVAC ventilation schedule."
     )
     
-    return ComplianceReport(
+    fallback_report = ComplianceReport(
         city=city,
         temperature_f=temp_f,
         ashrae_compliance_status=status,
         iecc_envelope_warning=envelope_warning,
         recommended_hvac_action=hvac_action
     )
+    dispatch_n8n_audit(fallback_report)
+    return fallback_report
 
 
 # Pre-initialize vector DB on module import. Never let a vector-store failure crash

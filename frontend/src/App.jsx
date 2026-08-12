@@ -272,11 +272,26 @@ export default function App() {
       const report = await response.json();
       setAuditReport(report);
 
-      // Fire-and-forget n8n webhook dispatch (tolerated in local mock environments).
+      // Fire-and-forget n8n webhook dispatch
+      const auditPayload = {
+        agent: "Agent 1 (Urban Heat & Energy Compliance Analyst)",
+        city: report.city,
+        temperature_f: report.temperature_f,
+        ashrae_compliance_status: report.ashrae_compliance_status,
+        iecc_envelope_warning: report.iecc_envelope_warning,
+        recommended_hvac_action: report.recommended_hvac_action,
+        compliance_summary: `${report.ashrae_compliance_status} | ${report.iecc_envelope_warning}`,
+        action_items: [
+          report.recommended_hvac_action,
+          `Verify IECC continuous insulation (ci) and U-factor integrity for ${report.city} envelope zone.`,
+          `Maintain operative temperature setpoint below 79°F per ASHRAE 55 standards.`,
+        ],
+        timestamp: new Date().toISOString(),
+      };
       fetch(N8N_AUDIT_WEBHOOK, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(report),
+        body: JSON.stringify(auditPayload),
       }).catch(() => {});
 
       pushLog([
