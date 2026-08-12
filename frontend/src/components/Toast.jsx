@@ -1,14 +1,19 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, X } from "lucide-react";
 
 // Bottom-right toast that auto-dismisses after `duration` ms (default 3s).
 export default function Toast({ toast, onDismiss, duration = 3000 }) {
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
+
   useEffect(() => {
     if (!toast) return;
-    const t = setTimeout(onDismiss, duration);
+    const t = setTimeout(() => {
+      onDismissRef.current?.();
+    }, duration);
     return () => clearTimeout(t);
-  }, [toast, onDismiss, duration]);
+  }, [toast?.id, duration]);
 
   return (
     <div className="fixed bottom-5 right-5 z-[60] pointer-events-none">
