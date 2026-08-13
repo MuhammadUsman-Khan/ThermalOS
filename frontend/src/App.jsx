@@ -46,6 +46,7 @@ import {
 } from "./lib/utils";
 import KPICard from "./components/KPICard";
 import AgentEventLog from "./components/AgentEventLog";
+import AgentVisualization from "./components/AgentVisualization";
 import AgentOneModal from "./components/AgentOneModal";
 import AgentTwoModal from "./components/AgentTwoModal";
 import AgentThreeModal from "./components/AgentThreeModal";
@@ -53,6 +54,12 @@ import Toast from "./components/Toast";
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(false);
+
+  const [agentStates, setAgentStates] = useState({
+    agent1: "idle",
+    agent2: "idle",
+    agent3: "idle",
+  });
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -259,9 +266,11 @@ export default function App() {
     setIsAuditLoading(true);
     setAuditError(null);
     setAuditReport(null);
+    setAgentStates((prev) => ({ ...prev, agent1: "thinking" }));
 
     const tempToSend = currentReading ? currentReading.temperature_f : 96;
     try {
+      setAgentStates((prev) => ({ ...prev, agent1: "working" }));
       const response = await fetch(`${API_BASE}/v1/agents/audit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -299,8 +308,13 @@ export default function App() {
         makeLog({ type: "dispatch", badge: "N8N DISPATCH", text: `🚀 N8N AUTOMATED DISPATCH: Pre-cooling & mitigation payload transmitted silently to Agent 2 controller.` }),
       ]);
       showToast("Agent 1 Audit Complete", `Compliance report generated for ${selectedCity}.`);
+      setAgentStates((prev) => ({ ...prev, agent1: "success" }));
+      setTimeout(() => {
+        setAgentStates((prev) => (prev.agent1 === "success" ? { ...prev, agent1: "idle" } : prev));
+      }, 3000);
     } catch (err) {
       setAuditError(err.message || "Failed to connect to Agent 1 audit endpoint.");
+      setAgentStates((prev) => ({ ...prev, agent1: "idle" }));
     } finally {
       setIsAuditLoading(false);
     }
@@ -315,9 +329,11 @@ export default function App() {
     setIsInfraLoading(true);
     setInfraError(null);
     if (openModal) setInfraData(null);
+    setAgentStates((prev) => ({ ...prev, agent2: "thinking" }));
 
     const tempToSend = currentReading ? currentReading.temperature_f : 96;
     try {
+      setAgentStates((prev) => ({ ...prev, agent2: "working" }));
       const response = await fetch(`${API_BASE}/v1/agents/infrastructure`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -333,8 +349,13 @@ export default function App() {
       if (openModal) {
         showToast("Agent 2 Pre-Cool Dispatched", `Grid load-shift initiated for ${selectedCity}.`);
       }
+      setAgentStates((prev) => ({ ...prev, agent2: "success" }));
+      setTimeout(() => {
+        setAgentStates((prev) => (prev.agent2 === "success" ? { ...prev, agent2: "idle" } : prev));
+      }, 3000);
     } catch (err) {
       setInfraError(err.message || "Failed to connect to Agent 2 infrastructure endpoint.");
+      setAgentStates((prev) => ({ ...prev, agent2: "idle" }));
     } finally {
       setIsInfraLoading(false);
     }
@@ -350,9 +371,11 @@ export default function App() {
     }
     setIsCivicLoading(true);
     setCivicError(null);
+    setAgentStates((prev) => ({ ...prev, agent3: "thinking" }));
 
     const tempToSend = currentReading ? currentReading.temperature_f : 96;
     try {
+      setAgentStates((prev) => ({ ...prev, agent3: "working" }));
       const response = await fetch(`${API_BASE}/v1/agents/civic`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -369,8 +392,13 @@ export default function App() {
       if (openModal) {
         showToast("Agent 3 Civic Override", `WBGT ${report.wbgt_index} — alerts broadcast for ${selectedCity}.`);
       }
+      setAgentStates((prev) => ({ ...prev, agent3: "success" }));
+      setTimeout(() => {
+        setAgentStates((prev) => (prev.agent3 === "success" ? { ...prev, agent3: "idle" } : prev));
+      }, 3000);
     } catch (err) {
       setCivicError(err.message || "Failed to connect to Agent 3 civic endpoint.");
+      setAgentStates((prev) => ({ ...prev, agent3: "idle" }));
     } finally {
       setIsCivicLoading(false);
     }
@@ -391,11 +419,13 @@ export default function App() {
     if (currentTemp >= 105 && !hasAutoTriggered) {
       setHasAutoTriggered(true);
       setIsEmergencyMode(true);
+      setAgentStates({ agent1: "alert", agent2: "alert", agent3: "alert" });
       fetchInfrastructureData(false);
       fetchCivicData(false);
     } else if (currentTemp < 100 && hasAutoTriggered) {
       setHasAutoTriggered(false);
       setIsEmergencyMode(false);
+      setAgentStates({ agent1: "idle", agent2: "idle", agent3: "idle" });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTemp, hasAutoTriggered]);
@@ -728,6 +758,9 @@ export default function App() {
 
           <AgentEventLog logs={eventLogs} totalEventsCount={totalEventsCount} onClear={handleClearLog} />
         </div>
+
+        {/* Real-Time Phaser 3 Agent Activity Visualization */}
+        <AgentVisualization agentStates={agentStates} darkMode={darkMode} />
 
         {/* System status row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
