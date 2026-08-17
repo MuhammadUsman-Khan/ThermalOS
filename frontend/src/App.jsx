@@ -21,12 +21,14 @@ import {
   Droplets,
   FileCheck,
   Flame,
+  Globe,
   Layers,
   MapPin,
   Moon,
   Radio,
   RefreshCw,
   Shield,
+  Sliders,
   Sun,
   Thermometer,
   Wifi,
@@ -47,7 +49,11 @@ import {
   telemetryLog,
 } from "./lib/utils";
 import KPICard from "./components/KPICard";
+import RadialGauge from "./components/RadialGauge";
 import SurfaceSegmentationCard from "./components/SurfaceSegmentationCard";
+import SpatialHeatmapView from "./components/SpatialHeatmapView";
+import DiurnalTimelineScrubber from "./components/DiurnalTimelineScrubber";
+import NationalThermalGridMatrix from "./components/NationalThermalGridMatrix";
 import AgentEventLog from "./components/AgentEventLog";
 import AgentVisualization from "./components/AgentVisualization";
 import AgentOneModal from "./components/AgentOneModal";
@@ -57,6 +63,7 @@ import Toast from "./components/Toast";
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(false);
+  const [activeTab, setActiveTab] = useState("operations"); // 'operations' | 'spatial_heatmap' | 'diurnal_sim' | 'national_grid'
 
   const [agentStates, setAgentStates] = useState({
     agent1: "idle",
@@ -88,7 +95,7 @@ export default function App() {
     document.documentElement.classList.toggle("dark", darkMode);
   }, [darkMode]);
 
-  // Close the city dropdown when clicking outside of it.
+  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -107,7 +114,7 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // Uptime + date ticker.
+  // Uptime ticker
   useEffect(() => {
     const interval = setInterval(() => {
       setUptimeSeconds((prev) => {
@@ -206,7 +213,7 @@ export default function App() {
     setIsCivicModalOpen(false);
   };
 
-  // Continuous 1000ms polling loop with real round-trip latency measurement.
+  // Continuous 1000ms polling loop
   useEffect(() => {
     let isMounted = true;
 
@@ -282,7 +289,7 @@ export default function App() {
       makeLog({
         type: "city_change",
         badge: "CITY CHANGED",
-        text: `--- CITY CHANGED: ${newCity} --- Loading FortyGuard microclimate parameters.`,
+        text: `--- CITY CHANGED: ${newCity} --- Synchronizing FortyGuard microclimate layer.`,
       })
     );
   };
@@ -446,7 +453,7 @@ export default function App() {
   const wbgt = currentReading ? currentReading.wbgt_f || 81.2 : 81.2;
   const riskConfig = getRiskConfig(currentTemp);
 
-  // Autonomous emergency observer: fire Agent 2 (Pre-cool) & Agent 3 (Civic) on a >= 105°F breach.
+  // Autonomous emergency observer
   useEffect(() => {
     if (currentTemp >= 105 && !hasAutoTriggered) {
       setHasAutoTriggered(true);
@@ -611,234 +618,324 @@ export default function App() {
 
       {/* Main dashboard */}
       <main className="w-full max-w-7xl mx-auto px-4 py-6 flex-1 flex flex-col space-y-5 relative z-10">
-        {/* FortyGuard KPI 4-Card Mission Control Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* 1. Surface vs Ambient Temp */}
-          <KPICard
-            label="SURFACE VS AMBIENT"
-            icon={<Thermometer className="w-4 h-4 text-orange-500 mb-4" />}
-            value={surfaceTemp.toFixed(1)}
-            unit="°F"
-            valueSuffix={
-              <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ml-2 mb-1 bg-orange-500/20 text-orange-500 border border-orange-500/30">
-                +{surfaceDelta.toFixed(1)}°F ΔT
-              </span>
-            }
-            hoverBorder="hover:border-[#FF6B2B]/30"
-            darkMode={darkMode}
-            sparkStroke={riskConfig.sparkStroke}
-            sparkGradientId="sparkOrangeGrad"
-            sparkPath="M0,24 Q15,6 32,18 T65,10 T95,14 L110,8"
-            footer={
-              <div className="text-[11px] font-mono text-gray-500 dark:text-zinc-400">
-                Ambient: <strong className="text-slate-800 dark:text-white">{currentTemp}°F</strong>
-              </div>
-            }
-          />
+        {/* Navigation View Switcher */}
+        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white/70 dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/10 shadow-sm backdrop-blur-xl font-mono text-xs overflow-x-auto">
+          <button
+            onClick={() => setActiveTab("operations")}
+            className={`px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all whitespace-nowrap ${
+              activeTab === "operations"
+                ? "bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-md shadow-orange-500/20"
+                : "text-gray-600 dark:text-zinc-400 hover:text-orange-500 dark:hover:text-white"
+            }`}
+          >
+            <Activity className="w-4 h-4" />
+            <span>OPERATIONS CENTER</span>
+          </button>
 
-          {/* 2. Solar Irradiance GHI */}
-          <KPICard
-            label="SOLAR IRRADIANCE (GHI)"
-            icon={<Sun className="w-4 h-4 text-amber-500 mb-4" />}
-            value={solarGhi.toFixed(0)}
-            unit="W/m²"
-            valueSuffix={
-              <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ml-2 mb-1 ${solarGhi >= 600 ? "bg-red-500/20 text-red-500 border border-red-500/30" : "bg-amber-500/20 text-amber-500 border border-amber-500/30"}`}>
-                {solarGhi >= 600 ? "PEAK FLUX" : "MODERATE"}
-              </span>
-            }
-            hoverBorder="hover:border-amber-500/30"
-            darkMode={darkMode}
-            sparkStroke="#F59E0B"
-            sparkGradientId="sparkAmberGrad"
-            sparkPath="M0,28 Q20,12 45,20 T80,8 T100,16 L110,10"
-            footer={
-              <div className="text-[11px] font-mono text-gray-500 dark:text-zinc-400">
-                Clear Sky DNI: <strong className="text-slate-800 dark:text-white">{(solarGhi * 1.3).toFixed(0)} W/m²</strong>
-              </div>
-            }
-          />
+          <button
+            onClick={() => setActiveTab("spatial_heatmap")}
+            className={`px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all whitespace-nowrap ${
+              activeTab === "spatial_heatmap"
+                ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md shadow-red-500/20"
+                : "text-gray-600 dark:text-zinc-400 hover:text-orange-500 dark:hover:text-white"
+            }`}
+          >
+            <Radio className="w-4 h-4" />
+            <span>FORTYGUARD SPATIAL HEATMAP (100M² TCM)</span>
+          </button>
 
-          {/* 3. Relative Humidity */}
-          <KPICard
-            label="RELATIVE HUMIDITY"
-            icon={<Droplets className="w-4 h-4 text-cyan-500 mb-4" />}
-            value={humidity.toFixed(1)}
-            unit="%"
-            valueSuffix={
-              <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ml-2 mb-1 bg-cyan-500/20 text-cyan-500 border border-cyan-500/30">
-                VAPOR ACTIVE
-              </span>
-            }
-            hoverBorder="hover:border-cyan-500/30"
-            darkMode={darkMode}
-            sparkStroke="#06B6D4"
-            sparkGradientId="sparkCyanGrad"
-            sparkPath="M0,16 Q25,24 50,14 T85,20 T105,10 L110,14"
-            footer={
-              <div className="text-[11px] font-mono text-gray-500 dark:text-zinc-400">
-                Wet-Bulb: <strong className="text-slate-800 dark:text-white">{currentReading?.wet_bulb_f ? `${currentReading.wet_bulb_f.toFixed(1)}°F` : "74.1°F"}</strong>
-              </div>
-            }
-          />
+          <button
+            onClick={() => setActiveTab("diurnal_sim")}
+            className={`px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all whitespace-nowrap ${
+              activeTab === "diurnal_sim"
+                ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md shadow-amber-500/20"
+                : "text-gray-600 dark:text-zinc-400 hover:text-amber-500 dark:hover:text-white"
+            }`}
+          >
+            <Clock className="w-4 h-4" />
+            <span>24H DIURNAL SIMULATOR</span>
+          </button>
 
-          {/* 4. Real-Time WBGT (Liljegren Index) */}
-          <KPICard
-            label="WBGT SURVIVABILITY"
-            icon={<Shield className="w-4 h-4 text-rose-500 mb-4" />}
-            value={wbgt.toFixed(1)}
-            unit="°F"
-            valueSuffix={
-              <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ml-2 mb-1 ${wbgt >= 85.0 ? "bg-red-500/20 text-red-500 border border-red-500/30 shadow-[0_0_8px_rgba(239,68,68,0.2)]" : "bg-emerald-500/20 text-emerald-500 border border-emerald-500/30"}`}>
-                {wbgt >= 85.0 ? "CRITICAL ALERT" : "NOMINAL"}
-              </span>
-            }
-            hoverBorder="hover:border-rose-500/30"
-            darkMode={darkMode}
-            sparkStroke="#F43F5E"
-            sparkGradientId="sparkRoseGrad"
-            sparkPath="M0,18 Q20,26 42,12 T78,22 T98,8 L110,14"
-            footer={
-              <span className="font-mono text-[11px] text-gray-500 dark:text-zinc-400">
-                Survivability Limit: <strong className="text-red-500">85.0°F</strong>
-              </span>
-            }
-          />
+          <button
+            onClick={() => setActiveTab("national_grid")}
+            className={`px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all whitespace-nowrap ${
+              activeTab === "national_grid"
+                ? "bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-md shadow-cyan-500/20"
+                : "text-gray-600 dark:text-zinc-400 hover:text-cyan-500 dark:hover:text-white"
+            }`}
+          >
+            <Globe className="w-4 h-4" />
+            <span>NATIONAL THERMAL GRID</span>
+          </button>
         </div>
 
-        {/* Workspace row: Telemetry Chart + Satellite Composition & Logs */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-          {/* Telemetry chart */}
-          <div className="lg:col-span-8 bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between shadow-sm dark:shadow-2xl backdrop-blur-xl">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100 dark:border-white/5">
-              <div>
-                <div className="flex items-center gap-2.5">
-                  <Activity className="w-4 h-4 text-[#FF6B2B]" />
-                  <h2 className="font-display text-sm font-bold uppercase tracking-tight text-slate-900 dark:text-white">
-                    FORTYGUARD THERMAL TELEMETRY STREAM • {selectedCity}
-                  </h2>
-                </div>
-                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                  Real-time Surface Radiometric vs. Ambient Canopy Temperature (rolling window)
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 text-xs font-mono">
-                  <span className="w-3 h-3 rounded-full bg-[#f97316]" />
-                  <span className="text-gray-600 dark:text-zinc-400">Surface (°F)</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs font-mono">
-                  <span className="w-3 h-3 rounded-full bg-[#38bdf8]" />
-                  <span className="text-gray-600 dark:text-zinc-400">Ambient (°F)</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full h-80 relative">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={telemetryData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="neonSurfaceFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f97316" stopOpacity={darkMode ? 0.35 : 0.12} />
-                      <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
-                    </linearGradient>
-                    <filter id="neonGlow">
-                      <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#f97316" floodOpacity={darkMode ? "0.6" : "0.15"} />
-                    </filter>
-                  </defs>
-
-                  <XAxis
-                    dataKey="time"
-                    stroke={darkMode ? "#1E2330" : "#E5E7EB"}
-                    tick={{ fill: darkMode ? "#71717A" : "#6B7280", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
-                    tickLine={false}
-                    axisLine={{ stroke: darkMode ? "#1E2330" : "#E5E7EB" }}
-                    interval="preserveStartEnd"
-                    minTickGap={28}
-                  />
-
-                  <YAxis
-                    domain={[75, 125]}
-                    ticks={[75, 85, 95, 105, 115, 125]}
-                    allowDataOverflow={false}
-                    stroke={darkMode ? "#1E2330" : "#E5E7EB"}
-                    tick={{ fill: darkMode ? "#71717A" : "#6B7280", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
-                    tickLine={false}
-                    axisLine={{ stroke: darkMode ? "#1E2330" : "#E5E7EB" }}
-                    tickFormatter={(val) => `${val}°`}
-                  />
-
-                  <Tooltip
-                    cursor={false}
-                    contentStyle={{
-                      backgroundColor: darkMode ? "#0D0D0D" : "#ffffff",
-                      borderColor: darkMode ? "rgba(255,255,255,0.1)" : "#e5e7eb",
-                      borderRadius: "8px",
-                      color: darkMode ? "#fff" : "#0f172a",
-                      boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-                    }}
-                  />
-
-                  <ReferenceLine
-                    y={105}
-                    stroke="#FF3B3B"
-                    strokeDasharray="4 4"
-                    strokeWidth={1.5}
-                    label={{
-                      value: "CRITICAL 105°F",
-                      fill: "#FF3B3B",
-                      position: "insideBottomRight",
-                      fontSize: 10,
-                      fontFamily: "JetBrains Mono, monospace",
-                      fontWeight: 600,
-                    }}
-                  />
-
-                  {/* Surface Radiometric Temperature Area */}
-                  <Area
-                    type="monotone"
-                    dataKey="surface_temperature_f"
-                    name="Surface Temp"
-                    stroke="#f97316"
-                    strokeWidth={3}
-                    fill="url(#neonSurfaceFill)"
-                    filter="url(#neonGlow)"
-                    dot={false}
-                    activeDot={{ r: 5, fill: "#f97316", stroke: darkMode ? "#000" : "#fff", strokeWidth: 2 }}
-                    isAnimationActive={true}
-                    animationDuration={300}
-                  />
-
-                  {/* Ambient Air Temperature Line */}
-                  <Line
-                    type="monotone"
-                    dataKey="temperature_f"
-                    name="Ambient Temp"
-                    stroke="#38bdf8"
-                    strokeWidth={2}
-                    strokeDasharray="3 3"
-                    dot={false}
-                    activeDot={{ r: 4, fill: "#38bdf8" }}
-                  />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Satellite Land-Cover Breakdown Card */}
-            <div className="mt-4">
-              <SurfaceSegmentationCard
-                segmentation={currentReading?.satellite}
-                city={selectedCity}
+        {/* Tab 1: Operations Center */}
+        {activeTab === "operations" && (
+          <div className="space-y-5">
+            {/* FortyGuard KPI 4-Card Mission Control Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* 1. Surface vs Ambient Temp */}
+              <KPICard
+                label="SURFACE VS AMBIENT"
+                icon={<Thermometer className="w-4 h-4 text-orange-500 mb-4" />}
+                value={surfaceTemp.toFixed(1)}
+                unit="°F"
+                valueSuffix={
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ml-2 mb-1 bg-orange-500/20 text-orange-500 border border-orange-500/30">
+                    +{surfaceDelta.toFixed(1)}°F ΔT
+                  </span>
+                }
+                hoverBorder="hover:border-[#FF6B2B]/30"
                 darkMode={darkMode}
+                sparkStroke={riskConfig.sparkStroke}
+                sparkGradientId="sparkOrangeGrad"
+                sparkPath="M0,24 Q15,6 32,18 T65,10 T95,14 L110,8"
+                footer={
+                  <div className="text-[11px] font-mono text-gray-500 dark:text-zinc-400">
+                    Ambient: <strong className="text-slate-800 dark:text-white">{currentTemp}°F</strong>
+                  </div>
+                }
               />
+
+              {/* 2. Solar Irradiance GHI */}
+              <KPICard
+                label="SOLAR IRRADIANCE (GHI)"
+                icon={<Sun className="w-4 h-4 text-amber-500 mb-4" />}
+                value={solarGhi.toFixed(0)}
+                unit="W/m²"
+                valueSuffix={
+                  <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ml-2 mb-1 ${solarGhi >= 600 ? "bg-red-500/20 text-red-500 border border-red-500/30" : "bg-amber-500/20 text-amber-500 border border-amber-500/30"}`}>
+                    {solarGhi >= 600 ? "PEAK FLUX" : "MODERATE"}
+                  </span>
+                }
+                hoverBorder="hover:border-amber-500/30"
+                darkMode={darkMode}
+                sparkStroke="#F59E0B"
+                sparkGradientId="sparkAmberGrad"
+                sparkPath="M0,28 Q20,12 45,20 T80,8 T100,16 L110,10"
+                footer={
+                  <div className="text-[11px] font-mono text-gray-500 dark:text-zinc-400">
+                    Clear Sky DNI: <strong className="text-slate-800 dark:text-white">{(solarGhi * 1.3).toFixed(0)} W/m²</strong>
+                  </div>
+                }
+              />
+
+              {/* 3. Relative Humidity */}
+              <KPICard
+                label="RELATIVE HUMIDITY"
+                icon={<Droplets className="w-4 h-4 text-cyan-500 mb-4" />}
+                value={humidity.toFixed(1)}
+                unit="%"
+                valueSuffix={
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ml-2 mb-1 bg-cyan-500/20 text-cyan-500 border border-cyan-500/30">
+                    VAPOR ACTIVE
+                  </span>
+                }
+                hoverBorder="hover:border-cyan-500/30"
+                darkMode={darkMode}
+                sparkStroke="#06B6D4"
+                sparkGradientId="sparkCyanGrad"
+                sparkPath="M0,16 Q25,24 50,14 T85,20 T105,10 L110,14"
+                footer={
+                  <div className="text-[11px] font-mono text-gray-500 dark:text-zinc-400">
+                    Wet-Bulb: <strong className="text-slate-800 dark:text-white">{currentReading?.wet_bulb_f ? `${currentReading.wet_bulb_f.toFixed(1)}°F` : "74.1°F"}</strong>
+                  </div>
+                }
+              />
+
+              {/* 4. Real-Time WBGT with Radial Gauge */}
+              <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-4 flex flex-col items-center justify-between shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-rose-500/30 transition-all">
+                <RadialGauge
+                  value={wbgt}
+                  min={60}
+                  max={100}
+                  threshold={85}
+                  unit="°F"
+                  label="LILJEGREN WBGT INDEX"
+                  size={135}
+                  color={wbgt >= 85 ? "#F43F5E" : "#10B981"}
+                />
+                <div className="w-full flex items-center justify-between pt-2 border-t border-gray-100 dark:border-white/5 font-mono text-[10px] text-gray-500 dark:text-zinc-400">
+                  <span>Crit Limit: <strong className="text-red-500">85.0°F</strong></span>
+                  <span className={wbgt >= 85 ? "text-red-500 font-bold" : "text-emerald-500 font-bold"}>
+                    {wbgt >= 85 ? "ALERT ACTIVE" : "NOMINAL"}
+                  </span>
+                </div>
+              </div>
             </div>
+
+            {/* Workspace row: Telemetry Chart + Satellite Composition & Logs */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              {/* Telemetry chart */}
+              <div className="lg:col-span-8 bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between shadow-sm dark:shadow-2xl backdrop-blur-xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100 dark:border-white/5">
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <Activity className="w-4 h-4 text-[#FF6B2B]" />
+                      <h2 className="font-display text-sm font-bold uppercase tracking-tight text-slate-900 dark:text-white">
+                        FORTYGUARD THERMAL TELEMETRY STREAM • {selectedCity}
+                      </h2>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                      Real-time Surface Radiometric vs. Ambient Canopy Temperature (rolling window)
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 text-xs font-mono">
+                      <span className="w-3 h-3 rounded-full bg-[#f97316]" />
+                      <span className="text-gray-600 dark:text-zinc-400">Surface (°F)</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs font-mono">
+                      <span className="w-3 h-3 rounded-full bg-[#38bdf8]" />
+                      <span className="text-gray-600 dark:text-zinc-400">Ambient (°F)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="w-full h-80 relative">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={telemetryData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="neonSurfaceFill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f97316" stopOpacity={darkMode ? 0.35 : 0.12} />
+                          <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                        </linearGradient>
+                        <filter id="neonGlow">
+                          <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#f97316" floodOpacity={darkMode ? "0.6" : "0.15"} />
+                        </filter>
+                      </defs>
+
+                      <XAxis
+                        dataKey="time"
+                        stroke={darkMode ? "#1E2330" : "#E5E7EB"}
+                        tick={{ fill: darkMode ? "#71717A" : "#6B7280", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
+                        tickLine={false}
+                        axisLine={{ stroke: darkMode ? "#1E2330" : "#E5E7EB" }}
+                        interval="preserveStartEnd"
+                        minTickGap={28}
+                      />
+
+                      <YAxis
+                        domain={[75, 125]}
+                        ticks={[75, 85, 95, 105, 115, 125]}
+                        allowDataOverflow={false}
+                        stroke={darkMode ? "#1E2330" : "#E5E7EB"}
+                        tick={{ fill: darkMode ? "#71717A" : "#6B7280", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
+                        tickLine={false}
+                        axisLine={{ stroke: darkMode ? "#1E2330" : "#E5E7EB" }}
+                        tickFormatter={(val) => `${val}°`}
+                      />
+
+                      <Tooltip
+                        cursor={false}
+                        contentStyle={{
+                          backgroundColor: darkMode ? "#0D0D0D" : "#ffffff",
+                          borderColor: darkMode ? "rgba(255,255,255,0.1)" : "#e5e7eb",
+                          borderRadius: "8px",
+                          color: darkMode ? "#fff" : "#0f172a",
+                          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
+                        }}
+                      />
+
+                      <ReferenceLine
+                        y={105}
+                        stroke="#FF3B3B"
+                        strokeDasharray="4 4"
+                        strokeWidth={1.5}
+                        label={{
+                          value: "CRITICAL 105°F",
+                          fill: "#FF3B3B",
+                          position: "insideBottomRight",
+                          fontSize: 10,
+                          fontFamily: "JetBrains Mono, monospace",
+                          fontWeight: 600,
+                        }}
+                      />
+
+                      {/* Surface Radiometric Temperature Area */}
+                      <Area
+                        type="monotone"
+                        dataKey="surface_temperature_f"
+                        name="Surface Temp"
+                        stroke="#f97316"
+                        strokeWidth={3}
+                        fill="url(#neonSurfaceFill)"
+                        filter="url(#neonGlow)"
+                        dot={false}
+                        activeDot={{ r: 5, fill: "#f97316", stroke: darkMode ? "#000" : "#fff", strokeWidth: 2 }}
+                        isAnimationActive={true}
+                        animationDuration={300}
+                      />
+
+                      {/* Ambient Air Temperature Line */}
+                      <Line
+                        type="monotone"
+                        dataKey="temperature_f"
+                        name="Ambient Temp"
+                        stroke="#38bdf8"
+                        strokeWidth={2}
+                        strokeDasharray="3 3"
+                        dot={false}
+                        activeDot={{ r: 4, fill: "#38bdf8" }}
+                      />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Satellite Land-Cover Breakdown Card */}
+                <div className="mt-4">
+                  <SurfaceSegmentationCard
+                    segmentation={currentReading?.satellite}
+                    city={selectedCity}
+                    darkMode={darkMode}
+                  />
+                </div>
+              </div>
+
+              <AgentEventLog logs={eventLogs} totalEventsCount={totalEventsCount} onClear={handleClearLog} />
+            </div>
+
+            {/* Real-Time Phaser 3 Agent Activity Visualization */}
+            <AgentVisualization agentStates={agentStates} darkMode={darkMode} />
           </div>
+        )}
 
-          <AgentEventLog logs={eventLogs} totalEventsCount={totalEventsCount} onClear={handleClearLog} />
-        </div>
+        {/* Tab 2: FortyGuard Spatial Heatmap View */}
+        {activeTab === "spatial_heatmap" && (
+          <SpatialHeatmapView selectedCity={selectedCity} darkMode={darkMode} />
+        )}
 
-        {/* Real-Time Phaser 3 Agent Activity Visualization */}
-        <AgentVisualization agentStates={agentStates} darkMode={darkMode} />
+        {/* Tab 3: 24-Hour Diurnal Simulator */}
+        {activeTab === "diurnal_sim" && (
+          <DiurnalTimelineScrubber
+            selectedCity={selectedCity}
+            onHourChange={(dataPoint) => {
+              // Update local state when user scrubs timeline
+              if (dataPoint) {
+                setCurrentReading((prev) => ({
+                  ...prev,
+                  temperature_f: dataPoint.ambientTemp,
+                  surface_temperature_f: dataPoint.surfaceTemp,
+                  solar_irradiance_ghi: dataPoint.ghi,
+                  relative_humidity: dataPoint.humidity,
+                  wbgt_f: dataPoint.wbgt,
+                }));
+              }
+            }}
+            darkMode={darkMode}
+          />
+        )}
+
+        {/* Tab 4: National Thermal Grid Matrix */}
+        {activeTab === "national_grid" && (
+          <NationalThermalGridMatrix
+            selectedCity={selectedCity}
+            onSelectCity={(city) => {
+              handleSelectCity(city);
+              setActiveTab("operations");
+            }}
+          />
+        )}
 
         {/* System status row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
