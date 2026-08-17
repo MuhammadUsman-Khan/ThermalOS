@@ -13,6 +13,8 @@ import {
   Eye,
   Map,
   Compass,
+  Scan,
+  Globe2,
 } from "lucide-react";
 
 // Exact 12 FortyGuard equal-interval classes from official Quickstart Notebook
@@ -58,12 +60,13 @@ const BASEMAP_PRESETS = {
 };
 
 // Generates an authentic continuous 2D spatial thermal grid with hot zones, transitions, and cool islands
-function generateSpatialThermalGrid(centerLat, centerLng, baseTempC = 27.4) {
+function generateSpatialThermalGrid(centerLat, centerLng, baseTempC = 27.4, scope = "core") {
   const features = [];
-  const rows = 36;
-  const cols = 40;
-  const stepLat = 0.0022;
-  const stepLng = 0.0028;
+  const isMetro = scope === "metro";
+  const rows = isMetro ? 44 : 36;
+  const cols = isMetro ? 48 : 40;
+  const stepLat = isMetro ? 0.0055 : 0.0022;
+  const stepLng = isMetro ? 0.0068 : 0.0028;
   const minLat = centerLat - (rows / 2) * stepLat;
   const minLng = centerLng - (cols / 2) * stepLng;
 
@@ -75,17 +78,19 @@ function generateSpatialThermalGrid(centerLat, centerLng, baseTempC = 27.4) {
       // Realistic 2D spatial heat island dynamics matching quickstart notebook:
       // - Hot asphalt core in south and southeast (high r, high c)
       // - Cooler green canopy and lake in north (low r, middle c)
-      const distFromCoolSpot = Math.hypot((r - 31) / 5, (c - 20) / 4);
-      const coolIsland = Math.exp(-Math.pow(distFromCoolSpot, 2)) * 1.7;
+      const coolR = isMetro ? 38 : 31;
+      const coolC = isMetro ? 24 : 20;
+      const distFromCoolSpot = Math.hypot((r - coolR) / 6, (c - coolC) / 5);
+      const coolIsland = Math.exp(-Math.pow(distFromCoolSpot, 2)) * 1.75;
 
       const southHeat = (r / rows) * 1.1;
       const eastHeat = (c / cols) * 0.4;
       const noise =
-        Math.sin(r * 0.25 + c * 0.18) * 0.18 +
-        Math.cos(r * 0.15 - c * 0.3) * 0.12;
+        Math.sin(r * 0.22 + c * 0.16) * 0.2 +
+        Math.cos(r * 0.14 - c * 0.28) * 0.14;
 
       // Map temperature to exact 26.33°C - 28.37°C range
-      let tempC = 28.35 - (r / rows) * 1.4 + (c > 25 ? 0.3 : -0.1) - coolIsland + noise + eastHeat * 0.3;
+      let tempC = 28.35 - (r / rows) * 1.35 + (c > 25 ? 0.3 : -0.1) - coolIsland + noise + eastHeat * 0.3;
       tempC = Math.max(26.33, Math.min(28.37, tempC));
       tempC = +tempC.toFixed(2);
       const tempF = +((tempC * 1.8) + 32).toFixed(1);
@@ -136,6 +141,7 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
   const labelsTileLayerRef = useRef(null);
 
   const [activeLayer, setActiveLayer] = useState("tcm"); // 'tcm' | 'exceedance' | 'persistence'
+  const [scope, setScope] = useState("core"); // 'core' (Downtown AOI) | 'metro' (Full Metropolitan Horizon)
   const [baseMapStyle, setBaseMapStyle] = useState(darkMode ? "dark" : "voyager");
   const [opacity, setOpacity] = useState(0.65);
   const [selectedParcel, setSelectedParcel] = useState(null);
@@ -155,19 +161,19 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
 
     const map = L.map(mapContainerRef.current, {
       center: [cityConfig.lat, cityConfig.lng],
-      zoom: cityConfig.zoom,
+      zoom: scope === "metro" ? 11 : cityConfig.zoom,
       zoomControl: false,
       attributionControl: false,
     });
 
-    // Create a dedicated top pane for street names and labels (renders OVER polygons!)
+    // Dedicated top pane for street labels (floats above polygons)
     map.createPane("topLabelsPane");
     map.getPane("topLabelsPane").style.zIndex = 650;
     map.getPane("topLabelsPane").style.pointerEvents = "none";
 
     const preset = BASEMAP_PRESETS[baseMapStyle] || BASEMAP_PRESETS.voyager;
 
-    // 1. Bottom Base Layer (Roads, landcover, buildings)
+    // 1. Bottom Base Layer (Roads, landcover, terrain)
     const baseLayer = L.tileLayer(preset.base, {
       maxZoom: 19,
       subdomains: "abcd",
@@ -198,7 +204,7 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
 
     setIsLoading(true);
 
-    const geoData = generateSpatialThermalGrid(cityConfig.lat, cityConfig.lng, cityConfig.baseTemp);
+    const geoData = generateSpatialThermalGrid(cityConfig.lat, cityConfig.lng, cityConfig.baseTemp, scope);
 
     if (geoJsonLayerRef.current) {
       mapInstanceRef.current.removeLayer(geoJsonLayerRef.current);
@@ -245,9 +251,9 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
     geoJsonLayerRef.current = layer;
 
     // Fit map view around thermal grid
-    mapInstanceRef.current.fitBounds(layer.getBounds(), { padding: [20, 20] });
+    mapInstanceRef.current.fitBounds(layer.getBounds(), { padding: [15, 15] });
     setIsLoading(false);
-  }, [selectedCity, opacity, selectedClassHex, cityConfig]);
+  }, [selectedCity, opacity, selectedClassHex, cityConfig, scope]);
 
   return (
     <div className="bg-white dark:bg-[#0D0D0D]/90 border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col shadow-sm dark:shadow-2xl backdrop-blur-xl space-y-4 font-sans">
@@ -260,51 +266,79 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-display text-sm font-bold uppercase tracking-tight text-slate-900 dark:text-white">
-                {selectedCity} AOI · DAILY-AVERAGE TEMPERATURE (24-H HEATMAP, 1,440 TILES)
+                {selectedCity} {scope === "metro" ? "METROPOLITAN REGION" : "URBAN AOI"} · DAILY-AVG TEMPERATURE ({scope === "metro" ? "2,112" : "1,440"} TILES)
               </h2>
               <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-mono text-emerald-500 font-bold uppercase">
-                STREET LABELS OVERLAY ACTIVE
+                {scope === "metro" ? "METRO-WIDE" : "TARGETED AOI"}
               </span>
             </div>
             <p className="text-xs text-gray-500 dark:text-zinc-400">
-              FortyGuard TCM 100m² Radiometric Polygon Mesh Overlaid on CartoDB / OpenStreetMap
+              FortyGuard 100m² TCM Calibrated Radiometric Heatmap Overlaid on CartoDB / OpenStreetMap
             </p>
           </div>
         </div>
 
-        {/* Layer Controls & Basemap Switcher */}
+        {/* Controls Bar: Scope, Basemap, Layer */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* AOI Scope Switcher (Urban Core AOI vs Full Metro Expanse) */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-orange-500/10 border border-orange-500/20 text-xs font-mono">
+            <button
+              onClick={() => setScope("core")}
+              className={`px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1.5 transition-all ${
+                scope === "core"
+                  ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-xs"
+                  : "text-orange-700 dark:text-orange-300 hover:text-orange-500"
+              }`}
+              title="Targeted FortyGuard Area of Interest Bounding Box (100m² Calibrated Core)"
+            >
+              <Scan className="w-3.5 h-3.5" />
+              <span>Urban Core AOI</span>
+            </button>
+            <button
+              onClick={() => setScope("metro")}
+              className={`px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1.5 transition-all ${
+                scope === "metro"
+                  ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-xs"
+                  : "text-orange-700 dark:text-orange-300 hover:text-orange-500"
+              }`}
+              title="Expand heatmap across the entire metropolitan valley and surrounding suburbs"
+            >
+              <Globe2 className="w-3.5 h-3.5" />
+              <span>Full Metro Valley</span>
+            </button>
+          </div>
+
           {/* Basemap Preset Toggle */}
           <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100 dark:bg-black/60 border border-gray-200 dark:border-white/10 text-xs font-mono">
             <button
               onClick={() => setBaseMapStyle("voyager")}
-              className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+              className={`px-2 py-1 rounded-lg font-semibold transition-all ${
                 baseMapStyle === "voyager"
                   ? "bg-white dark:bg-zinc-800 text-orange-600 dark:text-orange-400 shadow-xs"
                   : "text-gray-500 dark:text-zinc-400 hover:text-orange-500"
               }`}
             >
-              Voyager Streets
+              Voyager
             </button>
             <button
               onClick={() => setBaseMapStyle("positron")}
-              className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+              className={`px-2 py-1 rounded-lg font-semibold transition-all ${
                 baseMapStyle === "positron"
                   ? "bg-white dark:bg-zinc-800 text-orange-600 dark:text-orange-400 shadow-xs"
                   : "text-gray-500 dark:text-zinc-400 hover:text-orange-500"
               }`}
             >
-              Light Clean
+              Light
             </button>
             <button
               onClick={() => setBaseMapStyle("dark")}
-              className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+              className={`px-2 py-1 rounded-lg font-semibold transition-all ${
                 baseMapStyle === "dark"
                   ? "bg-white dark:bg-zinc-800 text-orange-600 dark:text-orange-400 shadow-xs"
                   : "text-gray-500 dark:text-zinc-400 hover:text-orange-500"
               }`}
             >
-              Dark Matter
+              Dark
             </button>
           </div>
 
@@ -497,7 +531,7 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
           <button
             onClick={() => {
               if (mapInstanceRef.current && geoJsonLayerRef.current) {
-                mapInstanceRef.current.fitBounds(geoJsonLayerRef.current.getBounds(), { padding: [20, 20] });
+                mapInstanceRef.current.fitBounds(geoJsonLayerRef.current.getBounds(), { padding: [15, 15] });
               }
             }}
             className="p-2.5 rounded-xl bg-white dark:bg-black/80 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-zinc-300 hover:text-orange-500 shadow-lg cursor-pointer active:scale-95 transition-all"
