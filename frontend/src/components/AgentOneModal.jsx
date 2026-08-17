@@ -19,7 +19,7 @@ export default function AgentOneModal({ onClose, city, loading, error, report })
         </div>
       }
       title="Agent 1: Energy & Thermal Compliance Audit"
-      subtitle={`RAG Vector Assessment • ${city}`}
+      subtitle={`FortyGuard Microclimate & RAG Vector Assessment • ${city}`}
     >
       {loading ? (
         <div className="py-12 flex flex-col items-center justify-center gap-3 font-mono text-xs text-gray-500 dark:text-zinc-400">

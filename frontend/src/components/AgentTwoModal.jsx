@@ -12,12 +12,12 @@ export default function AgentTwoModal({ onClose, city, currentTemp, loading, err
         </div>
       }
       title="Agent 2: Infrastructure & Pre-Cooling Controller"
-      subtitle={`Grid Peak-Shaving & Pre-Cool Orchestration • ${city}`}
+      subtitle={`FortyGuard Solar Flux & Grid Pre-Cool Orchestration • ${city}`}
     >
       {loading ? (
         <div className="py-12 flex flex-col items-center justify-center gap-3 font-mono text-xs text-gray-500 dark:text-zinc-400">
           <RefreshCw className="w-8 h-8 animate-spin text-cyan-500" />
-          <span>Calculating thermodynamic grid load shift & pre-cool curves...</span>
+          <span>Calculating FortyGuard thermal lag & thermodynamic pre-cool curves...</span>
         </div>
       ) : error ? (
         <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 font-mono text-xs space-y-2">

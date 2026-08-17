@@ -12,12 +12,12 @@ export default function AgentThreeModal({ onClose, city, loading, error, data })
         </div>
       }
       title="Agent 3: Civic & Public Health Heat Stress Override"
-      subtitle={`WBGT Thermodynamic Index & Public Health Protocol • ${city}`}
+      subtitle={`FortyGuard WBGT Thermodynamic Index & Public Health Protocol • ${city}`}
     >
       {loading ? (
         <div className="py-12 flex flex-col items-center justify-center gap-3 font-mono text-xs text-gray-500 dark:text-zinc-400">
           <RefreshCw className="w-8 h-8 animate-spin text-rose-500" />
-          <span>Fusing Open-Meteo humidity with Mock Telemetry models...</span>
+          <span>Fusing FortyGuard humidity & solar flux with Liljegren WBGT models...</span>
         </div>
       ) : error ? (
         <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 font-mono text-xs space-y-2">
