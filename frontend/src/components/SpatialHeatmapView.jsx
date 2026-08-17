@@ -10,9 +10,9 @@ import {
   Sliders,
   Radio,
   RefreshCw,
-  Thermometer,
-  ShieldAlert,
-  Flame,
+  Eye,
+  Map,
+  Compass,
 } from "lucide-react";
 
 // Exact 12 FortyGuard equal-interval classes from official Quickstart Notebook
@@ -37,6 +37,24 @@ const CITY_COORDINATES = {
   "Las Vegas, NV": { lat: 36.1699, lng: -115.1398, zoom: 13, baseTemp: 31.5 },
   "Houston, TX": { lat: 29.7604, lng: -95.3698, zoom: 13, baseTemp: 29.2 },
   "Dallas, TX": { lat: 32.7767, lng: -96.797, zoom: 13, baseTemp: 29.8 },
+};
+
+const BASEMAP_PRESETS = {
+  voyager: {
+    label: "Street Voyager (High Contrast)",
+    base: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
+    labels: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png",
+  },
+  positron: {
+    label: "Positron Light",
+    base: "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",
+    labels: "https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png",
+  },
+  dark: {
+    label: "Dark Matter Cyber",
+    base: "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png",
+    labels: "https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png",
+  },
 };
 
 // Generates an authentic continuous 2D spatial thermal grid with hot zones, transitions, and cool islands
@@ -114,16 +132,19 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const geoJsonLayerRef = useRef(null);
+  const baseTileLayerRef = useRef(null);
+  const labelsTileLayerRef = useRef(null);
 
   const [activeLayer, setActiveLayer] = useState("tcm"); // 'tcm' | 'exceedance' | 'persistence'
-  const [opacity, setOpacity] = useState(0.85);
+  const [baseMapStyle, setBaseMapStyle] = useState(darkMode ? "dark" : "voyager");
+  const [opacity, setOpacity] = useState(0.65);
   const [selectedParcel, setSelectedParcel] = useState(null);
   const [selectedClassHex, setSelectedClassHex] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const cityConfig = CITY_COORDINATES[selectedCity] || CITY_COORDINATES["San Jose, CA"];
 
-  // Initialize Leaflet Map with CartoDB Positron / Dark Matter basemap
+  // Initialize Leaflet Map with Sandwich Layer Architecture (Base -> Polygons -> Labels on top)
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
@@ -139,16 +160,27 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
       attributionControl: false,
     });
 
-    // High-contrast clean street basemap
-    const tileUrl = darkMode
-      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-      : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+    // Create a dedicated top pane for street names and labels (renders OVER polygons!)
+    map.createPane("topLabelsPane");
+    map.getPane("topLabelsPane").style.zIndex = 650;
+    map.getPane("topLabelsPane").style.pointerEvents = "none";
 
-    const baseTileLayer = L.tileLayer(tileUrl, {
+    const preset = BASEMAP_PRESETS[baseMapStyle] || BASEMAP_PRESETS.voyager;
+
+    // 1. Bottom Base Layer (Roads, landcover, buildings)
+    const baseLayer = L.tileLayer(preset.base, {
       maxZoom: 19,
       subdomains: "abcd",
-    });
-    baseTileLayer.addTo(map);
+    }).addTo(map);
+    baseTileLayerRef.current = baseLayer;
+
+    // 2. Top Labels Layer (Road text, city names, highway badges - placed in topLabelsPane!)
+    const labelsLayer = L.tileLayer(preset.labels, {
+      maxZoom: 19,
+      subdomains: "abcd",
+      pane: "topLabelsPane",
+    }).addTo(map);
+    labelsTileLayerRef.current = labelsLayer;
 
     mapInstanceRef.current = map;
 
@@ -158,7 +190,7 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
         mapInstanceRef.current = null;
       }
     };
-  }, [selectedCity, darkMode]);
+  }, [selectedCity, baseMapStyle]);
 
   // Render FortyGuard 12-class thermal polygon mesh
   useEffect(() => {
@@ -180,8 +212,8 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
 
         return {
           fillColor: hex,
-          fillOpacity: isFilterActive ? (isMatched ? 0.95 : 0.15) : opacity,
-          stroke: false, // NO stroke border to keep thermal bands smooth and rich!
+          fillOpacity: isFilterActive ? (isMatched ? 0.95 : 0.12) : opacity,
+          stroke: false,
           weight: 0,
         };
       },
@@ -192,8 +224,8 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
             target.setStyle({
               stroke: true,
               color: "#ffffff",
-              weight: 2,
-              fillOpacity: 1.0,
+              weight: 2.5,
+              fillOpacity: 0.95,
             });
             target.bringToFront();
             setSelectedParcel(feature.properties);
@@ -212,7 +244,7 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
     layer.addTo(mapInstanceRef.current);
     geoJsonLayerRef.current = layer;
 
-    // Fit map view nicely around the thermal layer
+    // Fit map view around thermal grid
     mapInstanceRef.current.fitBounds(layer.getBounds(), { padding: [20, 20] });
     setIsLoading(false);
   }, [selectedCity, opacity, selectedClassHex, cityConfig]);
@@ -231,7 +263,7 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
                 {selectedCity} AOI · DAILY-AVERAGE TEMPERATURE (24-H HEATMAP, 1,440 TILES)
               </h2>
               <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-mono text-emerald-500 font-bold uppercase">
-                12 EQUAL-INTERVAL CLASSES
+                STREET LABELS OVERLAY ACTIVE
               </span>
             </div>
             <p className="text-xs text-gray-500 dark:text-zinc-400">
@@ -240,38 +272,75 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
           </div>
         </div>
 
-        {/* Layer Switcher */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-gray-100 dark:bg-black/60 border border-gray-200 dark:border-white/10 text-xs font-mono">
-          <button
-            onClick={() => setActiveLayer("tcm")}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
-              activeLayer === "tcm"
-                ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-sm"
-                : "text-gray-600 dark:text-zinc-400 hover:text-orange-500"
-            }`}
-          >
-            TCM Avg Temp
-          </button>
-          <button
-            onClick={() => setActiveLayer("exceedance")}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
-              activeLayer === "exceedance"
-                ? "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-sm"
-                : "text-gray-600 dark:text-zinc-400 hover:text-red-500"
-            }`}
-          >
-            Exceedance Hours
-          </button>
-          <button
-            onClick={() => setActiveLayer("persistence")}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
-              activeLayer === "persistence"
-                ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-sm"
-                : "text-gray-600 dark:text-zinc-400 hover:text-purple-500"
-            }`}
-          >
-            Persistence Runs
-          </button>
+        {/* Layer Controls & Basemap Switcher */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Basemap Preset Toggle */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100 dark:bg-black/60 border border-gray-200 dark:border-white/10 text-xs font-mono">
+            <button
+              onClick={() => setBaseMapStyle("voyager")}
+              className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+                baseMapStyle === "voyager"
+                  ? "bg-white dark:bg-zinc-800 text-orange-600 dark:text-orange-400 shadow-xs"
+                  : "text-gray-500 dark:text-zinc-400 hover:text-orange-500"
+              }`}
+            >
+              Voyager Streets
+            </button>
+            <button
+              onClick={() => setBaseMapStyle("positron")}
+              className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+                baseMapStyle === "positron"
+                  ? "bg-white dark:bg-zinc-800 text-orange-600 dark:text-orange-400 shadow-xs"
+                  : "text-gray-500 dark:text-zinc-400 hover:text-orange-500"
+              }`}
+            >
+              Light Clean
+            </button>
+            <button
+              onClick={() => setBaseMapStyle("dark")}
+              className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+                baseMapStyle === "dark"
+                  ? "bg-white dark:bg-zinc-800 text-orange-600 dark:text-orange-400 shadow-xs"
+                  : "text-gray-500 dark:text-zinc-400 hover:text-orange-500"
+              }`}
+            >
+              Dark Matter
+            </button>
+          </div>
+
+          {/* Analytic Layer Switcher */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100 dark:bg-black/60 border border-gray-200 dark:border-white/10 text-xs font-mono">
+            <button
+              onClick={() => setActiveLayer("tcm")}
+              className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                activeLayer === "tcm"
+                  ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-sm"
+                  : "text-gray-600 dark:text-zinc-400 hover:text-orange-500"
+              }`}
+            >
+              TCM Temp
+            </button>
+            <button
+              onClick={() => setActiveLayer("exceedance")}
+              className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                activeLayer === "exceedance"
+                  ? "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-sm"
+                  : "text-gray-600 dark:text-zinc-400 hover:text-red-500"
+              }`}
+            >
+              Exceedance
+            </button>
+            <button
+              onClick={() => setActiveLayer("persistence")}
+              className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                activeLayer === "persistence"
+                  ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-sm"
+                  : "text-gray-600 dark:text-zinc-400 hover:text-purple-500"
+              }`}
+            >
+              Persistence
+            </button>
+          </div>
         </div>
       </div>
 
@@ -337,20 +406,24 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
           {/* Opacity Slider */}
           <div className="mt-3 pt-2 border-t border-gray-200 dark:border-white/10">
             <div className="flex justify-between items-center text-[10px] text-gray-500 dark:text-zinc-400 mb-1">
-              <span>LAYER OPACITY</span>
+              <span>HEATMAP TRANSPARENCY</span>
               <span className="font-bold text-slate-800 dark:text-zinc-200">
                 {(opacity * 100).toFixed(0)}%
               </span>
             </div>
             <input
               type="range"
-              min="0.3"
-              max="1.0"
+              min="0.25"
+              max="0.95"
               step="0.05"
               value={opacity}
               onChange={(e) => setOpacity(parseFloat(e.target.value))}
               className="w-full h-1.5 bg-gray-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-orange-500"
             />
+            <div className="flex justify-between text-[9px] text-gray-400 mt-1">
+              <span>More Streets</span>
+              <span>Solid Heatmap</span>
+            </div>
           </div>
         </div>
 
