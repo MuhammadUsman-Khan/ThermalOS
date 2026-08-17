@@ -110,7 +110,7 @@ export default function AgentEventLog({ logs, totalEventsCount, onClear }) {
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto max-h-[340px] pr-1 font-mono text-xs"
+        className="flex-1 overflow-y-auto max-h-[350px] pr-1.5 font-mono text-xs pb-1 space-y-2.5"
       >
         <AnimatePresence initial={false}>
           {logs.map((log) => {
@@ -118,7 +118,7 @@ export default function AgentEventLog({ logs, totalEventsCount, onClear }) {
             return (
               <motion.div
                 key={log.id}
-                initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                initial={{ opacity: 0, y: -15, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ type: "spring", stiffness: 350, damping: 25 }}

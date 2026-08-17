@@ -881,19 +881,17 @@ export default function App() {
                     </ComposedChart>
                   </ResponsiveContainer>
                 </div>
-
-                {/* Satellite Land-Cover Breakdown Card */}
-                <div className="mt-4">
-                  <SurfaceSegmentationCard
-                    segmentation={currentReading?.satellite}
-                    city={selectedCity}
-                    darkMode={darkMode}
-                  />
-                </div>
               </div>
 
               <AgentEventLog logs={eventLogs} totalEventsCount={totalEventsCount} onClear={handleClearLog} />
             </div>
+
+            {/* Satellite Land-Cover & Material Composition Panel */}
+            <SurfaceSegmentationCard
+              segmentation={currentReading?.satellite}
+              city={selectedCity}
+              darkMode={darkMode}
+            />
 
             {/* Real-Time Phaser 3 Agent Activity Visualization */}
             <AgentVisualization agentStates={agentStates} darkMode={darkMode} />
