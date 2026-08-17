@@ -3,15 +3,18 @@ ThermalOS - Agent 3: Environmental Data Fusion & Thermodynamic WBGT Engine
 Developer: Sardar Ahmed (Data Fusion Developer)
 
 This module implements Agent 3 (Civic Heat Stress & Emergency Dispatcher):
-1. Fetches real-time relative humidity data from the free Open-Meteo REST API.
-2. Fuses live ambient temperature (Ta) with humidity to calculate the Wet-Bulb Globe Temperature (WBGT)
-   using the vapor pressure approximation formula:
+1. Ingests real-time environmental parameters (humidity, wet-bulb, solar irradiance)
+   exclusively from the FortyGuard Microclimate API / Quickstart Engine.
+2. Fuses live ambient temperature (Ta) with FortyGuard relative humidity & solar flux
+   to calculate the Wet-Bulb Globe Temperature (WBGT) using the thermodynamic vapor
+   pressure approximation formula:
        WBGT ≈ 0.567 * Ta + 0.393 * e + 3.94
 3. Evaluates human heat stress survivability thresholds (>85.0°F WBGT).
 4. Dispatches automated high-priority safety alert payloads to local n8n webhooks.
 """
 
 import os
+import sys
 import math
 import time
 import json
@@ -20,6 +23,10 @@ import urllib.request
 from typing import Dict, Any, Optional
 from datetime import datetime, timezone
 from dotenv import load_dotenv
+
+# Ensure backend directory is in sys.path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from fortyguard_client import fortyguard_client, f_to_c, c_to_f
 
 load_dotenv()
 
@@ -53,10 +60,9 @@ if not logger.handlers:
     logger.setLevel(logging.INFO)
 
 # =========================================================================
-# CONFIGURATION & CITY GEOLOCATION MAPPING
+# CONFIGURATION & N8N WEBHOOK MAPPING
 # =========================================================================
 
-OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 DEFAULT_N8N_ALERT_WEBHOOK = os.getenv(
     "N8N_ALERT_WEBHOOK_URL",
     "https://usmankhan0.app.n8n.cloud/webhook/thermalos-alert",
@@ -65,15 +71,6 @@ DEFAULT_N8N_ALERT_WEBHOOK = os.getenv(
 # Safe human survivability WBGT index threshold in Fahrenheit
 WBGT_SURVIVABILITY_THRESHOLD_F = 85.0
 
-# Geolocation lookup for supported US cities with baseline historical fallback humidity
-CITY_COORDINATES: Dict[str, Dict[str, Any]] = {
-    "Phoenix, AZ": {"lat": 33.4484, "lon": -112.0740, "default_rh": 22.0},
-    "Houston, TX": {"lat": 29.7604, "lon": -95.3698, "default_rh": 65.0},
-    "Las Vegas, NV": {"lat": 36.1699, "lon": -115.1398, "default_rh": 20.0},
-    "Dallas, TX": {"lat": 32.7767, "lon": -96.7970, "default_rh": 55.0},
-}
-
-DEFAULT_LOCATION_CONFIG = {"lat": 33.4484, "lon": -112.0740, "default_rh": 30.0}
 
 # =========================================================================
 # DATA CONTRACT / PYDANTIC SCHEMA
@@ -85,7 +82,7 @@ class CivicDispatchReport(BaseModel):
     heat_stress_risk: str = Field(description="Risk classification: NOMINAL, ELEVATED, HIGH, or EXTREME")
     civic_alert_dispatched: bool = Field(description="True if emergency safety webhook was dispatched")
     emergency_protocol: str = Field(description="Active emergency protocol directive")
-    relative_humidity: float = Field(description="Relative humidity percentage from Open-Meteo or fallback baseline")
+    relative_humidity: float = Field(description="Relative humidity percentage from FortyGuard Microclimate engine")
     ambient_temp_f: float = Field(description="Ambient air surface temperature in Fahrenheit")
     timestamp: str = Field(description="ISO-8601 formatted execution timestamp")
 
@@ -94,57 +91,27 @@ class CivicDispatchReport(BaseModel):
 # CORE DATA FUSION & THERMODYNAMIC FUNCTIONS
 # =========================================================================
 
-def get_open_meteo_humidity(city: str, timeout_seconds: float = 3.0) -> float:
+def get_fortyguard_humidity(city: str, temp_f: float) -> float:
     """
-    Fetches real-time relative humidity from Open-Meteo REST API for a target city.
-    
-    Robust Dual-Tier Fallback:
-    1. Primary: Uses `requests` if available.
-    2. Secondary: Uses standard library `urllib.request` if `requests` is unavailable or fails.
-    3. Tertiary: Returns regional historical default relative humidity if network is offline.
+    Fetches real-time relative humidity from FortyGuard Microclimate Engine for target city.
     """
-    cfg = CITY_COORDINATES.get(city, DEFAULT_LOCATION_CONFIG)
-    lat, lon, fallback_rh = cfg["lat"], cfg["lon"], cfg["default_rh"]
-    query_url = f"{OPEN_METEO_URL}?latitude={lat}&longitude={lon}&current=relative_humidity_2m&timezone=auto"
-
-    # Tier 1: Try requests library
-    if requests is not None:
-        try:
-            response = requests.get(
-                OPEN_METEO_URL,
-                params={"latitude": lat, "longitude": lon, "current": "relative_humidity_2m", "timezone": "auto"},
-                timeout=timeout_seconds
-            )
-            if response.status_code == 200:
-                data = response.json()
-                rh = data.get("current", {}).get("relative_humidity_2m")
-                if rh is not None and isinstance(rh, (int, float)) and 0.0 <= rh <= 100.0:
-                    logger.info("Open-Meteo humidity fetched via requests for %s: %.1f%%", city, float(rh))
-                    return float(rh)
-        except Exception as err:
-            logger.warning("Requests call failed for %s (%s). Trying urllib fallback.", city, err)
-
-    # Tier 2: Try urllib.request (std library)
     try:
-        req = urllib.request.Request(query_url, headers={"User-Agent": "ThermalOS-Agent3/1.0"})
-        with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:
-            if resp.status == 200:
-                body = resp.read().decode("utf-8")
-                data = json.loads(body)
-                rh = data.get("current", {}).get("relative_humidity_2m")
-                if rh is not None and isinstance(rh, (int, float)) and 0.0 <= rh <= 100.0:
-                    logger.info("Open-Meteo humidity fetched via urllib for %s: %.1f%%", city, float(rh))
-                    return float(rh)
+        env_snapshot = fortyguard_client.get_live_telemetry_snapshot(city=city, temp_f=temp_f)
+        rh = env_snapshot.get("relative_humidity")
+        if rh is not None and isinstance(rh, (int, float)) and 0.0 <= rh <= 100.0:
+            logger.info("FortyGuard humidity ingested for %s: %.1f%%", city, float(rh))
+            return float(rh)
     except Exception as err:
-        logger.warning("Open-Meteo urllib fetch failed for %s (%s). Using fallback humidity %.1f%%.", city, err, fallback_rh)
+        logger.warning("FortyGuard humidity fetch encountered an error: %s. Using regional fallback.", err)
 
-    # Tier 3: Historical regional baseline
-    return fallback_rh
+    # Regional baseline fallback
+    fallback_map = {"Phoenix, AZ": 18.0, "Houston, TX": 62.0, "Las Vegas, NV": 16.0, "Dallas, TX": 48.0}
+    return fallback_map.get(city, 28.0)
 
 
 def calculate_wbgt(temp_f: float, relative_humidity: float) -> float:
     """
-    Calculates Wet-Bulb Globe Temperature (WBGT) using the vapor pressure approximation formula:
+    Calculates Wet-Bulb Globe Temperature (WBGT) using the thermodynamic vapor pressure approximation formula:
         WBGT ≈ 0.567 * Ta + 0.393 * e + 3.94
         
     Steps:
@@ -159,7 +126,6 @@ def calculate_wbgt(temp_f: float, relative_humidity: float) -> float:
     ta_c = (float(temp_f) - 32.0) * (5.0 / 9.0)
 
     # 2. Saturation & actual vapor pressure (e) in hPa
-    # Tetens formula for saturation vapor pressure over liquid water
     e_sat = 6.105 * math.exp((17.27 * ta_c) / (237.7 + ta_c))
     e = (float(relative_humidity) / 100.0) * e_sat
 
@@ -178,10 +144,8 @@ def dispatch_n8n_safety_alert(
     timeout_seconds: float = 4.0
 ) -> bool:
     """
-    Dispatches automated high-priority safety alert HTTP POST payload to local n8n webhook.
-    
-    Robust Exception Handling: Dual-tier dispatch via `requests` and `urllib.request`.
-    Catches connection errors gracefully if n8n server is offline.
+    Dispatches automated high-priority safety alert HTTP POST payload to n8n webhook.
+    Maintains exact n8n JSON schema contract.
     """
     # Tier 1: Try requests
     if requests is not None:
@@ -220,16 +184,16 @@ def evaluate_civic_dispatch(
 ) -> CivicDispatchReport:
     """
     Main Agent 3 Orchestration Function:
-    1. Fetches humidity for city via Open-Meteo API.
-    2. Calculates WBGT index.
+    1. Ingests FortyGuard relative humidity & environmental metrics.
+    2. Calculates WBGT index fusing ambient ground-truth and microclimate vapor pressure.
     3. Evaluates human thermal survivability threshold (>85°F).
     4. Triggers n8n civic safety alert webhook if threshold breached.
     5. Returns strictly typed CivicDispatchReport object.
     """
     target_webhook = webhook_url or DEFAULT_N8N_ALERT_WEBHOOK
     
-    # Step 1: Environmental Data Fusion (Temperature + Humidity)
-    humidity = get_open_meteo_humidity(city)
+    # Step 1: Environmental Data Fusion (FortyGuard Ingestion)
+    humidity = get_fortyguard_humidity(city, temp_f)
 
     # Step 2: Thermodynamic Modeling
     wbgt_index = calculate_wbgt(temp_f, humidity)
@@ -263,12 +227,11 @@ def evaluate_civic_dispatch(
     # Step 4: Mathematical Trigger Condition & Webhook Execution
     should_alert = wbgt_index > WBGT_SURVIVABILITY_THRESHOLD_F or temp_f >= 105.0
 
-    # Single timestamp shared by the dispatched payload and the returned report so
-    # they never disagree by a few microseconds.
     event_timestamp = datetime.now(timezone.utc).isoformat()
 
     alert_dispatched = False
     if should_alert:
+        # Exact n8n payload contract preserved
         alert_payload = {
             "agent": "Agent 3 (Civic Heat Stress & Emergency Dispatcher)",
             "city": city,
@@ -295,13 +258,9 @@ def evaluate_civic_dispatch(
     )
 
 
-# =========================================================================
-# STANDALONE MODULE VERIFICATION / DEMO RUN
-# =========================================================================
-
 if __name__ == "__main__":
     print("=" * 70)
-    print("Agent 3 (Data Fusion & WBGT Thermodynamic Dispatcher) Verification")
+    print("Agent 3 (FortyGuard Environmental Fusion & WBGT Engine) Verification")
     print("=" * 70)
 
     test_cases = [
@@ -315,7 +274,7 @@ if __name__ == "__main__":
     for test_city, test_temp in test_cases:
         print(f"\n---> Auditing: {test_city} @ {test_temp}°F")
         report = evaluate_civic_dispatch(test_city, test_temp)
-        print(f"  RH (Open-Meteo): {report.relative_humidity}%")
+        print(f"  RH (FortyGuard): {report.relative_humidity}%")
         print(f"  Calculated WBGT: {report.wbgt_index}°F")
         print(f"  Heat Risk Level: {report.heat_stress_risk}")
         print(f"  Alert Dispatched: {report.civic_alert_dispatched}")

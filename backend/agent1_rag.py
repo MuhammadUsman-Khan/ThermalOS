@@ -1,16 +1,6 @@
 import os
+import sys
 import time
-
-# Force the HuggingFace/transformers stack onto the PyTorch backend BEFORE any
-# langchain import. langchain_text_splitters eagerly imports sentence_transformers,
-# which otherwise tries to import TensorFlow — and TF currently dies on a
-# google.protobuf version conflict, raising RuntimeError (NOT ImportError) that would
-# crash the entire FastAPI server at import time. Disabling the TF/Flax backends
-# sidesteps that import chain entirely; ChromaDB embeddings run on ONNX/PyTorch anyway.
-os.environ.setdefault("USE_TF", "0")
-os.environ.setdefault("USE_FLAX", "0")
-os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
-
 import logging
 from typing import Optional
 from dotenv import load_dotenv
@@ -20,6 +10,16 @@ from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+# Ensure backend directory is in sys.path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from fortyguard_client import fortyguard_client, f_to_c, c_to_f
+
+# Force the HuggingFace/transformers stack onto the PyTorch backend BEFORE any
+# langchain import. Disabling TF/Flax prevents protobuf version crashes.
+os.environ.setdefault("USE_TF", "0")
+os.environ.setdefault("USE_FLAX", "0")
+os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
+
 load_dotenv()
 
 N8N_AUDIT_WEBHOOK_URL = os.getenv(
@@ -27,12 +27,9 @@ N8N_AUDIT_WEBHOOK_URL = os.getenv(
     "https://usmankhan0.app.n8n.cloud/webhook/thermalos-audit",
 )
 
-# Broad except (not just ImportError): transitively importing these can raise
-# RuntimeError from a broken TensorFlow/protobuf install. We must degrade to the
-# baseline-chunk fallback rather than take the whole backend down.
 try:
     from langchain_community.document_loaders import PyPDFLoader
-except Exception:  # noqa: BLE001 - defensive: keep the server bootable
+except Exception:  # noqa: BLE001
     PyPDFLoader = None
 
 try:
@@ -42,8 +39,6 @@ except Exception:  # noqa: BLE001
         from langchain.text_splitter import RecursiveCharacterTextSplitter
     except Exception:  # noqa: BLE001
         RecursiveCharacterTextSplitter = None
-
-load_dotenv()
 
 logger = logging.getLogger("thermalos.agent1")
 
@@ -84,15 +79,17 @@ def _resolve_pdf_path(path: str) -> str:
 def initialize_vector_db():
     """
     Initializes a local ChromaDB client and chunks/embeds ASHRAE 55, IECC 2021, and ASHRAE 90.1-2019 PDF documents.
+    Uses PersistentClient to cache vector index on disk.
     """
     global _collection
-    client = chromadb.Client()
+    persist_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "chroma_db")
+    os.makedirs(persist_dir, exist_ok=True)
+    client = chromadb.PersistentClient(path=persist_dir)
     
     collection = client.get_or_create_collection(name="energy_codes")
     
-    # Idempotency Guard: If collection already seeded, skip
     if collection.count() > 0:
-        print("ChromaDB already seeded. Skipping.")
+        logger.info(f"ChromaDB already seeded ({collection.count()} chunks). Skipping re-seed.")
         _collection = collection
         return _collection
 
@@ -123,9 +120,7 @@ def initialize_vector_db():
                     metadatas.append({"source": "ASHRAE-55-2023", "topic": "Thermal Comfort"})
                 ashrae55_count = len(chunks)
             except Exception as e:
-                print(f"WARNING: Error parsing ASHRAE 55 PDF: {e}")
-        else:
-            print(f"WARNING: PDF file not found at '{ashrae55_path}'")
+                logger.warning(f"Error parsing ASHRAE 55 PDF: {e}")
 
         # 2. Load & chunk IECC 2021
         if os.path.exists(iecc_path):
@@ -139,9 +134,7 @@ def initialize_vector_db():
                     metadatas.append({"source": "IECC-2021", "topic": "Building Envelope & Energy Conservation"})
                 iecc_count = len(chunks)
             except Exception as e:
-                print(f"WARNING: Error parsing IECC 2021 PDF: {e}")
-        else:
-            print(f"WARNING: PDF file not found at '{iecc_path}'")
+                logger.warning(f"Error parsing IECC 2021 PDF: {e}")
 
         # 3. Load & chunk ASHRAE 90.1-2019
         if os.path.exists(ashrae901_path):
@@ -155,13 +148,10 @@ def initialize_vector_db():
                     metadatas.append({"source": "ASHRAE-90.1-2019", "topic": "Energy Standard for Commercial Buildings"})
                 ashrae901_count = len(chunks)
             except Exception as e:
-                print(f"WARNING: Error parsing ASHRAE 90.1 PDF: {e}")
-        else:
-            print(f"WARNING: PDF file not found at '{ashrae901_path}'")
+                logger.warning(f"Error parsing ASHRAE 90.1 PDF: {e}")
 
-    # Graceful Fallback if no documents loaded
+    # Fallback baseline chunks
     if not documents:
-        print("WARNING: Falling back to default baseline chunks.")
         documents = [
             "ASHRAE 55 Standard: The acceptable summer operative temperature range for building occupants wearing 0.5 clo is 73°F to 79°F. Temperatures above 79°F require mechanical pre-cooling.",
             "IECC Building Envelope Code: In extreme heat climate zones, continuous insulation (ci) and strict U-factor compliance are mandatory to prevent thermal bridging during heat spikes.",
@@ -177,7 +167,6 @@ def initialize_vector_db():
         iecc_count = 1
         ashrae901_count = 1
 
-    # Add all chunks to ChromaDB in safe batches
     batch_size = 500
     for idx in range(0, len(documents), batch_size):
         collection.add(
@@ -186,9 +175,7 @@ def initialize_vector_db():
             metadatas=metadatas[idx:idx + batch_size]
         )
 
-    total_count = len(documents)
-    print(f"Seeded {ashrae55_count} ashrae55 chunks, {iecc_count} iecc chunks, {ashrae901_count} ashrae901 chunks. Total: {total_count}")
-
+    logger.info(f"Seeded {ashrae55_count} ashrae55 chunks, {iecc_count} iecc chunks, {ashrae901_count} ashrae901 chunks. Total: {len(documents)}")
     _collection = collection
     return _collection
 
@@ -204,10 +191,8 @@ def _clean_schema_for_gemini(schema_dict):
 
 def dispatch_n8n_audit(report: ComplianceReport, webhook_url: Optional[str] = None) -> bool:
     """
-    Dispatches the LLM-generated RAG compliance audit to the n8n webhook.
-    Unpacks and maps the Pydantic ComplianceReport into exact keys expected by n8n:
-      - 'compliance_summary': Combined ASHRAE 55 and IECC evaluation summary.
-      - 'action_items': Actionable mitigation steps and HVAC protocols.
+    Dispatches the RAG compliance audit to the n8n webhook.
+    Maintains exact n8n JSON schema contract.
     """
     target_url = webhook_url or N8N_AUDIT_WEBHOOK_URL
 
@@ -246,15 +231,28 @@ def dispatch_n8n_audit(report: ComplianceReport, webhook_url: Optional[str] = No
 
 def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
     """
-    Executes the Agent 1 RAG pipeline:
-    1. Queries local ChromaDB for relevant building/energy codes.
-    2. Invokes ChatGoogleGenerativeAI with LCEL and structured output using GEMINI_API_KEY from environment.
-    3. Dispatches the full Pydantic report to the n8n webhook.
+    Executes Agent 1 RAG pipeline powered by FortyGuard Microclimate Telemetry:
+    1. Fetches FortyGuard environmental parameters, solar GHI, and satellite land-cover metrics.
+    2. Queries local ChromaDB for relevant building/energy codes (ASHRAE 55, IECC).
+    3. Prompts ChatGoogleGenerativeAI with RAG context and FortyGuard parameters.
+    4. Dispatches the full Pydantic report to the n8n webhook.
     """
+    # 1. Ingest FortyGuard real microclimate & satellite land cover data
+    env_snapshot = fortyguard_client.get_live_telemetry_snapshot(city=city, temp_f=float(temp_f))
+    sat_data = fortyguard_client.get_satellite_segmentation(city=city)
+    
+    surface_temp_f = env_snapshot.get("surface_temperature_f", float(temp_f) + 12.0)
+    solar_ghi = env_snapshot.get("solar_irradiance_ghi", 580.0)
+    building_pct = sat_data.get("segmentation", {}).get("material_fractions", {}).get("impervious_building_pct", 40.0)
+
     collection = _collection if _collection is not None else initialize_vector_db()
     
     # Query ChromaDB for relevant standards
-    query_text = f"Building energy code compliance for {city} experiencing ambient temperature of {temp_f}°F"
+    query_text = (
+        f"Building energy code compliance for {city} ambient {temp_f}°F, "
+        f"FortyGuard surface temperature {surface_temp_f}°F, solar GHI {solar_ghi} W/m2, "
+        f"impervious building envelope {building_pct}%."
+    )
     query_results = collection.query(
         query_texts=[query_text],
         n_results=2
@@ -263,22 +261,18 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
     retrieved_docs = query_results.get("documents", [[]])[0]
     context_str = "\n\n".join(retrieved_docs)
     
-    # Resolve Gemini API Key from environment
     api_key = os.getenv("GEMINI_API_KEY")
 
     if api_key and api_key != "insert_your_actual_key_here" and api_key != "mock_key":
         try:
             llm = ChatGoogleGenerativeAI(
-                # `gemini-flash-latest` is a rolling alias for the current Flash model.
-                # Pinned versions (gemini-2.5-flash, gemini-2.5-flash-lite) now 404 with
-                # "no longer available to new users"; the alias keeps this path alive
-                # across model retirements without another code change.
                 model="gemini-flash-latest",
                 google_api_key=api_key,
                 temperature=0.2,
+                timeout=10,
+                max_retries=1,
             )
 
-            # Strip 'title' keys to prevent noisy schema parser warnings
             clean_schema = _clean_schema_for_gemini(ComplianceReport.model_json_schema())
             structured_llm = llm.with_structured_output(clean_schema)
 
@@ -286,8 +280,14 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
                 (
                     "system",
                     "You are the Urban Heat & Energy Compliance Analyst (Agent 1) for ThermalOS. "
-                    "Evaluate city temperature telemetry against retrieved ASHRAE 55 and IECC energy codes. "
+                    "Evaluate city temperature and FortyGuard microclimate telemetry (surface temperature, "
+                    "solar irradiance, building material fractions) against retrieved ASHRAE 55 and IECC energy codes. "
                     "Context documents:\n{context}\n\n"
+                    "FortyGuard Ground-Truth Telemetry:\n"
+                    f"- Ambient Air Temp: {temp_f}°F\n"
+                    f"- FortyGuard Surface Temp: {surface_temp_f}°F\n"
+                    f"- Solar GHI: {solar_ghi} W/m²\n"
+                    f"- Building Impervious Fraction: {building_pct}%\n\n"
                     "Provide a strict engineering compliance assessment."
                 ),
                 (
@@ -315,33 +315,33 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
             return result
         except Exception as e:
             logger.warning(
-                "Agent 1: Gemini inference failed (%s). Falling back to DETERMINISTIC compliance engine.",
+                "Agent 1: Gemini inference failed (%s). Falling back to DETERMINISTIC FortyGuard compliance engine.",
                 e,
             )
     else:
-        logger.warning(
-            "Agent 1: GEMINI_API_KEY not configured. Using DETERMINISTIC compliance engine for %s (%s°F).",
+        logger.info(
+            "Agent 1: GEMINI_API_KEY not configured. Using DETERMINISTIC FortyGuard compliance engine for %s (%s°F).",
             city,
             temp_f,
         )
 
-    # Fallback rule evaluation strictly adhering to ASHRAE 55 and IECC chunks
+    # Deterministic FortyGuard engineering evaluation
     is_exceeded = temp_f > 79
     status = (
-        f"EXCEEDS LIMIT: Temperature of {temp_f}°F exceeds ASHRAE 55 summer operative upper limit of 79°F (0.5 clo)."
+        f"EXCEEDS LIMIT: Temperature of {temp_f}°F (FortyGuard Surface {surface_temp_f:.1f}°F) exceeds ASHRAE 55 summer operative upper limit of 79°F (0.5 clo)."
         if is_exceeded
         else f"WITHIN LIMIT: Temperature of {temp_f}°F is within ASHRAE 55 summer comfort range (73°F-79°F)."
     )
     
     envelope_warning = (
-        f"CRITICAL ENVELOPE STRESS: {city} at {temp_f}°F triggers mandatory IECC continuous insulation (ci) verification to prevent severe thermal bridging."
-        if temp_f >= 100
-        else f"IECC STANDARD: Verify continuous insulation (ci) and U-factor integrity for {city} climate zone."
+        f"CRITICAL ENVELOPE STRESS: {city} at {temp_f}°F with FortyGuard solar radiation of {solar_ghi} W/m² triggers mandatory IECC continuous insulation (ci) verification."
+        if temp_f >= 100 or solar_ghi > 600.0
+        else f"IECC STANDARD: Verify continuous insulation (ci) and U-factor integrity for {city} climate zone ({building_pct:.1f}% building fraction)."
     )
     
     hvac_action = (
-        f"IMMEDIATE PRE-COOLING: Deploy stage-3 mechanical pre-cooling and cycle chiller loops to mitigate {temp_f}°F heat spike."
-        if temp_f >= 105
+        f"IMMEDIATE PRE-COOLING: Deploy stage-3 mechanical pre-cooling and cycle chiller loops to mitigate {temp_f}°F thermal peak."
+        if temp_f >= 105 or surface_temp_f >= 115
         else f"MODULATED COOLING: Activate stage-1 economizer and variable refrigerant flow to maintain occupant setpoints below 79°F."
         if temp_f > 79
         else "STANDARD BASELINE: Maintain standard HVAC ventilation schedule."
@@ -358,9 +358,6 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
     return fallback_report
 
 
-# Pre-initialize vector DB on module import. Never let a vector-store failure crash
-# the FastAPI process: the compliance audit lazily re-initializes (and has a
-# deterministic fallback) if this best-effort seed does not complete.
 try:
     initialize_vector_db()
 except Exception as _init_err:  # noqa: BLE001

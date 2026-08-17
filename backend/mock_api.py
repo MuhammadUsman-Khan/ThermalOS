@@ -11,6 +11,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+from fortyguard_client import fortyguard_client
 import agent1_rag
 from agent1_rag import run_compliance_audit, ComplianceReport
 from agent2_controller import process_reading as agent2_process_reading
@@ -18,7 +20,7 @@ from agent3_dispatcher import evaluate_civic_dispatch, CivicDispatchReport
 
 logger = logging.getLogger("thermalos.api")
 
-app = FastAPI(title="FortyGuard Mock Temperature API & ThermalOS Agents")
+app = FastAPI(title="ThermalOS FortyGuard Microclimate API & Autonomous Agents")
 
 SERVER_START_TIME = time.time()
 
@@ -37,6 +39,7 @@ CITY_CONFIGS = {
     "Houston, TX": {"min": 84, "max": 96, "spike_chance": 0.02, "spike_val": 101},
     "Las Vegas, NV": {"min": 88, "max": 101, "spike_chance": 0.03, "spike_val": 105},
     "Dallas, TX": {"min": 82, "max": 94, "spike_chance": 0.02, "spike_val": 100},
+    "San Jose, CA": {"min": 74, "max": 88, "spike_chance": 0.02, "spike_val": 94},
 }
 
 # In-memory last temperature tracking per city
@@ -45,6 +48,7 @@ LAST_CITY_TEMPS = {
     "Houston, TX": 88,
     "Las Vegas, NV": 92,
     "Dallas, TX": 86,
+    "San Jose, CA": 78,
 }
 
 
@@ -75,11 +79,12 @@ class AgentRequest(BaseModel):
 
 @app.get("/health")
 async def health():
-    """System status, uptime and per-agent readiness."""
+    """System status, uptime, FortyGuard engine mode, and per-agent readiness."""
     rag_ready = getattr(agent1_rag, "_collection", None) is not None
     return {
         "status": "ok",
         "uptime_seconds": int(time.time() - SERVER_START_TIME),
+        "fortyguard_api_mode": "LIVE" if fortyguard_client.is_live else "CACHED_QUICKSTART",
         "agents": {
             "agent1_compliance": "ready" if rag_ready else "initializing",
             "agent2_infrastructure": "ready",
@@ -90,6 +95,10 @@ async def health():
 
 @app.post("/v1/heat-intelligence")
 async def get_heat_intelligence(request: HeatIntelligenceRequest):
+    """
+    Real-time continuous telemetry stream powered by FortyGuard Microclimate Engine.
+    Fuses ground-truth ambient air, surface temperature, wet-bulb, solar GHI, and air quality.
+    """
     try:
         city = request.location
         cfg = CITY_CONFIGS.get(
@@ -98,19 +107,13 @@ async def get_heat_intelligence(request: HeatIntelligenceRequest):
         )
         last_temp = LAST_CITY_TEMPS.get(city, 95)
 
-        # 3-4% chance of an occasional transient heat spike. The spike sits just
-        # above the city's normal max, capped at its configured ceiling. Guard the
-        # lower bound: cities whose ceiling is < 105°F (Houston, Dallas) would
-        # otherwise hit random.randint(low > high) and raise ValueError -> 500.
         if random.random() < cfg["spike_chance"]:
             spike_low = min(cfg["max"] + 1, cfg["spike_val"])
             new_temp = random.randint(spike_low, cfg["spike_val"])
         else:
-            # Visible fluctuation of +/- 1 to 3 degrees each second
             step = random.choice([-3, -2, -1, 1, 2, 3])
             new_temp = last_temp + step
 
-            # Keep bounded in normal active range
             if new_temp < cfg["min"]:
                 new_temp = cfg["min"] + random.randint(0, 2)
             elif new_temp > cfg["max"]:
@@ -118,35 +121,19 @@ async def get_heat_intelligence(request: HeatIntelligenceRequest):
 
         LAST_CITY_TEMPS[city] = new_temp
 
-        # Dynamic risk categories calibrated to urban thermal thresholds
-        if new_temp >= 105:
-            risk_level = "extreme"
-        elif new_temp >= 103:
-            risk_level = "high"
-        elif new_temp >= 98:
-            risk_level = "elevated"
-        else:
-            risk_level = "nominal"
+        # Ingest FortyGuard real-time microclimate packet
+        snapshot = fortyguard_client.get_live_telemetry_snapshot(city=city, temp_f=float(new_temp))
 
-        return {
-            "location": city,
-            "temperature_f": new_temp,
-            "risk_level": risk_level,
-            "resolution": "10m²",
-            "measured_at": "2m above ground",
-            "credits_remaining": 999999,
-            "server_uptime_seconds": int(time.time() - SERVER_START_TIME),
-        }
+        snapshot["server_uptime_seconds"] = int(time.time() - SERVER_START_TIME)
+        return snapshot
     except Exception as e:
-        logger.exception("heat-intelligence generation failed")
+        logger.exception("FortyGuard heat-intelligence generation failed")
         raise HTTPException(status_code=500, detail=f"Telemetry generation failed: {e}")
 
 
 @app.post("/v1/agents/audit", response_model=ComplianceReport)
 def audit_endpoint(request: AuditRequest):
-    # Sync `def` (not async): run_compliance_audit does blocking work (Gemini
-    # inference + ChromaDB query). FastAPI runs sync handlers in a threadpool, so
-    # this never stalls the event loop / the 1s telemetry poll.
+    """Agent 1: ASHRAE 55 & IECC RAG Compliance Audit powered by FortyGuard."""
     if request.temperature_f is not None:
         temp_f = request.temperature_f
     else:
@@ -161,11 +148,8 @@ def audit_endpoint(request: AuditRequest):
 
 @app.post("/v1/agents/infrastructure", response_model=InfrastructurePrecoolReport)
 def infrastructure_precool_endpoint(request: AgentRequest):
-    # Sync `def`: Agent 2 fires a blocking requests.post to the n8n webhook.
-    # Threadpool execution keeps the telemetry loop responsive.
-    # Simulate realistic SCADA telemetry handshake & thermodynamic grid curve computation (1.2s)
-    # to ensure a consistent, clear loading spinner across all three agents.
-    time.sleep(1.2)
+    """Agent 2: Infrastructure Pre-Cool Controller powered by FortyGuard Solar & Thermal Lag."""
+    time.sleep(1.0)
     try:
         agent2_result = agent2_process_reading(
             {
@@ -196,9 +180,7 @@ def infrastructure_precool_endpoint(request: AgentRequest):
 
 @app.post("/v1/agents/civic", response_model=CivicDispatchReport)
 def civic_dispatch_endpoint(request: AgentRequest):
-    # Sync `def`: Agent 3 makes a blocking Open-Meteo GET (up to 3s) plus an n8n
-    # POST. Running in the threadpool prevents a slow upstream from freezing the
-    # event loop and every concurrent telemetry request.
+    """Agent 3: Civic WBGT Dispatch Engine powered by FortyGuard Environmental Fusion."""
     try:
         return evaluate_civic_dispatch(city=request.city, temp_f=request.temperature_f)
     except Exception as e:
@@ -206,8 +188,34 @@ def civic_dispatch_endpoint(request: AgentRequest):
         raise HTTPException(status_code=502, detail=f"Civic dispatcher failed: {e}")
 
 
+@app.get("/v1/fortyguard/heatmap")
+def heatmap_endpoint(city: str = "Phoenix, AZ", analytic_type: str = "tcm"):
+    """Fetch FortyGuard spatial thermal tile mesh."""
+    try:
+        return fortyguard_client.get_heatmap_analytics(city=city, analytic_type=analytic_type)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/v1/fortyguard/satellite")
+def satellite_endpoint(city: str = "Phoenix, AZ"):
+    """Fetch FortyGuard satellite land-cover material classification."""
+    try:
+        return fortyguard_client.get_satellite_segmentation(city=city)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/v1/fortyguard/intelligence")
+def intelligence_endpoint(city: str = "Phoenix, AZ", temp_f: Optional[float] = None):
+    """Fetch FortyGuard 5-Pillar Heat Intelligence Report metadata."""
+    try:
+        return fortyguard_client.get_heat_intelligence_report(city=city, temp_f=temp_f)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run("mock_api:app", host="0.0.0.0", port=8000, reload=True)
-

@@ -8,3 +8,5 @@ venv/
 progress.md
 PROGRESS.md
 .claude
+chroma_db/
+backend/data/chroma_db/

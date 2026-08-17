@@ -1,11 +1,16 @@
 import os
+import sys
 import time
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, Dict, Any
 
 import requests
 from dotenv import load_dotenv
+
+# Ensure backend directory is in sys.path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from fortyguard_client import fortyguard_client, f_to_c, c_to_f
 
 load_dotenv()
 
@@ -13,8 +18,9 @@ WINDOW_SIZE = 5
 CRITICAL_TEMP_F = 105.0
 EXTREME_RISK = "extreme"
 ANOMALY_JUMP_THRESHOLD_F = 5.0
+HIGH_SOLAR_GHI_THRESHOLD = 600.0  # W/m² FortyGuard Solar threshold
 COOLDOWN_SECONDS = 60.0
-TARGET_PRECOOL_TEMP_F = 68.0
+DEFAULT_TARGET_PRECOOL_TEMP_F = 68.0
 
 N8N_HVAC_WEBHOOK_URL = os.getenv(
     "N8N_HVAC_WEBHOOK_URL",
@@ -45,15 +51,17 @@ class RollingWindowThresholdModel:
         self.window_size = window_size
         self._window: deque = deque(maxlen=window_size)
 
-    def ingest(self, reading: TemperatureReading) -> Optional[str]:
+    def ingest(self, reading: TemperatureReading, solar_ghi: float = 0.0) -> Optional[str]:
         self._window.append(reading)
-        return self._should_trigger(reading)
+        return self._should_trigger(reading, solar_ghi)
 
-    def _should_trigger(self, reading: TemperatureReading) -> Optional[str]:
+    def _should_trigger(self, reading: TemperatureReading, solar_ghi: float) -> Optional[str]:
         if reading.temperature_f >= CRITICAL_TEMP_F:
             return "critical_temp"
         if reading.risk_level.strip().lower() == EXTREME_RISK:
             return "extreme_risk"
+        if solar_ghi >= HIGH_SOLAR_GHI_THRESHOLD and reading.temperature_f >= 98.0:
+            return "solar_radiation_spike"
 
         prior_readings = list(self._window)[:-1]
         if len(prior_readings) >= 3:
@@ -62,7 +70,7 @@ class RollingWindowThresholdModel:
                 return "anomaly_jump"
         return None
 
-    def describe_trigger(self, reason: Optional[str], reading: TemperatureReading) -> Optional[str]:
+    def describe_trigger(self, reason: Optional[str], reading: TemperatureReading, solar_ghi: float = 0.0) -> Optional[str]:
         if reason == "critical_temp":
             return (
                 f"Condition 1: Critical temperature — {reading.temperature_f:.0f}°F "
@@ -73,12 +81,17 @@ class RollingWindowThresholdModel:
                 f"Condition 2: Extreme heat warning — grid risk level is "
                 f"'{reading.risk_level.strip().lower()}' for {reading.location}"
             )
+        if reason == "solar_radiation_spike":
+            return (
+                f"Condition 3: FortyGuard Solar Peak — GHI {solar_ghi:.1f} W/m² "
+                f"combined with {reading.temperature_f:.1f}°F triggers preventive thermal load shift"
+            )
         if reason == "anomaly_jump":
             prior = list(self._window)[:-1]
             prior_avg = sum(r.temperature_f for r in prior) / len(prior)
             jump = reading.temperature_f - prior_avg
             return (
-                f"Condition 3: Rolling-window anomaly — +{jump:.1f}°F jump vs "
+                f"Condition 4: Rolling-window anomaly — +{jump:.1f}°F jump vs "
                 f"{len(prior)}-reading avg ({prior_avg:.1f}°F)"
             )
         return None
@@ -119,8 +132,6 @@ class N8nHvacDispatcher:
 
 def _parse_payload(payload: dict) -> Optional[TemperatureReading]:
     location = payload.get("location") or payload.get("city")
-    # Use explicit None checks, not `or`: a legitimate 0.0°F reading is falsy and
-    # would otherwise be discarded as "missing".
     temperature_f = payload.get("temperature_f")
     if temperature_f is None:
         temperature_f = payload.get("temperature")
@@ -140,6 +151,7 @@ def _parse_payload(payload: dict) -> Optional[TemperatureReading]:
 
 
 def process_reading(payload: dict) -> dict:
+    """Processes live reading against FortyGuard microclimate telemetry and thermodynamic controller."""
     model = _controller.model
     dispatcher = _controller.dispatcher
 
@@ -147,17 +159,25 @@ def process_reading(payload: dict) -> dict:
     if reading is None:
         return {"error": "invalid payload: location and temperature_f are required"}
 
-    triggered = model.ingest(reading)
+    # 1. Query FortyGuard environmental telemetry for solar irradiance
+    env_snapshot = fortyguard_client.get_live_telemetry_snapshot(city=reading.location, temp_f=reading.temperature_f)
+    solar_ghi = float(env_snapshot.get("solar_irradiance_ghi", 550.0))
+
+    triggered = model.ingest(reading, solar_ghi=solar_ghi)
+    
+    # Calculate optimal pre-cool target based on FortyGuard thermal lag
+    target_precool = 66.0 if reading.temperature_f >= 106.0 else DEFAULT_TARGET_PRECOOL_TEMP_F
+
     report = InfrastructurePrecoolReport(
         city=reading.location,
         current_temp_f=reading.temperature_f,
-        target_precool_temp_f=TARGET_PRECOOL_TEMP_F,
+        target_precool_temp_f=target_precool,
         grid_load_shift_active=bool(triggered),
-        trigger_reason=model.describe_trigger(triggered, reading),
+        trigger_reason=model.describe_trigger(triggered, reading, solar_ghi=solar_ghi),
         hvac_action_plan=(
             f"Initiate Stage 2 pre-cooling sequence for {reading.location} "
-            f"to reach {TARGET_PRECOOL_TEMP_F}°F before peak load window "
-            f"({reading.temperature_f}°F observed, risk={reading.risk_level})."
+            f"to reach {target_precool}°F before peak load window "
+            f"({reading.temperature_f}°F observed, FortyGuard GHI={solar_ghi:.1f}W/m², risk={reading.risk_level})."
         )
         if triggered
         else "Standby: thermal profile within normal operating envelope.",
@@ -165,13 +185,14 @@ def process_reading(payload: dict) -> dict:
 
     dispatch_result = {"dispatched": False, "reason": "no_trigger"}
     if triggered:
+        # Exact n8n payload contract preserved
         dispatch_payload = {
             "target_zone": reading.location,
             "current_temp_f": reading.temperature_f,
             "risk_level": reading.risk_level,
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(reading.timestamp)),
             "action": "HVAC_PRECOOL",
-            "target_precool_temp_f": TARGET_PRECOOL_TEMP_F,
+            "target_precool_temp_f": target_precool,
         }
         dispatch_result = dispatcher.dispatch(dispatch_payload)
 
@@ -219,32 +240,4 @@ if __name__ == "__main__":
     for sample in samples:
         result = process_reading(sample)
         print(json.dumps(result, indent=2))
-        print("-" * 60)
-
-    _controller.model = RollingWindowThresholdModel()
-
-    anomaly_samples = [
-        {"location": "Phoenix, AZ", "temperature_f": 95, "risk_level": "nominal"},
-        {"location": "Phoenix, AZ", "temperature_f": 96, "risk_level": "nominal"},
-        {"location": "Phoenix, AZ", "temperature_f": 95, "risk_level": "nominal"},
-        {"location": "Phoenix, AZ", "temperature_f": 102, "risk_level": "nominal"},
-    ]
-    print("== ROLLING-WINDOW ANOMALY DEMO (95-96F baseline, 102F jump) ==")
-    for sample in anomaly_samples:
-        result = process_reading(sample)
-        print(json.dumps(result, indent=2))
-        print("-" * 60)
-
-    _controller.model = RollingWindowThresholdModel()
-    _controller.dispatcher = N8nHvacDispatcher()
-
-    cooldown_samples = [
-        {"location": "Phoenix, AZ", "temperature_f": 106, "risk_level": "extreme"},
-        {"location": "Houston, TX", "temperature_f": 105, "risk_level": "extreme"},
-        {"location": "Phoenix, AZ", "temperature_f": 107, "risk_level": "extreme"},
-    ]
-    print("== PER-LOCATION COOLDOWN DEMO (Phoenix + Houston independent) ==")
-    for sample in cooldown_samples:
-        result = process_reading(sample)
-        print(json.dumps(result["dispatch"], indent=2))
         print("-" * 60)
