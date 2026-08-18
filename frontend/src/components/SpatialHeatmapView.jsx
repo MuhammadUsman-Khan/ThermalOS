@@ -711,20 +711,20 @@ export default function SpatialHeatmapView({
       {/* Top Header Bar */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-gray-100 dark:border-white/5">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
-            <Radio className="w-5 h-5 text-orange-500 animate-pulse" />
+          <div className="h-9 w-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
+            <Radio className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-display text-sm font-bold uppercase tracking-tight text-slate-900 dark:text-white">
-                NATIONAL THERMAL GRID • ALL MONITORED US METROS
+                Spatial Microclimate Heatmap
               </h2>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-mono text-emerald-500 font-bold uppercase">
-                {currentView === "national" ? "NATIONAL OVERVIEW" : focusedCityName}
+              <span className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-[10px] font-mono text-gray-600 dark:text-zinc-400 font-medium">
+                {currentView === "national" ? "National Overview" : focusedCityName}
               </span>
             </div>
             <p className="text-xs text-gray-500 dark:text-zinc-400">
-              FortyGuard TCM 100m² Radiometric Grid Overlaid on CartoDB / OpenStreetMap
+              FortyGuard 100m² Radiometric Grid Overlaid on CartoDB / OpenStreetMap
             </p>
           </div>
         </div>
@@ -745,41 +745,41 @@ export default function SpatialHeatmapView({
                   flyToCity(e.target.value);
                 }
               }}
-              className="bg-gray-100 dark:bg-black/80 hover:bg-gray-200 dark:hover:bg-zinc-900 border border-gray-200 dark:border-white/10 rounded-xl pl-8 pr-7 py-1.5 font-mono text-xs font-bold text-slate-900 dark:text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500/40 transition-all appearance-none shadow-xs"
+              className="bg-gray-50 dark:bg-zinc-900 hover:bg-gray-100 dark:hover:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl pl-8 pr-7 py-1.5 font-mono text-xs font-medium text-slate-800 dark:text-zinc-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all appearance-none shadow-xs"
             >
               <option value="national">🌐 National Overview (All US Cities)</option>
-              <optgroup label="🌵 Southwest & Desert (High Risk)">
+              <optgroup label="🌵 Southwest & Desert">
                 {MONITORED_CITIES.filter((c) => ["Southwest Desert", "Mojave Basin", "Sonoran Basin"].includes(c.region)).map((c) => (
                   <option key={c.id} value={c.name}>
-                    {c.emoji} {c.name} — {c.tempF} ({c.status})
+                    {c.emoji} {c.name} — {c.tempF}
                   </option>
                 ))}
               </optgroup>
-              <optgroup label="🚀 Texas & Gulf Corridor">
+              <optgroup label="🚀 Texas & South Central">
                 {MONITORED_CITIES.filter((c) => ["Gulf Coast", "North Texas", "Texas Hill Country", "South Texas", "Mississippi Delta"].includes(c.region)).map((c) => (
                   <option key={c.id} value={c.name}>
-                    {c.emoji} {c.name} — {c.tempF} ({c.status})
+                    {c.emoji} {c.name} — {c.tempF}
                   </option>
                 ))}
               </optgroup>
               <optgroup label="🌉 West Coast & Pacific">
                 {MONITORED_CITIES.filter((c) => ["Silicon Valley", "SoCal Basin", "Bay Area", "Pacific Northwest"].includes(c.region)).map((c) => (
                   <option key={c.id} value={c.name}>
-                    {c.emoji} {c.name} — {c.tempF} ({c.status})
+                    {c.emoji} {c.name} — {c.tempF}
                   </option>
                 ))}
               </optgroup>
               <optgroup label="🏔️ Mountain & Midwest">
                 {MONITORED_CITIES.filter((c) => ["Rocky Mountains", "Great Basin", "Great Lakes", "Upper Midwest", "Midwest Corridor"].includes(c.region)).map((c) => (
                   <option key={c.id} value={c.name}>
-                    {c.emoji} {c.name} — {c.tempF} ({c.status})
+                    {c.emoji} {c.name} — {c.tempF}
                   </option>
                 ))}
               </optgroup>
               <optgroup label="🗽 East Coast & Southeast">
                 {MONITORED_CITIES.filter((c) => ["Northeast Megalopolis", "New England", "Mid-Atlantic", "Capital Corridor", "South Florida", "Central Florida", "Southeast Piedmont"].includes(c.region)).map((c) => (
                   <option key={c.id} value={c.name}>
-                    {c.emoji} {c.name} — {c.tempF} ({c.status})
+                    {c.emoji} {c.name} — {c.tempF}
                   </option>
                 ))}
               </optgroup>
@@ -790,28 +790,28 @@ export default function SpatialHeatmapView({
           </div>
 
           {/* AOI Scope Toggle */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-orange-500/10 border border-orange-500/20 text-xs font-mono">
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100 dark:bg-black/60 border border-gray-200 dark:border-white/10 text-xs font-mono">
             <button
               onClick={() => setScope("core")}
-              className={`px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1.5 transition-all ${
+              className={`px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
                 scope === "core"
-                  ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-xs"
-                  : "text-orange-700 dark:text-orange-300 hover:text-orange-500"
+                  ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs"
+                  : "text-gray-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
-              <Scan className="w-3.5 h-3.5" />
-              <span>Urban Core</span>
+              <Scan className="w-3.5 h-3.5 text-orange-500" />
+              <span>Core AOI</span>
             </button>
             <button
               onClick={() => setScope("metro")}
-              className={`px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1.5 transition-all ${
+              className={`px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
                 scope === "metro"
-                  ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-xs"
-                  : "text-orange-700 dark:text-orange-300 hover:text-orange-500"
+                  ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs"
+                  : "text-gray-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
-              <Globe2 className="w-3.5 h-3.5" />
-              <span>Full Metro</span>
+              <Globe2 className="w-3.5 h-3.5 text-orange-500" />
+              <span>Metro Valley</span>
             </button>
           </div>
 
@@ -819,30 +819,30 @@ export default function SpatialHeatmapView({
           <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100 dark:bg-black/60 border border-gray-200 dark:border-white/10 text-xs font-mono">
             <button
               onClick={() => setBaseMapStyle("voyager")}
-              className={`px-2 py-1 rounded-lg font-semibold transition-all ${
+              className={`px-2 py-1 rounded-lg font-medium transition-all cursor-pointer ${
                 baseMapStyle === "voyager"
-                  ? "bg-white dark:bg-zinc-800 text-orange-600 dark:text-orange-400 shadow-xs"
-                  : "text-gray-500 dark:text-zinc-400 hover:text-orange-500"
+                  ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs"
+                  : "text-gray-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               Voyager
             </button>
             <button
               onClick={() => setBaseMapStyle("positron")}
-              className={`px-2 py-1 rounded-lg font-semibold transition-all ${
+              className={`px-2 py-1 rounded-lg font-medium transition-all cursor-pointer ${
                 baseMapStyle === "positron"
-                  ? "bg-white dark:bg-zinc-800 text-orange-600 dark:text-orange-400 shadow-xs"
-                  : "text-gray-500 dark:text-zinc-400 hover:text-orange-500"
+                  ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs"
+                  : "text-gray-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               Light
             </button>
             <button
               onClick={() => setBaseMapStyle("dark")}
-              className={`px-2 py-1 rounded-lg font-semibold transition-all ${
+              className={`px-2 py-1 rounded-lg font-medium transition-all cursor-pointer ${
                 baseMapStyle === "dark"
-                  ? "bg-white dark:bg-zinc-800 text-orange-600 dark:text-orange-400 shadow-xs"
-                  : "text-gray-500 dark:text-zinc-400 hover:text-orange-500"
+                  ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs"
+                  : "text-gray-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               Dark
@@ -853,30 +853,30 @@ export default function SpatialHeatmapView({
           <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100 dark:bg-black/60 border border-gray-200 dark:border-white/10 text-xs font-mono">
             <button
               onClick={() => setActiveLayer("tcm")}
-              className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+              className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${
                 activeLayer === "tcm"
-                  ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-sm"
-                  : "text-gray-600 dark:text-zinc-400 hover:text-orange-500"
+                  ? "bg-white dark:bg-zinc-800 text-orange-500 shadow-xs font-bold"
+                  : "text-gray-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               TCM Temp
             </button>
             <button
               onClick={() => setActiveLayer("exceedance")}
-              className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+              className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${
                 activeLayer === "exceedance"
-                  ? "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-sm"
-                  : "text-gray-600 dark:text-zinc-400 hover:text-red-500"
+                  ? "bg-white dark:bg-zinc-800 text-rose-500 shadow-xs font-bold"
+                  : "text-gray-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               Exceedance
             </button>
             <button
               onClick={() => setActiveLayer("persistence")}
-              className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+              className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${
                 activeLayer === "persistence"
-                  ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-sm"
-                  : "text-gray-600 dark:text-zinc-400 hover:text-purple-500"
+                  ? "bg-white dark:bg-zinc-800 text-purple-500 shadow-xs font-bold"
+                  : "text-gray-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               Persistence

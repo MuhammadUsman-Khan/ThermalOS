@@ -102,20 +102,20 @@ export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, da
       {/* Header & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100 dark:border-white/5">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-            <Clock className="w-5 h-5 text-amber-500" />
+          <div className="h-9 w-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+            <Clock className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-display text-sm font-bold uppercase tracking-tight text-slate-900 dark:text-white">
-                24-HOUR DIURNAL SOLAR & THERMAL SIMULATOR • {selectedCity}
+                24-Hour Diurnal Forecast • {selectedCity}
               </h2>
-              <span className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-[10px] font-mono text-amber-500 font-bold uppercase">
-                PREDICTIVE TIMELINE
+              <span className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-[10px] font-mono text-gray-600 dark:text-zinc-400 font-medium">
+                Simulation Model
               </span>
             </div>
             <p className="text-xs text-gray-500 dark:text-zinc-400">
-              Simulate diurnal heat island lag, solar flux windows, and pre-cooling opportunities
+              Simulate diurnal thermal lag, solar flux windows, and HVAC pre-cooling windows
             </p>
           </div>
         </div>
@@ -124,14 +124,14 @@ export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, da
         <div className="flex items-center gap-2 font-mono text-xs">
           <button
             onClick={() => setIsPlaying(!isPlaying)}
-            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-bold transition-all ${
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-medium transition-all cursor-pointer ${
               isPlaying
-                ? "bg-red-500/20 text-red-500 border border-red-500/30"
-                : "bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-md hover:brightness-110"
+                ? "bg-rose-500/10 text-rose-500 border border-rose-500/20"
+                : "bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 border border-gray-200 dark:border-white/10 hover:text-orange-500 shadow-xs"
             }`}
           >
-            {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-            <span>{isPlaying ? "PAUSE SIM" : "PLAY 24H SIM"}</span>
+            {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 text-orange-500" />}
+            <span>{isPlaying ? "Pause" : "Play 24H"}</span>
           </button>
           <button
             onClick={() => {
@@ -139,7 +139,7 @@ export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, da
               setIsPlaying(false);
               if (onHourChange) onHourChange(diurnalData[14]);
             }}
-            className="p-1.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-zinc-400 hover:text-orange-500 transition-all"
+            className="p-1.5 rounded-lg bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-zinc-400 hover:text-orange-500 transition-all cursor-pointer"
             title="Reset to 14:00 Solar Peak"
           >
             <RotateCcw className="w-3.5 h-3.5" />
