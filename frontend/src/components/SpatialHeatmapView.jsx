@@ -722,7 +722,7 @@ export default function SpatialHeatmapView({
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.96 }}
                   transition={{ type: "spring", stiffness: 450, damping: 25 }}
-                  className="absolute top-full mt-2 right-0 w-80 bg-white/98 dark:bg-[#0B0D14]/98 backdrop-blur-2xl border border-gray-200 dark:border-white/[0.12] rounded-2xl shadow-[0_24px_60px_-10px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.06)] overflow-hidden z-50 flex flex-col max-h-[380px] font-mono text-xs"
+                  className="absolute top-full mt-2 right-0 w-80 glass-popover rounded-2xl overflow-hidden z-50 flex flex-col max-h-[380px] font-mono text-xs"
                 >
                   {/* Subtle top edge glow */}
                   <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
