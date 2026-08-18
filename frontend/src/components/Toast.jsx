@@ -1,47 +1,60 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, X } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Info, AlertOctagon, X } from "lucide-react";
 
-// Bottom-right toast that auto-dismisses after `duration` ms (default 3s).
-export default function Toast({ toast, onDismiss, duration = 3000 }) {
-  const onDismissRef = useRef(onDismiss);
-  onDismissRef.current = onDismiss;
+export default function Toast({ toast, message, type = "info", onClose, onDismiss, duration = 3500 }) {
+  const text = message || toast?.message || toast?.title;
+  const toastType = type || toast?.type || "info";
+  const dismissFn = onClose || onDismiss;
 
   useEffect(() => {
-    if (!toast) return;
+    if (!text) return;
     const t = setTimeout(() => {
-      onDismissRef.current?.();
+      if (dismissFn) dismissFn();
     }, duration);
     return () => clearTimeout(t);
-  }, [toast?.id, duration]);
+  }, [text, duration, dismissFn]);
+
+  if (!text) return null;
+
+  const getIcon = () => {
+    switch (toastType) {
+      case "success":
+        return <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />;
+      case "warning":
+        return <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />;
+      case "error":
+        return <AlertOctagon className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />;
+      default:
+        return <Info className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />;
+    }
+  };
 
   return (
     <div className="fixed bottom-5 right-5 z-[60] pointer-events-none">
       <AnimatePresence>
-        {toast && (
-          <motion.div
-            key={toast.id}
-            initial={{ opacity: 0, y: 20, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.96 }}
-            transition={{ type: "spring", stiffness: 340, damping: 26 }}
-            className="pointer-events-auto flex items-start gap-3 max-w-sm bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl px-4 py-3"
-          >
-            <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-            <div className="min-w-0">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white font-mono">
-                {toast.title}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">{toast.message}</p>
-            </div>
+        <motion.div
+          initial={{ opacity: 0, y: 16, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 16, scale: 0.96 }}
+          transition={{ duration: 0.15 }}
+          className="pointer-events-auto flex items-start gap-2.5 max-w-sm bg-white dark:bg-[#111318] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl px-3.5 py-2.5 font-sans"
+        >
+          {getIcon()}
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-slate-800 dark:text-zinc-200 leading-snug font-mono">
+              {text}
+            </p>
+          </div>
+          {dismissFn && (
             <button
-              onClick={onDismiss}
-              className="p-1 rounded-md text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer flex-shrink-0"
+              onClick={dismissFn}
+              className="p-0.5 rounded text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer shrink-0 ml-1"
             >
               <X className="w-3.5 h-3.5" />
             </button>
-          </motion.div>
-        )}
+          )}
+        </motion.div>
       </AnimatePresence>
     </div>
   );

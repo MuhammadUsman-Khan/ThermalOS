@@ -1210,28 +1210,36 @@ export default function AgentVisualization({ agentStates, darkMode = true }) {
   }, [agentStates]);
 
   return (
-    <div className="w-full bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-5 shadow-sm dark:shadow-2xl backdrop-blur-xl transition-all">
+    <div className="w-full bg-white dark:bg-[#111318] border border-gray-200 dark:border-white/5 rounded-xl p-5 shadow-xs transition-all">
       {/* Section Header */}
       <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100 dark:border-white/5">
         <div className="flex items-center gap-2.5">
-          <Building2 className="w-4 h-4 text-[#FF6B2B]" />
-          <h2 className="font-display text-sm font-bold uppercase tracking-tight text-slate-900 dark:text-white">
-            AGENT OPERATIONS WORKSPACE — LIVE
-          </h2>
-          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="h-8 w-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
+            <Building2 className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="font-display text-sm font-semibold tracking-tight text-slate-900 dark:text-white">
+                Autonomous Agent Workspace
+              </h2>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            </div>
+            <p className="text-xs text-gray-500 dark:text-zinc-400">
+              Interactive multi-agent simulation for thermal audit, HVAC control, and civic dispatch
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2 text-xs font-mono text-gray-500 dark:text-zinc-400">
-          <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-300 text-[10px] font-semibold">
-            REALISTIC WORKSPACE
+          <span className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs font-mono text-gray-600 dark:text-zinc-400">
+            Phaser Engine · 3 Active Cores
           </span>
-          <span className="hidden sm:inline-block text-[11px]">Real-Time Autonomous Agent Simulation</span>
         </div>
       </div>
 
       {/* Phaser Canvas Container */}
       <div
         ref={containerRef}
-        className="w-full h-[360px] rounded-xl overflow-hidden border border-gray-200 dark:border-zinc-800 relative shadow-inner transition-colors duration-300"
+        className="w-full h-[360px] rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 relative shadow-inner transition-colors duration-300"
         style={{ minHeight: "360px" }}
       />
     </div>
