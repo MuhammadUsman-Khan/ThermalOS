@@ -1,18 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  AreaChart,
-  Area,
   XAxis,
   YAxis,
   Tooltip,
   ResponsiveContainer,
   ComposedChart,
+  Area,
   Line,
   ReferenceLine,
 } from "recharts";
 import {
   Activity,
-  AlertTriangle,
   FileCheck,
   Zap,
   Flame,
@@ -22,15 +20,12 @@ import {
   ChevronDown,
   RefreshCw,
   Clock,
-  Sparkles,
-  Layers,
   Thermometer,
   Radio,
   Globe,
   MapPin,
   Check,
   AlertOctagon,
-  Building2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -83,7 +78,6 @@ export default function App() {
 
   const [uptimeSeconds, setUptimeSeconds] = useState(5040);
   const [logs, setLogs] = useState([]);
-  const [totalEventsCount, setTotalEventsCount] = useState(0);
 
   const [agentStates, setAgentStates] = useState({
     agent1: "idle",
@@ -138,7 +132,6 @@ export default function App() {
       second: "2-digit",
     });
     setLogs((prev) => [{ id: Date.now() + Math.random(), time, message, type, source }, ...prev]);
-    setTotalEventsCount((c) => c + 1);
   };
 
   // Switch City Handler
@@ -311,7 +304,7 @@ export default function App() {
   const surfaceDelta = Math.max(0, surfaceTemp - currentTemp);
 
   return (
-    <div className={`min-h-[100dvh] flex flex-col font-sans transition-colors ${darkMode ? "bg-[#0A0C0F] text-zinc-100" : "bg-zinc-50 text-slate-900"}`}>
+    <div className={`min-h-[100dvh] flex flex-col font-sans transition-colors ${darkMode ? "bg-[#0C0E12] text-zinc-100" : "bg-[#F8FAFC] text-slate-900"}`}>
       {/* Toast Notification */}
       {toast && (
         <Toast
@@ -359,59 +352,59 @@ export default function App() {
       />
 
       {/* Topbar */}
-      <header className="border-b border-gray-200 dark:border-white/5 bg-white/90 dark:bg-[#0A0C0F]/90 backdrop-blur-md sticky top-0 z-40 px-6 py-3 transition-colors">
+      <header className="border-b border-slate-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-[#0C0E12]/90 backdrop-blur-md sticky top-0 z-40 px-6 py-2.5 transition-colors">
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-500">
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-500">
               <Flame className="w-4 h-4" />
             </div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white font-display">
+              <h1 className="text-sm font-semibold tracking-tight text-slate-900 dark:text-zinc-100 font-display">
                 ThermalOS
               </h1>
-              <span className="text-xs text-gray-400 dark:text-zinc-600">/</span>
-              <span className="text-xs font-mono text-gray-500 dark:text-zinc-400">
+              <span className="text-xs text-slate-300 dark:text-zinc-700">/</span>
+              <span className="text-xs font-mono text-slate-500 dark:text-zinc-400">
                 FortyGuard Microclimate Engine
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-            {/* Quick Action Triggers */}
-            <div className="flex items-center gap-1.5 p-1 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs font-mono">
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            {/* Action Triggers */}
+            <div className="flex items-center gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 text-xs font-mono">
               <button
                 onClick={handleRunAudit}
                 disabled={isAuditLoading}
-                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 hover:text-orange-500 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:text-orange-500 shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
-                {isAuditLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <FileCheck className="w-3 h-3 text-orange-500" />}
+                {isAuditLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <FileCheck className="w-3 h-3 text-slate-500 dark:text-zinc-400" />}
                 <span>Audit</span>
               </button>
 
               <button
                 onClick={handleRunInfrastructure}
                 disabled={isInfraLoading}
-                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 hover:text-cyan-500 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:text-teal-500 shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
-                {isInfraLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3 text-cyan-500" />}
+                {isInfraLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3 text-slate-500 dark:text-zinc-400" />}
                 <span>Pre-Cool</span>
               </button>
 
               <button
                 onClick={handleRunCivic}
                 disabled={isCivicLoading}
-                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 hover:text-rose-500 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:text-rose-500 shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
-                {isCivicLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <AlertOctagon className="w-3 h-3 text-rose-500" />}
+                {isCivicLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <AlertOctagon className="w-3 h-3 text-slate-500 dark:text-zinc-400" />}
                 <span>Civic Alert</span>
               </button>
             </div>
 
             {/* Telemetry Status */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/[0.02] text-xs font-mono">
-              <span className={`w-1.5 h-1.5 rounded-full ${isEmergencyMode ? "bg-rose-500 animate-pulse" : "bg-emerald-500"}`} />
-              <span className="text-gray-600 dark:text-zinc-400">
-                {isEmergencyMode ? "Critical Advisory" : `Active · ${uptime}`}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 text-xs font-mono">
+              <span className={`w-1.5 h-1.5 rounded-full ${isEmergencyMode ? "bg-rose-500" : "bg-emerald-500"}`} />
+              <span className="text-slate-600 dark:text-zinc-400">
+                {isEmergencyMode ? "Advisory Triggered" : `Active · ${uptime}`}
               </span>
             </div>
 
@@ -419,9 +412,9 @@ export default function App() {
             <button
               onClick={() => setDarkMode(!darkMode)}
               title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-zinc-400 hover:text-orange-500 transition-colors shadow-xs cursor-pointer"
+              className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors shadow-xs cursor-pointer"
             >
-              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {darkMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </button>
 
             {/* City Selector */}
@@ -429,12 +422,12 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 hover:border-orange-500/40 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer text-slate-800 dark:text-zinc-200 shadow-xs font-mono"
+                className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer text-slate-800 dark:text-zinc-200 shadow-xs font-mono"
               >
-                <MapPin className="w-3.5 h-3.5 text-orange-500" />
+                <MapPin className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
                 <span>{selectedCity}</span>
                 <ChevronDown
-                  className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
+                  className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
                 />
               </button>
 
@@ -445,7 +438,7 @@ export default function App() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 4, scale: 0.98 }}
                     transition={{ duration: 0.12 }}
-                    className="absolute top-full mt-1.5 right-0 w-52 bg-white dark:bg-[#111318] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl overflow-hidden z-50 py-1 font-mono text-xs"
+                    className="absolute top-full mt-1.5 right-0 w-52 bg-white dark:bg-[#12151B] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xl overflow-hidden z-50 py-1 font-mono text-xs"
                   >
                     {CITIES.map((city) => (
                       <div
@@ -453,8 +446,8 @@ export default function App() {
                         onClick={() => handleSelectCity(city)}
                         className={`px-3.5 py-2 cursor-pointer transition-colors flex items-center justify-between ${
                           selectedCity === city
-                            ? "bg-orange-500/10 text-orange-500 font-semibold"
-                            : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/5"
+                            ? "bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-white font-semibold"
+                            : "text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/50"
                         }`}
                       >
                         <span>{city}</span>
@@ -470,54 +463,54 @@ export default function App() {
       </header>
 
       {/* Main dashboard */}
-      <main className="w-full max-w-7xl mx-auto px-4 py-5 flex-1 flex flex-col space-y-4 relative z-10">
+      <main className="w-full max-w-7xl mx-auto px-4 py-4 flex-1 flex flex-col space-y-4 relative z-10">
         {/* Sleek Segmented Navigation Control */}
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-gray-100 dark:bg-black/40 border border-gray-200 dark:border-white/10 text-xs font-mono w-fit">
+        <div className="flex items-center gap-1 p-1 rounded-lg bg-slate-200/50 dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800 text-xs font-mono w-fit">
           <button
             onClick={() => setActiveTab("operations")}
-            className={`px-3.5 py-1.5 rounded-md font-medium flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-md font-medium flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === "operations"
-                ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs font-semibold"
-                : "text-gray-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs font-semibold"
+                : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
             }`}
           >
-            <Activity className="w-3.5 h-3.5 text-orange-500" />
+            <Activity className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
             <span>Operations Console</span>
           </button>
 
           <button
             onClick={() => setActiveTab("spatial_heatmap")}
-            className={`px-3.5 py-1.5 rounded-md font-medium flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-md font-medium flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === "spatial_heatmap"
-                ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs font-semibold"
-                : "text-gray-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs font-semibold"
+                : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
             }`}
           >
-            <Radio className="w-3.5 h-3.5 text-orange-500" />
+            <Radio className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
             <span>Spatial Heatmap</span>
           </button>
 
           <button
             onClick={() => setActiveTab("diurnal_sim")}
-            className={`px-3.5 py-1.5 rounded-md font-medium flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-md font-medium flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === "diurnal_sim"
-                ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs font-semibold"
-                : "text-gray-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs font-semibold"
+                : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
             }`}
           >
-            <Clock className="w-3.5 h-3.5 text-amber-500" />
+            <Clock className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
             <span>Diurnal Forecaster</span>
           </button>
 
           <button
             onClick={() => setActiveTab("national_grid")}
-            className={`px-3.5 py-1.5 rounded-md font-medium flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-md font-medium flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === "national_grid"
-                ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs font-semibold"
-                : "text-gray-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs font-semibold"
+                : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
             }`}
           >
-            <Globe className="w-3.5 h-3.5 text-cyan-500" />
+            <Globe className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
             <span>National Grid Matrix</span>
           </button>
         </div>
@@ -526,25 +519,25 @@ export default function App() {
         {activeTab === "operations" && (
           <div className="space-y-4">
             {/* 4-Card Mission Control Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
               {/* 1. Surface vs Ambient Temp */}
               <KPICard
                 label="Surface Temperature"
-                icon={<Thermometer className="w-4 h-4 text-orange-500" />}
+                icon={<Thermometer className="w-4 h-4 text-slate-500 dark:text-zinc-400" />}
                 value={surfaceTemp.toFixed(1)}
                 unit="°F"
                 valueSuffix={
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-2 mb-1 bg-orange-500/10 text-orange-500 border border-orange-500/20">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-1.5 mb-1 bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300">
                     +{surfaceDelta.toFixed(1)}°F ΔT
                   </span>
                 }
                 darkMode={darkMode}
-                sparkStroke="#f97316"
+                sparkStroke="#71717a"
                 sparkGradientId="sparkOrangeGrad"
                 sparkPath="M0,24 Q15,6 32,18 T65,10 T95,14 L110,8"
                 footer={
                   <span>
-                    Ambient Air: <strong className="text-slate-900 dark:text-white font-semibold">{currentTemp}°F</strong>
+                    Ambient Air: <strong className="text-slate-900 dark:text-zinc-100 font-medium">{currentTemp}°F</strong>
                   </span>
                 }
               />
@@ -552,21 +545,21 @@ export default function App() {
               {/* 2. Solar Irradiance GHI */}
               <KPICard
                 label="Solar Irradiance (GHI)"
-                icon={<Sun className="w-4 h-4 text-amber-500" />}
+                icon={<Sun className="w-4 h-4 text-slate-500 dark:text-zinc-400" />}
                 value={solarGhi.toFixed(0)}
                 unit="W/m²"
                 valueSuffix={
-                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-2 mb-1 ${solarGhi >= 600 ? "bg-rose-500/10 text-rose-500 border border-rose-500/20" : "bg-amber-500/10 text-amber-500 border border-amber-500/20"}`}>
-                    {solarGhi >= 600 ? "Peak Flux" : "Moderate"}
+                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-1.5 mb-1 ${solarGhi >= 600 ? "bg-rose-500/10 text-rose-600 dark:text-rose-400" : "bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300"}`}>
+                    {solarGhi >= 600 ? "Peak Flux" : "Nominal"}
                   </span>
                 }
                 darkMode={darkMode}
-                sparkStroke="#f59e0b"
+                sparkStroke="#71717a"
                 sparkGradientId="sparkAmberGrad"
                 sparkPath="M0,28 Q20,12 45,20 T80,8 T100,16 L110,10"
                 footer={
                   <span>
-                    Clear Sky DNI: <strong className="text-slate-900 dark:text-white font-semibold">{(solarGhi * 1.3).toFixed(0)} W/m²</strong>
+                    Clear Sky DNI: <strong className="text-slate-900 dark:text-zinc-100 font-medium">{(solarGhi * 1.3).toFixed(0)} W/m²</strong>
                   </span>
                 }
               />
@@ -574,27 +567,27 @@ export default function App() {
               {/* 3. Relative Humidity */}
               <KPICard
                 label="Relative Humidity"
-                icon={<Droplets className="w-4 h-4 text-cyan-500" />}
+                icon={<Droplets className="w-4 h-4 text-slate-500 dark:text-zinc-400" />}
                 value={humidity.toFixed(1)}
                 unit="%"
                 valueSuffix={
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-2 mb-1 bg-cyan-500/10 text-cyan-500 border border-cyan-500/20">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-1.5 mb-1 bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300">
                     {humidity > 50 ? "Elevated" : "Nominal"}
                   </span>
                 }
                 darkMode={darkMode}
-                sparkStroke="#06b6d4"
+                sparkStroke="#71717a"
                 sparkGradientId="sparkCyanGrad"
                 sparkPath="M0,16 Q25,24 50,14 T85,20 T105,10 L110,14"
                 footer={
                   <span>
-                    Wet-Bulb: <strong className="text-slate-900 dark:text-white font-semibold">{currentReading?.wet_bulb_f ? `${currentReading.wet_bulb_f.toFixed(1)}°F` : "74.1°F"}</strong>
+                    Wet-Bulb: <strong className="text-slate-900 dark:text-zinc-100 font-medium">{currentReading?.wet_bulb_f ? `${currentReading.wet_bulb_f.toFixed(1)}°F` : "74.1°F"}</strong>
                   </span>
                 }
               />
 
               {/* 4. Real-Time WBGT with Radial Gauge */}
-              <div className="bg-white dark:bg-[#111318] border border-gray-200 dark:border-white/5 rounded-xl p-4 flex flex-col items-center justify-between shadow-xs transition-all">
+              <div className="bg-white dark:bg-[#12151B] border border-slate-200/80 dark:border-zinc-800/80 rounded-xl p-4 flex flex-col items-center justify-between shadow-xs transition-colors hover:border-slate-300 dark:hover:border-zinc-700">
                 <RadialGauge
                   value={wbgt}
                   min={60}
@@ -602,12 +595,12 @@ export default function App() {
                   threshold={85}
                   unit="°F"
                   label="Liljegren WBGT Index"
-                  size={125}
+                  size={120}
                   color={wbgt >= 85 ? "#f43f5e" : "#10b981"}
                 />
-                <div className="w-full flex items-center justify-between pt-2 border-t border-gray-100 dark:border-white/5 font-mono text-[10px] text-gray-500 dark:text-zinc-400">
-                  <span>Advisory Limit: <strong className="text-rose-500">85.0°F</strong></span>
-                  <span className={wbgt >= 85 ? "text-rose-500 font-semibold" : "text-emerald-500 font-semibold"}>
+                <div className="w-full flex items-center justify-between pt-2 border-t border-slate-100 dark:border-zinc-800/60 font-mono text-[10px] text-slate-500 dark:text-zinc-400">
+                  <span>Advisory Limit: <strong className="text-slate-700 dark:text-zinc-300">85.0°F</strong></span>
+                  <span className={wbgt >= 85 ? "text-rose-500 font-medium" : "text-slate-600 dark:text-zinc-400"}>
                     {wbgt >= 85 ? "Triggered" : "Nominal"}
                   </span>
                 </div>
@@ -615,49 +608,49 @@ export default function App() {
             </div>
 
             {/* Workspace Row: Telemetry Chart + Dispatch Log */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5">
               {/* Telemetry chart */}
-              <div className="lg:col-span-8 bg-white dark:bg-[#111318] border border-gray-200 dark:border-white/5 rounded-xl p-5 flex flex-col justify-between shadow-xs">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 pb-3 border-b border-gray-100 dark:border-white/5">
+              <div className="lg:col-span-8 bg-white dark:bg-[#12151B] border border-slate-200/80 dark:border-zinc-800/80 rounded-xl p-4 flex flex-col justify-between shadow-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 pb-3 border-b border-slate-100 dark:border-zinc-800/60">
                   <div>
                     <div className="flex items-center gap-2">
-                      <Activity className="w-4 h-4 text-orange-500" />
-                      <h2 className="font-display text-sm font-semibold tracking-tight text-slate-900 dark:text-white">
+                      <Activity className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
+                      <h2 className="font-display text-sm font-semibold tracking-tight text-slate-900 dark:text-zinc-100">
                         Thermal Telemetry Stream · {selectedCity}
                       </h2>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
                       Real-time surface radiometric vs. ambient canopy temperature (rolling window)
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1.5 text-xs font-mono">
-                      <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
-                      <span className="text-gray-600 dark:text-zinc-400">Surface (°F)</span>
+                      <span className="w-2 h-2 rounded-full bg-slate-700 dark:bg-zinc-300" />
+                      <span className="text-slate-600 dark:text-zinc-400">Surface (°F)</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-xs font-mono">
-                      <span className="w-2.5 h-2.5 rounded-full bg-sky-400" />
-                      <span className="text-gray-600 dark:text-zinc-400">Ambient (°F)</span>
+                      <span className="w-2 h-2 rounded-full bg-slate-400 dark:bg-zinc-500" />
+                      <span className="text-slate-600 dark:text-zinc-400">Ambient (°F)</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="w-full h-80 relative">
+                <div className="w-full h-72 relative">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={telemetryData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="surfaceFill" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#f97316" stopOpacity={darkMode ? 0.25 : 0.12} />
-                          <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                          <stop offset="5%" stopColor={darkMode ? "#ffffff" : "#0f172a"} stopOpacity={0.08} />
+                          <stop offset="95%" stopColor={darkMode ? "#ffffff" : "#0f172a"} stopOpacity={0} />
                         </linearGradient>
                       </defs>
 
                       <XAxis
                         dataKey="time"
-                        stroke={darkMode ? "#1E2330" : "#E5E7EB"}
-                        tick={{ fill: darkMode ? "#71717A" : "#6B7280", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
+                        stroke={darkMode ? "#27272a" : "#e2e8f0"}
+                        tick={{ fill: darkMode ? "#71717a" : "#64748b", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
                         tickLine={false}
-                        axisLine={{ stroke: darkMode ? "#1E2330" : "#E5E7EB" }}
+                        axisLine={{ stroke: darkMode ? "#27272a" : "#e2e8f0" }}
                         interval="preserveStartEnd"
                         minTickGap={28}
                       />
@@ -666,19 +659,19 @@ export default function App() {
                         domain={[75, 125]}
                         ticks={[75, 85, 95, 105, 115, 125]}
                         allowDataOverflow={false}
-                        stroke={darkMode ? "#1E2330" : "#E5E7EB"}
-                        tick={{ fill: darkMode ? "#71717A" : "#6B7280", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
+                        stroke={darkMode ? "#27272a" : "#e2e8f0"}
+                        tick={{ fill: darkMode ? "#71717a" : "#64748b", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
                         tickLine={false}
-                        axisLine={{ stroke: darkMode ? "#1E2330" : "#E5E7EB" }}
+                        axisLine={{ stroke: darkMode ? "#27272a" : "#e2e8f0" }}
                         tickFormatter={(v) => `${v}°`}
                       />
 
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: darkMode ? "#111318" : "#ffffff",
-                          borderColor: darkMode ? "rgba(255,255,255,0.1)" : "#e5e7eb",
+                          backgroundColor: darkMode ? "#12151B" : "#ffffff",
+                          borderColor: darkMode ? "#27272a" : "#e2e8f0",
                           borderRadius: "8px",
-                          color: darkMode ? "#fff" : "#0f172a",
+                          color: darkMode ? "#f4f4f5" : "#0f172a",
                           fontFamily: "JetBrains Mono, monospace",
                           fontSize: "11px",
                         }}
@@ -688,8 +681,9 @@ export default function App() {
                         y={110}
                         stroke="#f43f5e"
                         strokeDasharray="4 4"
+                        strokeWidth={1}
                         label={{
-                          value: "Critical Surface Threshold (110°F)",
+                          value: "Threshold (110°F)",
                           fill: "#f43f5e",
                           fontSize: 10,
                           fontFamily: "JetBrains Mono, monospace",
@@ -701,8 +695,8 @@ export default function App() {
                         type="monotone"
                         dataKey="surface"
                         name="Surface (°F)"
-                        stroke="#f97316"
-                        strokeWidth={2}
+                        stroke={darkMode ? "#e4e4e7" : "#0f172a"}
+                        strokeWidth={1.75}
                         fill="url(#surfaceFill)"
                       />
 
@@ -710,8 +704,8 @@ export default function App() {
                         type="monotone"
                         dataKey="ambient"
                         name="Ambient (°F)"
-                        stroke="#38bdf8"
-                        strokeWidth={1.5}
+                        stroke={darkMode ? "#71717a" : "#94a3b8"}
+                        strokeWidth={1.25}
                         strokeDasharray="3 3"
                         dot={false}
                       />
@@ -723,7 +717,6 @@ export default function App() {
               {/* Event Log */}
               <AgentEventLog
                 logs={logs}
-                totalEventsCount={totalEventsCount}
                 onClear={() => setLogs([])}
               />
             </div>
@@ -767,14 +760,14 @@ export default function App() {
       </main>
 
       {/* Executive Footer */}
-      <footer className="w-full max-w-7xl mx-auto px-6 py-4 border-t border-gray-200 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 dark:text-zinc-500 font-mono gap-2">
+      <footer className="w-full max-w-7xl mx-auto px-6 py-3 border-t border-slate-200/80 dark:border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-zinc-500 font-mono gap-2">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-orange-500" />
+          <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-zinc-600" />
           <span>ThermalOS v1.2 · Autonomous Microclimate Grid Operations</span>
         </div>
         <div className="flex items-center gap-4">
           <span>FortyGuard Radiometric API (v1)</span>
-          <span>ASHRAE Standard 55 Compliant</span>
+          <span>ASHRAE Standard 55</span>
         </div>
       </footer>
     </div>

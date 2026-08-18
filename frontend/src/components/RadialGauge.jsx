@@ -6,9 +6,9 @@ export default function RadialGauge({
   max = 120,
   threshold = 85,
   unit = "°F",
-  label = "WBGT Heat Stress",
-  size = 130,
-  strokeWidth = 8,
+  label = "Liljegren WBGT",
+  size = 120,
+  strokeWidth = 7,
   color = "#f43f5e",
 }) {
   const radius = (size - strokeWidth) / 2;
@@ -34,7 +34,7 @@ export default function RadialGauge({
             r={radius}
             fill="none"
             stroke="currentColor"
-            className="text-gray-200 dark:text-zinc-800"
+            className="text-slate-200 dark:text-zinc-800"
             strokeWidth={strokeWidth}
             strokeDasharray={`${arcLength} ${circumference}`}
             strokeLinecap="round"
@@ -52,34 +52,34 @@ export default function RadialGauge({
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
             style={{
-              transition: "stroke-dashoffset 0.5s ease-out",
+              transition: "stroke-dashoffset 0.4s ease-out",
             }}
           />
         </svg>
 
         {/* Center Display Value */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pt-2">
-          <div className="flex items-baseline">
-            <span className="text-2xl font-semibold font-mono text-slate-900 dark:text-white tabular-nums">
+          <div className="flex items-baseline gap-0.5">
+            <span className="text-2xl font-semibold font-mono text-slate-900 dark:text-zinc-100 tabular-nums">
               {typeof value === "number" ? value.toFixed(1) : value}
             </span>
-            <span className="text-xs font-mono text-gray-500 dark:text-zinc-400 ml-0.5">
+            <span className="text-xs font-mono text-slate-500 dark:text-zinc-400">
               {unit}
             </span>
           </div>
           <span
-            className={`text-[9px] font-mono font-medium px-1.5 py-0.5 rounded mt-1 ${
+            className={`text-[9px] font-mono px-1.5 py-0.5 rounded mt-0.5 ${
               isCritical
-                ? "bg-rose-500/10 text-rose-500 border border-rose-500/20"
-                : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-medium"
+                : "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 font-normal"
             }`}
           >
-            {isCritical ? "Advisory Triggered" : "Nominal Range"}
+            {isCritical ? "Advisory" : "Nominal"}
           </span>
         </div>
       </div>
 
-      <div className="text-[10px] font-mono uppercase tracking-wider text-gray-500 dark:text-zinc-400 mt-1">
+      <div className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 mt-1">
         {label}
       </div>
     </div>
