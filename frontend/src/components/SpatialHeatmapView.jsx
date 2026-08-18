@@ -834,57 +834,75 @@ export default function SpatialHeatmapView({
               </AnimatePresence>
           </div>
 
-          {/* AOI Scope Segmented Toggle */}
-          <div className="flex items-center gap-1 p-0.5 rounded-xl glass-panel-subtle text-xs font-mono">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setScope("core")}
-              className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
-                scope === "core"
-                  ? "bg-orange-500 text-black font-bold shadow-[0_0_10px_rgba(249,115,22,0.35)]"
-                  : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-              }`}
-            >
-              <Scan className={`w-3.5 h-3.5 ${scope === "core" ? "text-black" : "text-orange-500"}`} />
-              <span>Core AOI</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setScope("metro")}
-              className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
-                scope === "metro"
-                  ? "bg-orange-500 text-black font-bold shadow-[0_0_10px_rgba(249,115,22,0.35)]"
-                  : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-              }`}
-            >
-              <Globe2 className={`w-3.5 h-3.5 ${scope === "metro" ? "text-black" : "text-orange-500"}`} />
-              <span>Metro Valley</span>
-            </motion.button>
+          {/* Animated AOI Scope Segmented Toggle */}
+          <div className="flex items-center p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
+            {[
+              { id: "core", label: "Core AOI", icon: Scan },
+              { id: "metro", label: "Metro Valley", icon: Globe2 },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive = scope === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setScope(item.id)}
+                  className={`relative px-3.5 py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition-colors cursor-pointer z-10 select-none ${
+                    isActive
+                      ? "text-black font-bold"
+                      : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="aoiScopePill"
+                      className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] to-[#FF8533] shadow-[0_0_14px_rgba(255,107,43,0.45)] -z-10"
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 30,
+                        mass: 0.8,
+                      }}
+                    />
+                  )}
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? "text-black" : "text-orange-500"}`} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Basemap Preset Toggle */}
-          <div className="flex items-center gap-1 p-0.5 rounded-xl glass-panel-subtle text-xs font-mono">
+          {/* Animated Basemap Preset Toggle */}
+          <div className="flex items-center p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
             {Object.entries(BASEMAP_PRESETS).map(([key, item]) => {
               const Icon = item.icon;
               const isActive = baseMapStyle === key;
 
               return (
-                <motion.button
+                <button
                   key={key}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
                   onClick={() => setBaseMapStyle(key)}
-                  className={`px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                  className={`relative px-3 py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition-colors cursor-pointer z-10 select-none ${
                     isActive
-                      ? "bg-orange-500 text-black font-bold shadow-[0_0_10px_rgba(249,115,22,0.35)]"
+                      ? "text-black font-bold"
                       : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
                   }`}
                 >
-                  <Icon className="w-3 h-3" />
+                  {isActive && (
+                    <motion.div
+                      layoutId="baseMapPill"
+                      className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] to-[#FF8533] shadow-[0_0_14px_rgba(255,107,43,0.45)] -z-10"
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 30,
+                        mass: 0.8,
+                      }}
+                    />
+                  )}
+                  <Icon className={`w-3 h-3 ${isActive ? "text-black" : "text-gray-500 dark:text-zinc-400"}`} />
                   <span>{item.label}</span>
-                </motion.button>
+                </button>
               );
             })}
           </div>

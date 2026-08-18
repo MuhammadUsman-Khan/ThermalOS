@@ -266,20 +266,36 @@ export default function NationalThermalGridMatrix({ selectedCity, onSelectCity }
             />
           </div>
 
-          <div className="flex items-center gap-1 p-0.5 rounded-xl glass-panel-subtle text-xs font-mono">
-            {["all", "critical", "precool", "nominal"].map((st) => (
-              <button
-                key={st}
-                onClick={() => setStatusFilter(st)}
-                className={`px-2.5 py-1 rounded-lg font-medium capitalize transition-all cursor-pointer ${
-                  statusFilter === st
-                    ? "bg-orange-500 text-black font-bold shadow-[0_0_10px_rgba(249,115,22,0.3)]"
-                    : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-                }`}
-              >
-                {st}
-              </button>
-            ))}
+          <div className="flex items-center p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
+            {["all", "critical", "precool", "nominal"].map((st) => {
+              const isActive = statusFilter === st;
+
+              return (
+                <button
+                  key={st}
+                  onClick={() => setStatusFilter(st)}
+                  className={`relative px-3 py-1.5 rounded-xl font-medium capitalize transition-colors cursor-pointer z-10 select-none ${
+                    isActive
+                      ? "text-black font-bold"
+                      : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="statusFilterPill"
+                      className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] to-[#FF8533] shadow-[0_0_14px_rgba(255,107,43,0.45)] -z-10"
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 30,
+                        mass: 0.8,
+                      }}
+                    />
+                  )}
+                  <span>{st}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
