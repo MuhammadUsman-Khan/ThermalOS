@@ -501,80 +501,85 @@ export default function App() {
       />
 
       {/* Topbar */}
-      <header className="border-b border-gray-200 dark:border-white/5 bg-white/80 dark:bg-black/70 backdrop-blur-md sticky top-0 z-40 px-6 py-3 transition-colors">
+      <header className="border-b border-gray-200 dark:border-white/5 bg-white/90 dark:bg-black/60 backdrop-blur-xl sticky top-0 z-40 px-6 py-3.5 transition-colors duration-300">
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-500">
-              <Flame className="w-4 h-4" />
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-orange-500/10 border border-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.15)]">
+              <Flame className="w-5 h-5 text-orange-500" />
             </div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
-                ThermalOS
-              </h1>
-              <span className="text-xs text-gray-400 dark:text-zinc-500 font-normal">/</span>
-              <span className="text-xs font-medium text-gray-500 dark:text-zinc-400">
-                FortyGuard Microclimate Engine
-              </span>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-3">
+                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white leading-none">
+                  ThermalOS
+                </h1>
+                <span className="px-2.5 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/30 text-[10px] font-bold text-orange-500 dark:text-orange-400 tracking-widest uppercase flex items-center gap-1.5 shadow-[0_0_10px_rgba(249,115,22,0.15)]">
+                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></div>
+                  FORTYGUARD ENGINE
+                </span>
+              </div>
+              <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] mt-1">
+                Urban Micro-Climate OS • Radiometric Intelligence
+              </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-            {/* Quick Action Buttons */}
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs font-mono">
-              <button
-                onClick={handleRunAudit}
-                disabled={isAuditLoading}
-                className="px-3 py-1.5 rounded-lg font-semibold bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 hover:text-orange-500 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-              >
-                {isAuditLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FileCheck className="w-3.5 h-3.5 text-orange-500" />}
-                <span>Audit</span>
-              </button>
+            <button
+              onClick={handleRunAudit}
+              disabled={isAuditLoading}
+              className="bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold text-[11px] tracking-wider uppercase px-3.5 py-2 rounded-xl shadow-md dark:shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isAuditLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FileCheck className="w-3.5 h-3.5" />}
+              <span>AUDIT</span>
+            </button>
 
-              <button
-                onClick={handleRunInfrastructure}
-                disabled={isInfraLoading}
-                className="px-3 py-1.5 rounded-lg font-semibold bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 hover:text-cyan-500 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-              >
-                {isInfraLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-cyan-500" />}
-                <span>Pre-Cool</span>
-              </button>
+            <button
+              onClick={handleRunInfrastructure}
+              disabled={isInfraLoading}
+              className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white font-bold text-[10px] tracking-wider uppercase px-4 py-2 rounded-lg shadow-md dark:shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isInfraLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
+              <span>DISPATCH PRE-COOL</span>
+            </button>
 
-              <button
-                onClick={handleRunCivic}
-                disabled={isCivicLoading}
-                className="px-3 py-1.5 rounded-lg font-semibold bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 hover:text-rose-500 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-              >
-                {isCivicLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <AlertOctagon className="w-3.5 h-3.5 text-rose-500" />}
-                <span>Civic Alert</span>
-              </button>
-            </div>
+            <button
+              onClick={handleRunCivic}
+              disabled={isCivicLoading}
+              className="bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold text-[10px] tracking-wider uppercase px-4 py-2 rounded-lg shadow-md dark:shadow-[0_0_15px_rgba(225,29,72,0.4)] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isCivicLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <AlertOctagon className="w-3 h-3" />}
+              <span>CIVIC OVERRIDE</span>
+            </button>
 
-            {/* Telemetry Status */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-900/50 text-xs font-mono">
-              <span className={`w-2 h-2 rounded-full ${isEmergencyMode ? "bg-red-500 animate-ping" : "bg-emerald-500"}`} />
-              <span className="text-gray-600 dark:text-zinc-400">
-                {isEmergencyMode ? "Critical Thermal Alert" : `Active · ${uptime}`}
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border font-mono text-xs shadow-inner transition-colors ${
+                isEmergencyMode
+                  ? "text-red-500 border-red-500/50 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.25)]"
+                  : "border-emerald-500/30 bg-emerald-50/70 dark:bg-[#0B1015]"
+              }`}
+            >
+              <Activity className={`w-3.5 h-3.5 ${isEmergencyMode ? "text-red-500 animate-bounce" : "text-emerald-600 dark:text-emerald-400 animate-pulse"}`} />
+              <span className={`text-[11px] font-bold uppercase tracking-wider font-mono tabular-nums ${isEmergencyMode ? "text-red-500 font-extrabold" : "text-emerald-600 dark:text-emerald-400"}`}>
+                {isEmergencyMode ? "CRITICAL BREACH" : `LIVE (${uptime})`}
               </span>
             </div>
 
-            {/* Theme Toggle */}
             <button
               onClick={() => setDarkMode(!darkMode)}
               title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              className="p-2 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-zinc-400 hover:text-orange-500 transition-colors shadow-xs cursor-pointer"
+              className="p-2.5 rounded-full bg-white dark:bg-transparent border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:text-[#FF6B2B] dark:hover:text-[#FF6B2B] hover:border-[#FF6B2B]/30 transition-all shadow-sm cursor-pointer active:scale-95"
             >
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            {/* City Selector */}
             <div ref={dropdownRef} className="relative">
               <button
                 type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 hover:border-orange-500/40 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors cursor-pointer text-slate-800 dark:text-zinc-200 shadow-xs"
+                className="flex items-center gap-2 bg-white dark:bg-transparent border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer text-gray-700 dark:text-gray-200"
               >
-                <MapPin className="w-3.5 h-3.5 text-orange-500" />
-                <span className="font-mono">{selectedCity}</span>
+                <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                <span className="text-sm font-medium">{selectedCity}</span>
                 <ChevronDown
                   className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
                 />
@@ -587,20 +592,20 @@ export default function App() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 6, scale: 0.98 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute top-full mt-2 right-0 w-52 bg-white dark:bg-[#121212] border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 py-1"
+                    className="absolute top-full mt-2 right-0 w-48 bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
                   >
                     {CITIES.map((city) => (
                       <div
                         key={city}
                         onClick={() => handleSelectCity(city)}
-                        className={`px-3.5 py-2 text-xs font-mono cursor-pointer transition-colors flex items-center justify-between ${
+                        className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
                           selectedCity === city
-                            ? "bg-orange-500/10 text-orange-500 font-bold"
-                            : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/5"
+                            ? "bg-orange-50 dark:bg-[#FF6B2B]/20 text-[#FF6B2B] font-semibold"
+                            : "text-gray-700 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-orange-500/20 hover:text-[#FF6B2B]"
                         }`}
                       >
                         <span>{city}</span>
-                        {selectedCity === city && <Check className="w-3.5 h-3.5 text-orange-500" />}
+                        {selectedCity === city && <Check className="w-3.5 h-3.5 text-[#FF6B2B]" />}
                       </div>
                     ))}
                   </motion.div>
@@ -613,74 +618,74 @@ export default function App() {
 
       {/* Main dashboard */}
       <main className="w-full max-w-7xl mx-auto px-4 py-6 flex-1 flex flex-col space-y-5 relative z-10">
-        {/* Sleek Segmented Navigation Control */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-gray-100 dark:bg-black/60 border border-gray-200 dark:border-white/10 text-xs font-mono w-fit">
+        {/* Navigation View Switcher */}
+        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white/70 dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/10 shadow-sm backdrop-blur-xl font-mono text-xs overflow-x-auto">
           <button
             onClick={() => setActiveTab("operations")}
-            className={`px-4 py-1.5 rounded-lg font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all whitespace-nowrap ${
               activeTab === "operations"
-                ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs"
-                : "text-gray-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-md shadow-orange-500/20"
+                : "text-gray-600 dark:text-zinc-400 hover:text-orange-500 dark:hover:text-white"
             }`}
           >
-            <Activity className="w-3.5 h-3.5 text-orange-500" />
-            <span>Operations</span>
+            <Activity className="w-4 h-4" />
+            <span>OPERATIONS CENTER</span>
           </button>
 
           <button
             onClick={() => setActiveTab("spatial_heatmap")}
-            className={`px-4 py-1.5 rounded-lg font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all whitespace-nowrap ${
               activeTab === "spatial_heatmap"
-                ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs"
-                : "text-gray-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md shadow-red-500/20"
+                : "text-gray-600 dark:text-zinc-400 hover:text-orange-500 dark:hover:text-white"
             }`}
           >
-            <Radio className="w-3.5 h-3.5 text-orange-500" />
-            <span>Spatial Heatmap</span>
+            <Radio className="w-4 h-4" />
+            <span>FORTYGUARD SPATIAL HEATMAP (100M² TCM)</span>
           </button>
 
           <button
             onClick={() => setActiveTab("diurnal_sim")}
-            className={`px-4 py-1.5 rounded-lg font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all whitespace-nowrap ${
               activeTab === "diurnal_sim"
-                ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs"
-                : "text-gray-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md shadow-amber-500/20"
+                : "text-gray-600 dark:text-zinc-400 hover:text-amber-500 dark:hover:text-white"
             }`}
           >
-            <Clock className="w-3.5 h-3.5 text-amber-500" />
-            <span>Diurnal Forecast</span>
+            <Clock className="w-4 h-4" />
+            <span>24H DIURNAL SIMULATOR</span>
           </button>
 
           <button
             onClick={() => setActiveTab("national_grid")}
-            className={`px-4 py-1.5 rounded-lg font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all whitespace-nowrap ${
               activeTab === "national_grid"
-                ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs"
-                : "text-gray-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-md shadow-cyan-500/20"
+                : "text-gray-600 dark:text-zinc-400 hover:text-cyan-500 dark:hover:text-white"
             }`}
           >
-            <Globe className="w-3.5 h-3.5 text-cyan-500" />
-            <span>National Grid</span>
+            <Globe className="w-4 h-4" />
+            <span>NATIONAL THERMAL GRID</span>
           </button>
         </div>
 
         {/* Tab 1: Operations Center */}
         {activeTab === "operations" && (
           <div className="space-y-5">
-            {/* Mission Control KPI 4-Card Row */}
+            {/* FortyGuard KPI 4-Card Mission Control Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* 1. Surface vs Ambient Temp */}
               <KPICard
-                label="SURFACE TEMPERATURE"
+                label="SURFACE VS AMBIENT"
                 icon={<Thermometer className="w-4 h-4 text-orange-500 mb-4" />}
                 value={surfaceTemp.toFixed(1)}
                 unit="°F"
                 valueSuffix={
-                  <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-mono font-bold ml-2 mb-1 bg-orange-500/10 text-orange-500 border border-orange-500/20">
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ml-2 mb-1 bg-orange-500/20 text-orange-500 border border-orange-500/30">
                     +{surfaceDelta.toFixed(1)}°F ΔT
                   </span>
                 }
-                hoverBorder="hover:border-orange-500/30"
+                hoverBorder="hover:border-[#FF6B2B]/30"
                 darkMode={darkMode}
                 sparkStroke={riskConfig.sparkStroke}
                 sparkGradientId="sparkOrangeGrad"
@@ -699,8 +704,8 @@ export default function App() {
                 value={solarGhi.toFixed(0)}
                 unit="W/m²"
                 valueSuffix={
-                  <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-mono font-bold ml-2 mb-1 ${solarGhi >= 600 ? "bg-red-500/10 text-red-500 border border-red-500/20" : "bg-amber-500/10 text-amber-500 border border-amber-500/20"}`}>
-                    {solarGhi >= 600 ? "High Flux" : "Moderate"}
+                  <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ml-2 mb-1 ${solarGhi >= 600 ? "bg-red-500/20 text-red-500 border border-red-500/30" : "bg-amber-500/20 text-amber-500 border border-amber-500/30"}`}>
+                    {solarGhi >= 600 ? "PEAK FLUX" : "MODERATE"}
                   </span>
                 }
                 hoverBorder="hover:border-amber-500/30"
@@ -722,8 +727,8 @@ export default function App() {
                 value={humidity.toFixed(1)}
                 unit="%"
                 valueSuffix={
-                  <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-mono font-bold ml-2 mb-1 bg-cyan-500/10 text-cyan-500 border border-cyan-500/20">
-                    {humidity > 50 ? "Elevated" : "Normal"}
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ml-2 mb-1 bg-cyan-500/20 text-cyan-500 border border-cyan-500/30">
+                    VAPOR ACTIVE
                   </span>
                 }
                 hoverBorder="hover:border-cyan-500/30"
@@ -751,9 +756,9 @@ export default function App() {
                   color={wbgt >= 85 ? "#F43F5E" : "#10B981"}
                 />
                 <div className="w-full flex items-center justify-between pt-2 border-t border-gray-100 dark:border-white/5 font-mono text-[10px] text-gray-500 dark:text-zinc-400">
-                  <span>Limit: <strong className="text-red-500">85.0°F</strong></span>
+                  <span>Crit Limit: <strong className="text-red-500">85.0°F</strong></span>
                   <span className={wbgt >= 85 ? "text-red-500 font-bold" : "text-emerald-500 font-bold"}>
-                    {wbgt >= 85 ? "Heat Stress Alert" : "Nominal"}
+                    {wbgt >= 85 ? "ALERT ACTIVE" : "NOMINAL"}
                   </span>
                 </div>
               </div>
@@ -766,22 +771,22 @@ export default function App() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100 dark:border-white/5">
                   <div>
                     <div className="flex items-center gap-2.5">
-                      <Activity className="w-4 h-4 text-orange-500" />
+                      <Activity className="w-4 h-4 text-[#FF6B2B]" />
                       <h2 className="font-display text-sm font-bold uppercase tracking-tight text-slate-900 dark:text-white">
-                        Thermal Telemetry Stream • {selectedCity}
+                        FORTYGUARD THERMAL TELEMETRY STREAM • {selectedCity}
                       </h2>
                     </div>
                     <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                      Surface radiometric vs. ambient canopy temperature (rolling window)
+                      Real-time Surface Radiometric vs. Ambient Canopy Temperature (rolling window)
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1.5 text-xs font-mono">
-                      <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+                      <span className="w-3 h-3 rounded-full bg-[#f97316]" />
                       <span className="text-gray-600 dark:text-zinc-400">Surface (°F)</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-xs font-mono">
-                      <span className="w-2.5 h-2.5 rounded-full bg-sky-400" />
+                      <span className="w-3 h-3 rounded-full bg-[#38bdf8]" />
                       <span className="text-gray-600 dark:text-zinc-400">Ambient (°F)</span>
                     </div>
                   </div>

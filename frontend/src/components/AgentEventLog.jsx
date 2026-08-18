@@ -84,11 +84,11 @@ export default function AgentEventLog({ logs, totalEventsCount, onClear }) {
 
   return (
     <div className="lg:col-span-4 bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col shadow-sm dark:shadow-2xl backdrop-blur-xl h-full">
-      <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-white/5 mb-3">
+      <div className="flex items-center justify-between pb-3.5 border-b border-gray-100 dark:border-white/5 mb-3">
         <div className="flex items-center gap-2">
-          <Activity className="w-4 h-4 text-orange-500" />
-          <h2 className="font-display text-sm font-bold uppercase tracking-tight text-slate-900 dark:text-white">
-            Agent Event Log
+          <Link2 className="w-4 h-4 text-gray-400 dark:text-zinc-400" />
+          <h2 className="font-display text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+            AGENT EVENT LOG
           </h2>
         </div>
         <div className="flex items-center gap-2">
@@ -96,15 +96,14 @@ export default function AgentEventLog({ logs, totalEventsCount, onClear }) {
             onClick={onClear}
             disabled={logs.length === 0}
             title="Clear event log"
-            className="flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-400 hover:text-red-500 hover:border-red-500/40 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full border border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-400 hover:text-red-500 hover:border-red-500/40 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Trash2 className="w-3 h-3" />
-            <span>Clear</span>
+            CLEAR
           </button>
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono text-emerald-500 font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Live</span>
-          </div>
+          <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 font-bold">
+            LIVE FEED
+          </span>
         </div>
       </div>
 

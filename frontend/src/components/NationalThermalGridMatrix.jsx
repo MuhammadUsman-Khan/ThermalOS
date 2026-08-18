@@ -151,20 +151,20 @@ export default function NationalThermalGridMatrix({ selectedCity, onSelectCity }
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100 dark:border-white/5">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
-            <Globe className="w-4 h-4" />
+          <div className="h-9 w-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+            <Globe className="w-5 h-5 text-orange-500" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-display text-sm font-bold uppercase tracking-tight text-slate-900 dark:text-white">
-                National Thermal Grid Matrix
+                NATIONAL THERMAL GRID MATRIX • CROSS-CITY INTELLIGENCE
               </h2>
-              <span className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-[10px] font-mono text-gray-600 dark:text-zinc-400 font-medium">
-                Comparative Matrix
+              <span className="px-2 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/30 text-[10px] font-mono text-orange-500 font-bold uppercase">
+                MULTI-ZONE RADAR
               </span>
             </div>
             <p className="text-xs text-gray-500 dark:text-zinc-400">
-              Cross-city comparative telemetry across monitored metropolitan thermal corridors
+              Real-time synchronization across high-risk urban thermal corridors
             </p>
           </div>
         </div>
