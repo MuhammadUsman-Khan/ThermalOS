@@ -403,9 +403,6 @@ export default function App() {
                 <h1 className="text-base font-extrabold tracking-tight text-black dark:text-white font-display">
                   ThermalOS
                 </h1>
-                <span className="px-2 py-0.5 rounded-md bg-orange-500/15 border border-orange-500/30 text-[10px] font-mono font-bold text-orange-400">
-                  v1.2 PRO
-                </span>
               </div>
               <p className="text-[11px] font-mono text-gray-500 dark:text-zinc-400 tracking-tight hidden sm:block">
                 Autonomous Radiometric Microclimate Grid Intelligence
