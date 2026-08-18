@@ -900,7 +900,11 @@ export default function App() {
 
         {/* Tab 2: FortyGuard Spatial Heatmap View */}
         {activeTab === "spatial_heatmap" && (
-          <SpatialHeatmapView selectedCity={selectedCity} darkMode={darkMode} />
+          <SpatialHeatmapView
+            selectedCity={selectedCity}
+            onSelectCity={handleSelectCity}
+            darkMode={darkMode}
+          />
         )}
 
         {/* Tab 3: 24-Hour Diurnal Simulator */}

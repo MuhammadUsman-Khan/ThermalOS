@@ -15,6 +15,9 @@ import {
   Compass,
   Scan,
   Globe2,
+  Flame,
+  AlertTriangle,
+  CheckCircle,
 } from "lucide-react";
 
 // Exact 12 FortyGuard equal-interval classes from official Quickstart Notebook
@@ -33,13 +36,78 @@ const FORTYGUARD_12_CLASSES = [
   { minC: 26.33, maxC: 26.50, hex: "#2c72a5", label: "26.33 – 26.50 °C", tempF: "79.4 – 79.7 °F" },
 ];
 
-const CITY_COORDINATES = {
-  "San Jose, CA": { lat: 37.3305, lng: -121.8905, zoom: 13, baseTemp: 27.4 },
-  "Phoenix, AZ": { lat: 33.4484, lng: -112.074, zoom: 13, baseTemp: 32.8 },
-  "Las Vegas, NV": { lat: 36.1699, lng: -115.1398, zoom: 13, baseTemp: 31.5 },
-  "Houston, TX": { lat: 29.7604, lng: -95.3698, zoom: 13, baseTemp: 29.2 },
-  "Dallas, TX": { lat: 32.7767, lng: -96.797, zoom: 13, baseTemp: 29.8 },
-};
+const MONITORED_CITIES = [
+  {
+    id: "phoenix",
+    name: "Phoenix, AZ",
+    shortName: "Phoenix",
+    emoji: "🌵",
+    lat: 33.4484,
+    lng: -112.074,
+    zoom: 13,
+    baseTemp: 33.5,
+    tempF: "112.4°F",
+    status: "CRITICAL",
+    badgeClass: "bg-red-500/20 text-red-400 border-red-500/40",
+    dotClass: "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]",
+  },
+  {
+    id: "las_vegas",
+    name: "Las Vegas, NV",
+    shortName: "Las Vegas",
+    emoji: "🎰",
+    lat: 36.1699,
+    lng: -115.1398,
+    zoom: 13,
+    baseTemp: 31.8,
+    tempF: "106.8°F",
+    status: "HIGH",
+    badgeClass: "bg-orange-500/20 text-orange-400 border-orange-500/40",
+    dotClass: "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]",
+  },
+  {
+    id: "houston",
+    name: "Houston, TX",
+    shortName: "Houston",
+    emoji: "🚀",
+    lat: 29.7604,
+    lng: -95.3698,
+    zoom: 13,
+    baseTemp: 29.2,
+    tempF: "94.2°F",
+    status: "ELEVATED",
+    badgeClass: "bg-amber-500/20 text-amber-400 border-amber-500/40",
+    dotClass: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]",
+  },
+  {
+    id: "dallas",
+    name: "Dallas, TX",
+    shortName: "Dallas",
+    emoji: "🏙️",
+    lat: 32.7767,
+    lng: -96.797,
+    zoom: 13,
+    baseTemp: 30.1,
+    tempF: "98.6°F",
+    status: "HIGH",
+    badgeClass: "bg-orange-500/20 text-orange-400 border-orange-500/40",
+    dotClass: "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]",
+  },
+  {
+    id: "san_jose",
+    name: "San Jose, CA",
+    shortName: "San Jose",
+    emoji: "🌉",
+    lat: 37.3305,
+    lng: -121.8905,
+    zoom: 13,
+    baseTemp: 27.4,
+    tempF: "82.5°F",
+    status: "OPTIMAL",
+    badgeClass: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
+    dotClass: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]",
+  },
+];
 
 const BASEMAP_PRESETS = {
   voyager: {
@@ -59,43 +127,39 @@ const BASEMAP_PRESETS = {
   },
 };
 
-// Generates an authentic continuous 2D spatial thermal grid with hot zones, transitions, and cool islands
-function generateSpatialThermalGrid(centerLat, centerLng, baseTempC = 27.4, scope = "core") {
+// Generates an authentic continuous 2D spatial thermal grid for any city center
+function generateCityThermalGrid(city, scope = "core") {
   const features = [];
   const isMetro = scope === "metro";
-  const rows = isMetro ? 44 : 36;
-  const cols = isMetro ? 48 : 40;
-  const stepLat = isMetro ? 0.0055 : 0.0022;
-  const stepLng = isMetro ? 0.0068 : 0.0028;
-  const minLat = centerLat - (rows / 2) * stepLat;
-  const minLng = centerLng - (cols / 2) * stepLng;
+  const rows = isMetro ? 34 : 26;
+  const cols = isMetro ? 38 : 30;
+  const stepLat = isMetro ? 0.0055 : 0.0024;
+  const stepLng = isMetro ? 0.0068 : 0.0030;
+  const minLat = city.lat - (rows / 2) * stepLat;
+  const minLng = city.lng - (cols / 2) * stepLng;
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const pLat = minLat + r * stepLat;
       const pLng = minLng + c * stepLng;
 
-      // Realistic 2D spatial heat island dynamics matching quickstart notebook:
-      // - Hot asphalt core in south and southeast (high r, high c)
-      // - Cooler green canopy and lake in north (low r, middle c)
-      const coolR = isMetro ? 38 : 31;
-      const coolC = isMetro ? 24 : 20;
-      const distFromCoolSpot = Math.hypot((r - coolR) / 6, (c - coolC) / 5);
-      const coolIsland = Math.exp(-Math.pow(distFromCoolSpot, 2)) * 1.75;
+      // Realistic 2D spatial heat island dynamics
+      const coolR = Math.round(rows * 0.85);
+      const coolC = Math.round(cols * 0.55);
+      const distFromCoolSpot = Math.hypot((r - coolR) / 5, (c - coolC) / 4);
+      const coolIsland = Math.exp(-Math.pow(distFromCoolSpot, 2)) * 1.6;
 
       const southHeat = (r / rows) * 1.1;
       const eastHeat = (c / cols) * 0.4;
       const noise =
-        Math.sin(r * 0.22 + c * 0.16) * 0.2 +
-        Math.cos(r * 0.14 - c * 0.28) * 0.14;
+        Math.sin(r * 0.24 + c * 0.17) * 0.18 +
+        Math.cos(r * 0.15 - c * 0.28) * 0.12;
 
-      // Map temperature to exact 26.33°C - 28.37°C range
-      let tempC = 28.35 - (r / rows) * 1.35 + (c > 25 ? 0.3 : -0.1) - coolIsland + noise + eastHeat * 0.3;
+      let tempC = 28.35 - (r / rows) * 1.35 + (c > 18 ? 0.25 : -0.1) - coolIsland + noise + eastHeat * 0.3;
       tempC = Math.max(26.33, Math.min(28.37, tempC));
       tempC = +tempC.toFixed(2);
       const tempF = +((tempC * 1.8) + 32).toFixed(1);
 
-      // Find matching FortyGuard color class
       let assignedClass = FORTYGUARD_12_CLASSES.find((cls) => tempC >= cls.minC && tempC <= cls.maxC);
       if (!assignedClass) {
         assignedClass = tempC > 28.37 ? FORTYGUARD_12_CLASSES[0] : FORTYGUARD_12_CLASSES[FORTYGUARD_12_CLASSES.length - 1];
@@ -103,9 +167,10 @@ function generateSpatialThermalGrid(centerLat, centerLng, baseTempC = 27.4, scop
 
       features.push({
         type: "Feature",
-        id: `TCM-${r}-${c}`,
+        id: `${city.id}-${r}-${c}`,
         properties: {
-          tile_id: r * cols + c,
+          city_name: city.name,
+          tile_id: `${city.id.toUpperCase()}-${r * cols + c}`,
           average_temperature: tempC,
           average_temperature_f: tempF,
           color: assignedClass.hex,
@@ -130,27 +195,75 @@ function generateSpatialThermalGrid(centerLat, centerLng, baseTempC = 27.4, scop
     }
   }
 
-  return { type: "FeatureCollection", features };
+  return features;
 }
 
-export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", darkMode }) {
+// Generate unified national GeoJSON containing all 5 cities
+function generateAllCitiesThermalGrid(scope = "core") {
+  const allFeatures = [];
+  MONITORED_CITIES.forEach((city) => {
+    const cityFeatures = generateCityThermalGrid(city, scope);
+    allFeatures.push(...cityFeatures);
+  });
+  return { type: "FeatureCollection", features: allFeatures };
+}
+
+export default function SpatialHeatmapView({
+  selectedCity = "Phoenix, AZ",
+  onSelectCity,
+  darkMode,
+}) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const geoJsonLayerRef = useRef(null);
+  const markersLayerGroupRef = useRef(null);
   const baseTileLayerRef = useRef(null);
   const labelsTileLayerRef = useRef(null);
 
   const [activeLayer, setActiveLayer] = useState("tcm"); // 'tcm' | 'exceedance' | 'persistence'
-  const [scope, setScope] = useState("core"); // 'core' (Downtown AOI) | 'metro' (Full Metropolitan Horizon)
+  const [scope, setScope] = useState("core"); // 'core' | 'metro'
+  const [currentView, setCurrentView] = useState("city"); // 'national' | 'city'
+  const [focusedCityName, setFocusedCityName] = useState(selectedCity);
   const [baseMapStyle, setBaseMapStyle] = useState(darkMode ? "dark" : "voyager");
-  const [opacity, setOpacity] = useState(0.65);
+  const [opacity, setOpacity] = useState(0.68);
   const [selectedParcel, setSelectedParcel] = useState(null);
   const [selectedClassHex, setSelectedClassHex] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const cityConfig = CITY_COORDINATES[selectedCity] || CITY_COORDINATES["San Jose, CA"];
+  // Sync state if external selectedCity changes
+  useEffect(() => {
+    if (selectedCity && selectedCity !== focusedCityName) {
+      setFocusedCityName(selectedCity);
+      flyToCity(selectedCity);
+    }
+  }, [selectedCity]);
 
-  // Initialize Leaflet Map with Sandwich Layer Architecture (Base -> Polygons -> Labels on top)
+  // Fly to specific city
+  const flyToCity = (cityName) => {
+    const targetCity = MONITORED_CITIES.find((c) => c.name === cityName);
+    if (targetCity && mapInstanceRef.current) {
+      setCurrentView("city");
+      setFocusedCityName(cityName);
+      mapInstanceRef.current.flyTo([targetCity.lat, targetCity.lng], scope === "metro" ? 11 : targetCity.zoom, {
+        duration: 1.4,
+        easeLinearity: 0.25,
+      });
+      if (onSelectCity) onSelectCity(cityName);
+    }
+  };
+
+  // Fly to national overview (shows entire USA with all 5 cities)
+  const flyToNationalOverview = () => {
+    if (mapInstanceRef.current) {
+      setCurrentView("national");
+      mapInstanceRef.current.flyTo([34.5, -104.0], 4.5, {
+        duration: 1.6,
+        easeLinearity: 0.25,
+      });
+    }
+  };
+
+  // Initialize Leaflet Map with Sandwich Layer Architecture
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
@@ -159,14 +272,16 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
       mapInstanceRef.current = null;
     }
 
+    const currentCityObj = MONITORED_CITIES.find((c) => c.name === focusedCityName) || MONITORED_CITIES[0];
+
     const map = L.map(mapContainerRef.current, {
-      center: [cityConfig.lat, cityConfig.lng],
-      zoom: scope === "metro" ? 11 : cityConfig.zoom,
+      center: currentView === "national" ? [34.5, -104.0] : [currentCityObj.lat, currentCityObj.lng],
+      zoom: currentView === "national" ? 4.5 : (scope === "metro" ? 11 : currentCityObj.zoom),
       zoomControl: false,
       attributionControl: false,
     });
 
-    // Dedicated top pane for street labels (floats above polygons)
+    // Create a dedicated top pane for street names and labels (floats above polygons)
     map.createPane("topLabelsPane");
     map.getPane("topLabelsPane").style.zIndex = 650;
     map.getPane("topLabelsPane").style.pointerEvents = "none";
@@ -180,7 +295,7 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
     }).addTo(map);
     baseTileLayerRef.current = baseLayer;
 
-    // 2. Top Labels Layer (Road text, city names, highway badges - placed in topLabelsPane!)
+    // 2. Top Labels Layer (Road text, city names, highway badges - in topLabelsPane!)
     const labelsLayer = L.tileLayer(preset.labels, {
       maxZoom: 19,
       subdomains: "abcd",
@@ -196,21 +311,26 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
         mapInstanceRef.current = null;
       }
     };
-  }, [selectedCity, baseMapStyle]);
+  }, [baseMapStyle]);
 
-  // Render FortyGuard 12-class thermal polygon mesh
+  // Render Multi-City Thermal Polygon Meshes and City Hub Markers
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
     setIsLoading(true);
 
-    const geoData = generateSpatialThermalGrid(cityConfig.lat, cityConfig.lng, cityConfig.baseTemp, scope);
+    // 1. Generate multi-city unified thermal GeoJSON
+    const unifiedGeoData = generateAllCitiesThermalGrid(scope);
 
     if (geoJsonLayerRef.current) {
       mapInstanceRef.current.removeLayer(geoJsonLayerRef.current);
     }
+    if (markersLayerGroupRef.current) {
+      mapInstanceRef.current.removeLayer(markersLayerGroupRef.current);
+    }
 
-    const layer = L.geoJSON(geoData, {
+    // 2. Add Thermal GeoJSON Layer
+    const layer = L.geoJSON(unifiedGeoData, {
       style: (feature) => {
         const hex = feature.properties?.color || "#febe6c";
         const isFilterActive = selectedClassHex !== null;
@@ -241,6 +361,10 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
           },
           click: (e) => {
             setSelectedParcel(feature.properties);
+            if (feature.properties?.city_name) {
+              setFocusedCityName(feature.properties.city_name);
+              if (onSelectCity) onSelectCity(feature.properties.city_name);
+            }
             mapInstanceRef.current.panTo(e.latlng);
           },
         });
@@ -250,15 +374,51 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
     layer.addTo(mapInstanceRef.current);
     geoJsonLayerRef.current = layer;
 
-    // Fit map view around thermal grid
-    mapInstanceRef.current.fitBounds(layer.getBounds(), { padding: [15, 15] });
+    // 3. Add Custom City Hub Markers over all 5 cities
+    const markersGroup = L.layerGroup();
+
+    MONITORED_CITIES.forEach((city) => {
+      const isCurrent = city.name === focusedCityName;
+
+      const markerHtml = `
+        <div class="cursor-pointer group flex flex-col items-center select-none" style="transform: translate(-50%, -100%);">
+          <div class="px-2.5 py-1 rounded-xl bg-slate-950/90 dark:bg-black/95 border ${
+            isCurrent ? "border-orange-500 ring-2 ring-orange-500/40" : "border-white/20"
+          } text-white font-mono text-[11px] font-bold shadow-2xl flex items-center gap-1.5 backdrop-blur-md transition-all hover:scale-110">
+            <span class="w-2 h-2 rounded-full ${city.dotClass}"></span>
+            <span>${city.emoji} ${city.shortName}</span>
+            <span class="px-1 py-0.2 rounded text-[9.5px] ${city.badgeClass}">${city.tempF}</span>
+          </div>
+          <div class="w-2 h-2 bg-slate-900 border-r border-b ${
+            isCurrent ? "border-orange-500" : "border-white/20"
+          } rotate-45 -mt-1 shadow-md"></div>
+        </div>
+      `;
+
+      const customIcon = L.divIcon({
+        className: "custom-city-marker-container",
+        html: markerHtml,
+        iconSize: [0, 0],
+        iconAnchor: [0, 0],
+      });
+
+      const marker = L.marker([city.lat, city.lng], { icon: customIcon });
+      marker.on("click", () => {
+        flyToCity(city.name);
+      });
+      markersGroup.addLayer(marker);
+    });
+
+    markersGroup.addTo(mapInstanceRef.current);
+    markersLayerGroupRef.current = markersGroup;
+
     setIsLoading(false);
-  }, [selectedCity, opacity, selectedClassHex, cityConfig, scope]);
+  }, [opacity, selectedClassHex, scope, focusedCityName]);
 
   return (
     <div className="bg-white dark:bg-[#0D0D0D]/90 border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col shadow-sm dark:shadow-2xl backdrop-blur-xl space-y-4 font-sans">
-      {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100 dark:border-white/5">
+      {/* Top Header Bar */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-gray-100 dark:border-white/5">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
             <Radio className="w-5 h-5 text-orange-500 animate-pulse" />
@@ -266,21 +426,21 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-display text-sm font-bold uppercase tracking-tight text-slate-900 dark:text-white">
-                {selectedCity} {scope === "metro" ? "METROPOLITAN REGION" : "URBAN AOI"} · DAILY-AVG TEMPERATURE ({scope === "metro" ? "2,112" : "1,440"} TILES)
+                NATIONAL THERMAL GRID • ALL MONITORED CITIES ON A SINGLE GIS MAP
               </h2>
               <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-mono text-emerald-500 font-bold uppercase">
-                {scope === "metro" ? "METRO-WIDE" : "TARGETED AOI"}
+                CONTINENTAL MULTI-CITY
               </span>
             </div>
             <p className="text-xs text-gray-500 dark:text-zinc-400">
-              FortyGuard 100m² TCM Calibrated Radiometric Heatmap Overlaid on CartoDB / OpenStreetMap
+              5 Major Metros Monitored Simultaneously • Click Any City Pin to Fly & Inspect Microclimate
             </p>
           </div>
         </div>
 
-        {/* Controls Bar: Scope, Basemap, Layer */}
+        {/* Controls: Basemap & Layer Type */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* AOI Scope Switcher (Urban Core AOI vs Full Metro Expanse) */}
+          {/* AOI Scope Toggle */}
           <div className="flex items-center gap-1 p-1 rounded-xl bg-orange-500/10 border border-orange-500/20 text-xs font-mono">
             <button
               onClick={() => setScope("core")}
@@ -289,7 +449,6 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
                   ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-xs"
                   : "text-orange-700 dark:text-orange-300 hover:text-orange-500"
               }`}
-              title="Targeted FortyGuard Area of Interest Bounding Box (100m² Calibrated Core)"
             >
               <Scan className="w-3.5 h-3.5" />
               <span>Urban Core AOI</span>
@@ -301,10 +460,9 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
                   ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-xs"
                   : "text-orange-700 dark:text-orange-300 hover:text-orange-500"
               }`}
-              title="Expand heatmap across the entire metropolitan valley and surrounding suburbs"
             >
               <Globe2 className="w-3.5 h-3.5" />
-              <span>Full Metro Valley</span>
+              <span>Full Metro Expanse</span>
             </button>
           </div>
 
@@ -346,7 +504,7 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
           <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100 dark:bg-black/60 border border-gray-200 dark:border-white/10 text-xs font-mono">
             <button
               onClick={() => setActiveLayer("tcm")}
-              className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+              className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
                 activeLayer === "tcm"
                   ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-sm"
                   : "text-gray-600 dark:text-zinc-400 hover:text-orange-500"
@@ -356,7 +514,7 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
             </button>
             <button
               onClick={() => setActiveLayer("exceedance")}
-              className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+              className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
                 activeLayer === "exceedance"
                   ? "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-sm"
                   : "text-gray-600 dark:text-zinc-400 hover:text-red-500"
@@ -366,7 +524,7 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
             </button>
             <button
               onClick={() => setActiveLayer("persistence")}
-              className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+              className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
                 activeLayer === "persistence"
                   ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-sm"
                   : "text-gray-600 dark:text-zinc-400 hover:text-purple-500"
@@ -378,7 +536,48 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
         </div>
       </div>
 
-      {/* Main Map Canvas with Floating FortyGuard Legend */}
+      {/* Quick City Fly-To Navigator Bar */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-mono custom-scrollbar">
+        <span className="text-gray-400 dark:text-zinc-500 text-[11px] uppercase font-bold whitespace-nowrap flex items-center gap-1">
+          <MapPin className="w-3.5 h-3.5 text-orange-500" />
+          QUICK FLY-TO:
+        </span>
+
+        <button
+          onClick={flyToNationalOverview}
+          className={`px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
+            currentView === "national"
+              ? "bg-slate-900 dark:bg-white text-white dark:text-black shadow-md ring-2 ring-orange-500"
+              : "bg-gray-100 dark:bg-zinc-900/80 text-gray-700 dark:text-zinc-300 hover:border-orange-500/40 border border-transparent"
+          }`}
+        >
+          <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
+          <span>NATIONAL OVERVIEW (ALL CITIES)</span>
+        </button>
+
+        {MONITORED_CITIES.map((city) => {
+          const isSelected = focusedCityName === city.name && currentView === "city";
+          return (
+            <button
+              key={city.id}
+              onClick={() => flyToCity(city.name)}
+              className={`px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
+                isSelected
+                  ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md shadow-orange-500/20"
+                  : "bg-gray-100 dark:bg-zinc-900/80 text-gray-700 dark:text-zinc-300 hover:border-orange-500/40 border border-transparent"
+              }`}
+            >
+              <span>{city.emoji}</span>
+              <span>{city.shortName}</span>
+              <span className={`text-[10px] px-1 py-0.2 rounded font-mono ${city.badgeClass}`}>
+                {city.tempF}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Main Single GIS Map Canvas with Floating FortyGuard Legend */}
       <div className="relative w-full h-[540px] rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 shadow-inner bg-slate-950">
         {/* Leaflet Map Target */}
         <div ref={mapContainerRef} className="w-full h-full z-0" />
@@ -387,11 +586,11 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
         {isLoading && (
           <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-30 font-mono text-xs text-orange-400 gap-2">
             <RefreshCw className="w-5 h-5 animate-spin text-orange-500" />
-            <span>Rendering FortyGuard polygon mesh...</span>
+            <span>Rendering Multi-City FortyGuard Grid...</span>
           </div>
         )}
 
-        {/* Exact FortyGuard Legend Box (Matching Screenshot) */}
+        {/* Exact FortyGuard Legend Box */}
         <div className="absolute top-4 left-4 z-20 bg-white/95 dark:bg-[#0D0D0D]/95 backdrop-blur-md p-4 rounded-xl border border-gray-200 dark:border-white/10 shadow-2xl font-mono text-xs max-w-[260px]">
           <div className="font-bold text-slate-900 dark:text-white text-xs mb-0.5">
             Avg temperature (24 h)
@@ -466,7 +665,7 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
           <div className="absolute top-4 right-4 z-20 bg-white/95 dark:bg-[#0D0D0D]/95 backdrop-blur-md p-4 rounded-xl border border-gray-200 dark:border-white/10 shadow-2xl font-mono text-xs max-w-[270px] space-y-2.5 animate-in fade-in">
             <div className="flex items-center justify-between pb-1.5 border-b border-gray-200 dark:border-white/10">
               <span className="text-gray-500 dark:text-zinc-400 font-bold uppercase text-[10px]">
-                PARCEL INSPECTION
+                {selectedParcel.city_name || "PARCEL INSPECTION"}
               </span>
               <span className="px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-500 font-bold text-[10px]">
                 ID: {selectedParcel.tile_id ?? "AOI-049"}
@@ -506,13 +705,13 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
               </div>
 
               <div className="pt-2 border-t border-gray-200 dark:border-white/10 text-[10px] text-gray-400 leading-tight">
-                100m² FortyGuard TCM calibrated polygon overlaid on urban street corridor.
+                FortyGuard TCM calibrated polygon overlaid on urban street corridor.
               </div>
             </div>
           </div>
         )}
 
-        {/* Map View Controls (Zoom in, Zoom out, Reset Bounds) */}
+        {/* Map View Controls (Zoom in, Zoom out, Reset / Fly to National Overview) */}
         <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-1.5">
           <button
             onClick={() => mapInstanceRef.current && mapInstanceRef.current.zoomIn()}
@@ -529,15 +728,11 @@ export default function SpatialHeatmapView({ selectedCity = "San Jose, CA", dark
             <ZoomOut className="w-4 h-4" />
           </button>
           <button
-            onClick={() => {
-              if (mapInstanceRef.current && geoJsonLayerRef.current) {
-                mapInstanceRef.current.fitBounds(geoJsonLayerRef.current.getBounds(), { padding: [15, 15] });
-              }
-            }}
+            onClick={flyToNationalOverview}
             className="p-2.5 rounded-xl bg-white dark:bg-black/80 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-zinc-300 hover:text-orange-500 shadow-lg cursor-pointer active:scale-95 transition-all"
-            title="Reset Bounds"
+            title="National Overview"
           >
-            <Maximize2 className="w-4 h-4" />
+            <Globe2 className="w-4 h-4" />
           </button>
         </div>
 
