@@ -722,20 +722,20 @@ export default function SpatialHeatmapView({
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.96 }}
                   transition={{ type: "spring", stiffness: 450, damping: 25 }}
-                  className="absolute top-full mt-2 right-0 w-80 glass-panel rounded-2xl shadow-2xl overflow-hidden z-50 flex flex-col max-h-[380px] font-mono text-xs"
+                  className="absolute top-full mt-2 right-0 w-80 bg-white/98 dark:bg-[#0B0D14]/98 backdrop-blur-2xl border border-gray-200 dark:border-white/[0.12] rounded-2xl shadow-[0_24px_60px_-10px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.06)] overflow-hidden z-50 flex flex-col max-h-[380px] font-mono text-xs"
                 >
                   {/* Subtle top edge glow */}
                   <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
 
                   {/* Search Input Bar */}
-                  <div className="p-2.5 border-b border-gray-100 dark:border-white/[0.06] relative">
+                  <div className="p-2.5 border-b border-gray-200/80 dark:border-white/[0.08] bg-gray-50/70 dark:bg-white/[0.02] relative">
                     <Search className="w-3.5 h-3.5 absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       placeholder="Search 22+ cities..."
                       value={citySearchQuery}
                       onChange={(e) => setCitySearchQuery(e.target.value)}
-                      className="w-full bg-gray-100 dark:bg-zinc-900/80 border border-gray-200 dark:border-zinc-800 rounded-lg pl-8 pr-7 py-1.5 text-xs text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50"
+                      className="w-full bg-white dark:bg-black/60 border border-gray-200 dark:border-zinc-800 rounded-lg pl-8 pr-7 py-1.5 text-xs text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50"
                       autoFocus
                     />
                     {citySearchQuery && (
@@ -749,7 +749,7 @@ export default function SpatialHeatmapView({
                   </div>
 
                   {/* Options List */}
-                  <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
+                  <div className="flex-1 overflow-y-auto p-1.5 space-y-1.5">
                     {/* National Overview Option */}
                     {!citySearchQuery && (
                       <button
@@ -757,7 +757,7 @@ export default function SpatialHeatmapView({
                         className={`w-full px-3 py-2 rounded-lg flex items-center justify-between text-left transition-colors cursor-pointer ${
                           currentView === "national"
                             ? "bg-orange-500/15 text-orange-400 font-semibold border-l-2 border-orange-500"
-                            : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800/60 hover:text-white"
+                            : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-black dark:hover:text-white"
                         }`}
                       >
                         <div className="flex items-center gap-2">
@@ -776,8 +776,8 @@ export default function SpatialHeatmapView({
                       if (regionCities.length === 0) return null;
 
                       return (
-                        <div key={region} className="pt-1.5">
-                          <div className="px-3 py-1 text-[10px] font-semibold text-orange-500/80 uppercase tracking-wider">
+                        <div key={region} className="pt-0.5">
+                          <div className="px-3 py-1 text-[9.5px] font-bold text-orange-500/90 uppercase tracking-wider bg-orange-500/5 rounded-md mb-1">
                             {region}
                           </div>
                           {regionCities.map((c) => {
@@ -790,14 +790,14 @@ export default function SpatialHeatmapView({
                                 className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-between text-left transition-all cursor-pointer ${
                                   isSelected
                                     ? "bg-orange-500/15 text-orange-400 font-semibold border-l-2 border-orange-500"
-                                    : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800/60 hover:text-white"
+                                    : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-black dark:hover:text-white"
                                 }`}
                               >
                                 <div className="flex items-center gap-2">
                                   <span className={`w-2 h-2 rounded-full ${c.dotClass}`} />
                                   <span>{c.name}</span>
                                 </div>
-                                <span className="px-1.5 py-0.2 rounded text-[10px] bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 font-mono">
+                                <span className="px-1.5 py-0.5 rounded text-[9.5px] bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 font-mono">
                                   {c.tempF}
                                 </span>
                               </button>
