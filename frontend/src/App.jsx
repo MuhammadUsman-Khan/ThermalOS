@@ -320,7 +320,19 @@ export default function App() {
   );
 
   return (
-    <div className={`min-h-[100dvh] flex flex-col font-sans transition-colors ${darkMode ? "bg-[#090A0D] text-zinc-100" : "bg-[#F9FAFB] text-black"}`}>
+    <div className={`min-h-[100dvh] flex flex-col font-sans transition-colors relative ${darkMode ? "bg-[#090A0E] text-zinc-100" : "bg-[#F3F5F9] text-black"}`}>
+      {/* Apple iOS-Style Ambient Luminous Mesh Backdrop */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        {/* Top-Left Warm Thermal Aurora Glow */}
+        <div className="absolute -top-32 -left-32 w-[550px] h-[550px] rounded-full bg-gradient-to-br from-orange-500/20 via-amber-500/12 to-transparent blur-[95px] animate-ambient-1" />
+
+        {/* Center-Right Cyan Off-Peak Aurora Glow */}
+        <div className="absolute top-[28%] -right-32 w-[600px] h-[600px] rounded-full bg-gradient-to-bl from-cyan-500/15 via-sky-500/10 to-transparent blur-[115px] animate-ambient-2" />
+
+        {/* Bottom-Left Radiant Rose Advisory Glow */}
+        <div className="absolute -bottom-40 left-[15%] w-[650px] h-[650px] rounded-full bg-gradient-to-tr from-rose-500/12 via-orange-500/8 to-transparent blur-[125px] animate-ambient-1" />
+      </div>
+
       {/* Toast Notification */}
       {toast && (
         <Toast
@@ -346,7 +358,7 @@ export default function App() {
       <AgentTwoModal
         isOpen={isInfraModalOpen}
         onClose={() => {
-          setIsInfraModalOpen(false);
+          setIsAuditModalOpen(false);
           setAgentStates((prev) => ({ ...prev, agent2: "idle" }));
         }}
         city={selectedCity}
@@ -367,15 +379,15 @@ export default function App() {
         data={civicData}
       />
 
-      {/* Executive Topbar */}
-      <header className="border-b border-gray-200/80 dark:border-white/[0.08] bg-white/80 dark:bg-[#090A0D]/80 backdrop-blur-xl sticky top-0 z-40 px-6 py-2.5 transition-colors">
+      {/* Executive Apple-Style Frosted Glass Topbar */}
+      <header className="border-b border-white/[0.12] dark:border-white/[0.08] bg-white/70 dark:bg-[#0B0D13]/70 backdrop-blur-2xl sticky top-0 z-40 px-6 py-2.5 transition-colors shadow-xs">
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4">
           {/* Brand Logo & Tag */}
           <div className="flex items-center gap-3">
             <motion.div
               whileHover={{ rotate: 12, scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400, damping: 15 }}
-              className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.2)] cursor-pointer"
+              className="flex items-center justify-center w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.25)] cursor-pointer"
             >
               <Flame className="w-4 h-4" />
             </motion.div>
@@ -400,7 +412,7 @@ export default function App() {
                 onClick={handleRunAudit}
                 disabled={isAuditLoading}
                 title="Agent 1: Energy & Thermal Compliance Audit"
-                className="px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 text-gray-700 dark:text-zinc-300 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-white dark:hover:bg-zinc-800/80 border border-transparent hover:border-amber-500/30 hover:shadow-xs"
+                className="px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 text-gray-700 dark:text-zinc-300 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-white/80 dark:hover:bg-white/10 border border-transparent hover:border-amber-500/30 hover:shadow-xs"
               >
                 {isAuditLoading ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-500" />
@@ -420,7 +432,7 @@ export default function App() {
                 onClick={handleRunInfrastructure}
                 disabled={isInfraLoading}
                 title="Agent 2: Infrastructure & Pre-Cooling Controller"
-                className="px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 text-gray-700 dark:text-zinc-300 hover:text-cyan-500 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-zinc-800/80 border border-transparent hover:border-cyan-500/30 hover:shadow-xs"
+                className="px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 text-gray-700 dark:text-zinc-300 hover:text-cyan-500 dark:hover:text-cyan-400 hover:bg-white/80 dark:hover:bg-white/10 border border-transparent hover:border-cyan-500/30 hover:shadow-xs"
               >
                 {isInfraLoading ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin text-cyan-500" />
@@ -440,7 +452,7 @@ export default function App() {
                 onClick={handleRunCivic}
                 disabled={isCivicLoading}
                 title="Agent 3: Civic & Public Health Override"
-                className="px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 text-gray-700 dark:text-zinc-300 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-white dark:hover:bg-zinc-800/80 border border-transparent hover:border-rose-500/30 hover:shadow-xs"
+                className="px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 text-gray-700 dark:text-zinc-300 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-white/80 dark:hover:bg-white/10 border border-transparent hover:border-rose-500/30 hover:shadow-xs"
               >
                 {isCivicLoading ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin text-rose-500" />
@@ -922,7 +934,7 @@ export default function App() {
       </main>
 
       {/* Executive Footer */}
-      <footer className="w-full max-w-7xl mx-auto px-6 py-3 border-t border-gray-200 dark:border-white/[0.08] flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 dark:text-zinc-500 font-mono gap-2">
+      <footer className="w-full max-w-7xl mx-auto px-6 py-3 border-t border-white/[0.12] dark:border-white/[0.08] flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 dark:text-zinc-500 font-mono gap-2 relative z-10">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-orange-500" />
           <span>ThermalOS v1.2 · Autonomous Microclimate Grid Operations</span>
