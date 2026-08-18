@@ -3,7 +3,18 @@
 export const API_BASE = "http://127.0.0.1:8000";
 export const N8N_AUDIT_WEBHOOK = "https://usmankhan0.app.n8n.cloud/webhook/thermalos-audit";
 
-export const CITIES = ["Phoenix, AZ", "Houston, TX", "Las Vegas, NV", "Dallas, TX"];
+export const CITIES = [
+  "Phoenix, AZ",
+  "Las Vegas, NV",
+  "Houston, TX",
+  "Dallas, TX",
+  "San Jose, CA",
+  "New York, NY",
+  "Chicago, IL",
+  "Miami, FL",
+  "Los Angeles, CA",
+  "Atlanta, GA",
+];
 
 export const MAX_DATA_POINTS = 20;
 export const MAX_LOG_ENTRIES = 100;

@@ -35,20 +35,30 @@ app.add_middleware(
 
 # City temperature configuration: normal active range and rare spike ceiling
 CITY_CONFIGS = {
-    "Phoenix, AZ": {"min": 91, "max": 103, "spike_chance": 0.04, "spike_val": 106},
+    "Phoenix, AZ": {"min": 91, "max": 104, "spike_chance": 0.04, "spike_val": 108},
+    "Las Vegas, NV": {"min": 88, "max": 102, "spike_chance": 0.03, "spike_val": 106},
     "Houston, TX": {"min": 84, "max": 96, "spike_chance": 0.02, "spike_val": 101},
-    "Las Vegas, NV": {"min": 88, "max": 101, "spike_chance": 0.03, "spike_val": 105},
-    "Dallas, TX": {"min": 82, "max": 94, "spike_chance": 0.02, "spike_val": 100},
+    "Dallas, TX": {"min": 82, "max": 95, "spike_chance": 0.02, "spike_val": 100},
     "San Jose, CA": {"min": 74, "max": 88, "spike_chance": 0.02, "spike_val": 94},
+    "New York, NY": {"min": 76, "max": 90, "spike_chance": 0.02, "spike_val": 96},
+    "Chicago, IL": {"min": 72, "max": 86, "spike_chance": 0.02, "spike_val": 92},
+    "Miami, FL": {"min": 83, "max": 93, "spike_chance": 0.03, "spike_val": 98},
+    "Los Angeles, CA": {"min": 78, "max": 95, "spike_chance": 0.03, "spike_val": 101},
+    "Atlanta, GA": {"min": 79, "max": 93, "spike_chance": 0.02, "spike_val": 97},
 }
 
 # In-memory last temperature tracking per city
 LAST_CITY_TEMPS = {
     "Phoenix, AZ": 95,
-    "Houston, TX": 88,
     "Las Vegas, NV": 92,
+    "Houston, TX": 88,
     "Dallas, TX": 86,
     "San Jose, CA": 78,
+    "New York, NY": 82,
+    "Chicago, IL": 79,
+    "Miami, FL": 89,
+    "Los Angeles, CA": 86,
+    "Atlanta, GA": 84,
 }
 
 

@@ -29,10 +29,15 @@ logger = logging.getLogger("thermalos.fortyguard")
 # Coordinate lookups for supported ThermalOS cities
 CITY_COORDINATES: Dict[str, Dict[str, float]] = {
     "Phoenix, AZ": {"lat": 33.4484, "lon": -112.0740, "elevation": 331.0},
-    "Houston, TX": {"lat": 29.7604, "lon": -95.3698, "elevation": 15.0},
     "Las Vegas, NV": {"lat": 36.1699, "lon": -115.1398, "elevation": 610.0},
+    "Houston, TX": {"lat": 29.7604, "lon": -95.3698, "elevation": 15.0},
     "Dallas, TX": {"lat": 32.7767, "lon": -96.7970, "elevation": 131.0},
     "San Jose, CA": {"lat": 37.3382, "lon": -121.8863, "elevation": 28.0},
+    "New York, NY": {"lat": 40.7128, "lon": -74.0060, "elevation": 10.0},
+    "Chicago, IL": {"lat": 41.8781, "lon": -87.6298, "elevation": 181.0},
+    "Miami, FL": {"lat": 25.7617, "lon": -80.1918, "elevation": 2.0},
+    "Los Angeles, CA": {"lat": 34.0522, "lon": -118.2437, "elevation": 87.0},
+    "Atlanta, GA": {"lat": 33.7490, "lon": -84.3880, "elevation": 320.0},
 }
 
 # Resolve quickstart cached data directory
