@@ -365,7 +365,7 @@ export default function App() {
       <AgentTwoModal
         isOpen={isInfraModalOpen}
         onClose={() => {
-          setIsInfraModalOpen(false);
+          setIsAuditModalOpen(false);
           setAgentStates((prev) => ({ ...prev, agent2: "idle" }));
         }}
         city={selectedCity}
@@ -589,27 +589,30 @@ export default function App() {
 
       {/* Main Dashboard Canvas */}
       <main className="w-full max-w-7xl mx-auto px-4 py-4 flex-1 flex flex-col space-y-4 relative z-10">
-        {/* Next-Gen Continuous Sliding Segmented Navigation Control */}
-        <div className="flex items-center gap-1 p-1 rounded-2xl glass-panel-subtle text-xs font-mono w-fit relative">
+        {/* Buttery-Smooth Fluid Continuous Sliding Segmented Navigation Control */}
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl glass-panel-subtle text-xs font-mono w-fit relative">
           {NAV_TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
 
             return (
-              <button
+              <motion.button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.97 }}
                 className="relative px-4 py-2 rounded-xl text-xs font-mono font-medium transition-colors cursor-pointer flex items-center gap-2 select-none group"
               >
-                {/* Continuous Spring Sliding Pill Indicator */}
+                {/* Continuous Fluid Spring Sliding Pill Indicator */}
                 {isActive && (
                   <motion.div
                     layoutId="activeTabPill"
-                    className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] to-[#FF8533] shadow-[0_0_20px_rgba(255,107,43,0.45)]"
+                    className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7832] to-[#FF8A3D] shadow-[0_0_22px_rgba(255,107,43,0.45),inset_0_1px_1px_rgba(255,255,255,0.4)]"
                     transition={{
                       type: "spring",
-                      stiffness: 500,
-                      damping: 35,
+                      stiffness: 380,
+                      damping: 32,
+                      mass: 0.8,
                     }}
                   />
                 )}
@@ -624,21 +627,21 @@ export default function App() {
                   <Icon className="w-3.5 h-3.5" />
                   <span>{tab.label}</span>
                 </span>
-              </button>
+              </motion.button>
             );
           })}
         </div>
 
-        {/* Dynamic Animated Tab View Routing with AI-Grade Directional Blur-Slide Transitions */}
+        {/* Dynamic Animated Tab View Routing with Silky-Smooth Organic Scale & Fade Transitions */}
         <AnimatePresence mode="wait">
           {/* Tab 1: Operations Console */}
           {activeTab === "operations" && (
             <motion.div
               key="operations"
-              initial={{ opacity: 0, y: 14, filter: "blur(6px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -10, filter: "blur(6px)" }}
-              transition={{ duration: 0.24, ease: [0.2, 0.9, 0.3, 1] }}
+              initial={{ opacity: 0, y: 10, scale: 0.992 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.992 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               className="space-y-4"
             >
               {/* 4-Card Mission Control Row */}
@@ -874,10 +877,10 @@ export default function App() {
           {activeTab === "spatial_heatmap" && (
             <motion.div
               key="spatial_heatmap"
-              initial={{ opacity: 0, y: 14, filter: "blur(6px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -10, filter: "blur(6px)" }}
-              transition={{ duration: 0.24, ease: [0.2, 0.9, 0.3, 1] }}
+              initial={{ opacity: 0, y: 10, scale: 0.992 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.992 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
               <SpatialHeatmapView
                 selectedCity={selectedCity}
@@ -891,10 +894,10 @@ export default function App() {
           {activeTab === "diurnal_sim" && (
             <motion.div
               key="diurnal_sim"
-              initial={{ opacity: 0, y: 14, filter: "blur(6px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -10, filter: "blur(6px)" }}
-              transition={{ duration: 0.24, ease: [0.2, 0.9, 0.3, 1] }}
+              initial={{ opacity: 0, y: 10, scale: 0.992 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.992 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
               <DiurnalTimelineScrubber
                 selectedCity={selectedCity}
@@ -907,10 +910,10 @@ export default function App() {
           {activeTab === "national_grid" && (
             <motion.div
               key="national_grid"
-              initial={{ opacity: 0, y: 14, filter: "blur(6px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -10, filter: "blur(6px)" }}
-              transition={{ duration: 0.24, ease: [0.2, 0.9, 0.3, 1] }}
+              initial={{ opacity: 0, y: 10, scale: 0.992 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.992 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
               <NationalThermalGridMatrix
                 selectedCity={selectedCity}
