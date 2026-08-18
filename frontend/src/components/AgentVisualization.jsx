@@ -711,6 +711,43 @@ export default function AgentVisualization({
           headG.fillCircle(0, cy - 28, 10.5);
           headG.fillRect(-10, cy - 30, 20, 7);
 
+          // Vibrant Colored Professional Over-Ear Headset (Agent Theme Color)
+          // 1. Dark Padded Underside
+          headG.lineStyle(3, 0x0f172a, 1);
+          headG.beginPath();
+          headG.arc(0, cy - 27, 12, Phaser.Math.DegToRad(195), Phaser.Math.DegToRad(345), false);
+          headG.strokePath();
+
+          // 2. Vibrant Outer Headband Arc in Agent Theme Color
+          headG.lineStyle(2, cfg.themeColor, 1);
+          headG.beginPath();
+          headG.arc(0, cy - 27, 13, Phaser.Math.DegToRad(195), Phaser.Math.DegToRad(345), false);
+          headG.strokePath();
+
+          // 3. Vibrant Over-Ear Cups with Inner Cushion and Glowing Outer Shell
+          // Left Ear Cup
+          headG.fillStyle(0x0f172a, 1);
+          headG.fillRoundedRect(-15, cy - 28.5, 5, 9.5, 2);
+          headG.fillStyle(cfg.themeColor, 1);
+          headG.fillRoundedRect(-14.5, cy - 28, 4, 8.5, 2);
+          headG.fillStyle(0xffffff, 0.9);
+          headG.fillCircle(-12.5, cy - 23.5, 1.2);
+
+          // Right Ear Cup
+          headG.fillStyle(0x0f172a, 1);
+          headG.fillRoundedRect(10, cy - 28.5, 5, 9.5, 2);
+          headG.fillStyle(cfg.themeColor, 1);
+          headG.fillRoundedRect(10.5, cy - 28, 4, 8.5, 2);
+          headG.fillStyle(0xffffff, 0.9);
+          headG.fillCircle(12.5, cy - 23.5, 1.2);
+
+          // 4. Curved Boom Microphone from Left Ear toward mouth
+          headG.lineStyle(1.4, cfg.themeColor, 1);
+          headG.lineBetween(-12.5, cy - 23.5, -4, cy - 18);
+          headG.fillStyle(0xffffff, 1);
+          headG.fillCircle(-4, cy - 18, 1.4);
+
+          // Modern Glasses / Visor Eyes
           headG.fillStyle(cfg.themeColor, 1);
           headG.fillRoundedRect(-8, cy - 25, 7, 4.5, 1);
           headG.fillRoundedRect(1, cy - 25, 7, 4.5, 1);
@@ -755,10 +792,32 @@ export default function AgentVisualization({
           torsoG.fillStyle(shirt, 1);
           torsoG.fillRoundedRect(-11, cy - 17, 22, 21, 4);
 
-          // Back of Head & Hair
+          // Back of Head & Hair with Headset
           headG.fillStyle(hair, 1);
           headG.fillCircle(0, cy - 26, 10.5);
           headG.fillRoundedRect(-10, cy - 28, 20, 10, 3);
+
+          // Headset Arc across back of head in Agent Theme Color
+          headG.lineStyle(3, 0x0f172a, 1);
+          headG.beginPath();
+          headG.arc(0, cy - 28, 12, Phaser.Math.DegToRad(195), Phaser.Math.DegToRad(345), false);
+          headG.strokePath();
+
+          headG.lineStyle(2, cfg.themeColor, 1);
+          headG.beginPath();
+          headG.arc(0, cy - 28, 13, Phaser.Math.DegToRad(195), Phaser.Math.DegToRad(345), false);
+          headG.strokePath();
+
+          // Earcups
+          headG.fillStyle(0x0f172a, 1);
+          headG.fillRoundedRect(-15, cy - 30.5, 5, 9.5, 2);
+          headG.fillRoundedRect(10, cy - 30.5, 5, 9.5, 2);
+          headG.fillStyle(cfg.themeColor, 1);
+          headG.fillRoundedRect(-14.5, cy - 30, 4, 8.5, 2);
+          headG.fillRoundedRect(10.5, cy - 30, 4, 8.5, 2);
+          headG.fillStyle(0xffffff, 0.9);
+          headG.fillCircle(-12.5, cy - 25.5, 1.2);
+          headG.fillCircle(12.5, cy - 25.5, 1.2);
 
           // Arm swing holding keycard in hand
           const armSwing = Math.sin(-walkAngle) * 8;
@@ -796,6 +855,27 @@ export default function AgentVisualization({
           headG.fillStyle(hair, 1);
           headG.fillCircle(0, cy - 30, 10.5);
 
+          // Headset Arc
+          headG.lineStyle(3, 0x0f172a, 1);
+          headG.beginPath();
+          headG.arc(0, cy - 30, 12, Phaser.Math.DegToRad(195), Phaser.Math.DegToRad(345), false);
+          headG.strokePath();
+
+          headG.lineStyle(2, cfg.themeColor, 1);
+          headG.beginPath();
+          headG.arc(0, cy - 30, 13, Phaser.Math.DegToRad(195), Phaser.Math.DegToRad(345), false);
+          headG.strokePath();
+
+          headG.fillStyle(0x0f172a, 1);
+          headG.fillRoundedRect(-15, cy - 32.5, 5, 9.5, 2);
+          headG.fillRoundedRect(10, cy - 32.5, 5, 9.5, 2);
+          headG.fillStyle(cfg.themeColor, 1);
+          headG.fillRoundedRect(-14.5, cy - 32, 4, 8.5, 2);
+          headG.fillRoundedRect(10.5, cy - 32, 4, 8.5, 2);
+          headG.fillStyle(0xffffff, 0.9);
+          headG.fillCircle(-12.5, cy - 27.5, 1.2);
+          headG.fillCircle(12.5, cy - 27.5, 1.2);
+
           // Right Arm raised high to card reader with Keycard
           armsG.lineStyle(3.5, shirt, 1);
           armsG.lineBetween(8, cy - 13, 16, cy - 22);
@@ -830,6 +910,27 @@ export default function AgentVisualization({
           headG.fillCircle(0, cy - 26, 10);
           headG.fillStyle(hair, 1);
           headG.fillCircle(0, cy - 30, 10.5);
+
+          // Headset Arc
+          headG.lineStyle(3, 0x0f172a, 1);
+          headG.beginPath();
+          headG.arc(0, cy - 30, 12, Phaser.Math.DegToRad(195), Phaser.Math.DegToRad(345), false);
+          headG.strokePath();
+
+          headG.lineStyle(2, cfg.themeColor, 1);
+          headG.beginPath();
+          headG.arc(0, cy - 30, 13, Phaser.Math.DegToRad(195), Phaser.Math.DegToRad(345), false);
+          headG.strokePath();
+
+          headG.fillStyle(0x0f172a, 1);
+          headG.fillRoundedRect(-15, cy - 32.5, 5, 9.5, 2);
+          headG.fillRoundedRect(10, cy - 32.5, 5, 9.5, 2);
+          headG.fillStyle(cfg.themeColor, 1);
+          headG.fillRoundedRect(-14.5, cy - 32, 4, 8.5, 2);
+          headG.fillRoundedRect(10.5, cy - 32, 4, 8.5, 2);
+          headG.fillStyle(0xffffff, 0.9);
+          headG.fillCircle(-12.5, cy - 27.5, 1.2);
+          headG.fillCircle(12.5, cy - 27.5, 1.2);
 
           // Dual arms operating holographic terminal
           armsG.lineStyle(3.5, shirt, 1);
@@ -880,6 +981,34 @@ export default function AgentVisualization({
           headG.fillStyle(hair, 1);
           headG.fillCircle(0, cy - 30, 10.5);
           headG.fillRect(-10, cy - 32, 20, 7);
+
+          // Headset Arc in Agent Theme Color
+          headG.lineStyle(3, 0x0f172a, 1);
+          headG.beginPath();
+          headG.arc(0, cy - 29, 12, Phaser.Math.DegToRad(195), Phaser.Math.DegToRad(345), false);
+          headG.strokePath();
+
+          headG.lineStyle(2, cfg.themeColor, 1);
+          headG.beginPath();
+          headG.arc(0, cy - 29, 13, Phaser.Math.DegToRad(195), Phaser.Math.DegToRad(345), false);
+          headG.strokePath();
+
+          // Ear Cups
+          headG.fillStyle(0x0f172a, 1);
+          headG.fillRoundedRect(-15, cy - 30.5, 5, 9.5, 2);
+          headG.fillRoundedRect(10, cy - 30.5, 5, 9.5, 2);
+          headG.fillStyle(cfg.themeColor, 1);
+          headG.fillRoundedRect(-14.5, cy - 30, 4, 8.5, 2);
+          headG.fillRoundedRect(10.5, cy - 30, 4, 8.5, 2);
+          headG.fillStyle(0xffffff, 0.9);
+          headG.fillCircle(-12.5, cy - 25.5, 1.2);
+          headG.fillCircle(12.5, cy - 25.5, 1.2);
+
+          // Boom mic
+          headG.lineStyle(1.4, cfg.themeColor, 1);
+          headG.lineBetween(-12.5, cy - 25.5, -4, cy - 20);
+          headG.fillStyle(0xffffff, 1);
+          headG.fillCircle(-4, cy - 20, 1.4);
 
           headG.fillStyle(cfg.themeColor, 1);
           headG.fillRoundedRect(-8, cy - 27, 7, 4.5, 1);
