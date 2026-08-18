@@ -26,6 +26,7 @@ import {
   MapPin,
   Check,
   AlertOctagon,
+  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -351,75 +352,90 @@ export default function App() {
         data={civicData}
       />
 
-      {/* Topbar */}
-      <header className="border-b border-gray-200 dark:border-zinc-800/90 bg-white/95 dark:bg-[#090A0D]/95 backdrop-blur-md sticky top-0 z-40 px-6 py-2.5 transition-colors">
+      {/* Executive Topbar */}
+      <header className="border-b border-gray-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-[#090A0D]/90 backdrop-blur-md sticky top-0 z-40 px-6 py-2.5 transition-colors">
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4">
+          {/* Brand Logo & Tag */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.2)]">
+            <motion.div
+              whileHover={{ rotate: 12, scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 400, damping: 15 }}
+              className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.2)] cursor-pointer"
+            >
               <Flame className="w-4 h-4" />
-            </div>
+            </motion.div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-semibold tracking-tight text-black dark:text-white font-display">
+              <h1 className="text-base font-bold tracking-tight text-black dark:text-white font-display">
                 ThermalOS
               </h1>
-              <span className="text-xs text-gray-300 dark:text-zinc-700">/</span>
-              <span className="text-xs font-mono text-orange-500">
+              <span className="text-xs text-gray-300 dark:text-zinc-700 font-mono">/</span>
+              <span className="text-xs font-mono text-orange-500 font-medium tracking-tight">
                 FortyGuard Radiometric Intelligence
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-            {/* Action Triggers with Calibrated Secondary Tones */}
+            {/* Action Triggers with Physics Springs */}
             <div className="flex items-center gap-1 p-0.5 rounded-lg bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-xs font-mono">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={handleRunAudit}
                 disabled={isAuditLoading}
-                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-amber-500 hover:border-amber-500/30 border border-transparent shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-amber-500 hover:border-amber-500/30 border border-transparent shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {isAuditLoading ? <RefreshCw className="w-3 h-3 animate-spin text-amber-500" /> : <FileCheck className="w-3 h-3 text-amber-500" />}
                 <span>Audit</span>
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={handleRunInfrastructure}
                 disabled={isInfraLoading}
-                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-cyan-500 hover:border-cyan-500/30 border border-transparent shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-cyan-500 hover:border-cyan-500/30 border border-transparent shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {isInfraLoading ? <RefreshCw className="w-3 h-3 animate-spin text-cyan-500" /> : <Zap className="w-3 h-3 text-cyan-500" />}
                 <span>Pre-Cool</span>
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={handleRunCivic}
                 disabled={isCivicLoading}
-                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-rose-500 hover:border-rose-500/30 border border-transparent shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-rose-500 hover:border-rose-500/30 border border-transparent shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {isCivicLoading ? <RefreshCw className="w-3 h-3 animate-spin text-rose-500" /> : <AlertOctagon className="w-3 h-3 text-rose-500" />}
                 <span>Civic Alert</span>
-              </button>
+              </motion.button>
             </div>
 
-            {/* Live Telemetry Status */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-emerald-500/20 bg-emerald-500/5 text-xs font-mono">
-              <span className={`w-1.5 h-1.5 rounded-full ${isEmergencyMode ? "bg-rose-500 animate-pulse" : "bg-emerald-500 animate-pulse"}`} />
-              <span className={isEmergencyMode ? "text-rose-500 font-medium" : "text-emerald-500 font-medium"}>
+            {/* Live Telemetry Radar Pulse */}
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg border border-emerald-500/20 bg-emerald-500/5 text-xs font-mono">
+              <span className={`w-2 h-2 rounded-full ${isEmergencyMode ? "bg-rose-500 animate-ping" : "bg-emerald-500 animate-radar-ping"}`} />
+              <span className={isEmergencyMode ? "text-rose-500 font-semibold" : "text-emerald-500 font-medium"}>
                 {isEmergencyMode ? "Advisory Active" : `Live · ${uptime}`}
               </span>
             </div>
 
             {/* Theme Toggle */}
-            <button
+            <motion.button
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.94 }}
               onClick={() => setDarkMode(!darkMode)}
               title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
               className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-500/30 transition-colors shadow-xs cursor-pointer"
             >
               {darkMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-            </button>
+            </motion.button>
 
             {/* City Selector */}
             <div ref={dropdownRef} className="relative">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 hover:border-orange-500/40 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer text-black dark:text-white shadow-xs font-mono"
@@ -429,16 +445,16 @@ export default function App() {
                 <ChevronDown
                   className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
                 />
-              </button>
+              </motion.button>
 
               <AnimatePresence>
                 {isDropdownOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: 4, scale: 0.98 }}
+                    initial={{ opacity: 0, y: 6, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 4, scale: 0.98 }}
-                    transition={{ duration: 0.12 }}
-                    className="absolute top-full mt-1.5 right-0 w-52 bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 rounded-xl shadow-xl overflow-hidden z-50 py-1 font-mono text-xs"
+                    exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                    transition={{ type: "spring", stiffness: 450, damping: 25 }}
+                    className="absolute top-full mt-1.5 right-0 w-52 bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 rounded-xl shadow-xl overflow-hidden z-50 py-1 font-mono text-xs max-h-72 overflow-y-auto"
                   >
                     {CITIES.map((city) => (
                       <div
@@ -462,7 +478,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main dashboard */}
+      {/* Main Dashboard Canvas */}
       <main className="w-full max-w-7xl mx-auto px-4 py-4 flex-1 flex flex-col space-y-4 relative z-10">
         {/* Segmented Navigation Control */}
         <div className="flex items-center gap-1 p-1 rounded-lg bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-xs font-mono w-fit">
@@ -515,253 +531,296 @@ export default function App() {
           </button>
         </div>
 
-        {/* Tab 1: Operations Console */}
-        {activeTab === "operations" && (
-          <div className="space-y-4">
-            {/* 4-Card Mission Control Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-              {/* 1. Surface vs Ambient Temp */}
-              <KPICard
-                label="Surface Temperature"
-                icon={<Thermometer className="w-4 h-4" />}
-                accentColor="text-orange-500"
-                borderHover="hover:border-orange-500/40"
-                value={surfaceTemp.toFixed(1)}
-                unit="°F"
-                valueSuffix={
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-1.5 mb-1 bg-orange-500/15 text-orange-500 border border-orange-500/30">
-                    +{surfaceDelta.toFixed(1)}°F ΔT
-                  </span>
-                }
-                darkMode={darkMode}
-                sparkStroke="#FF6B2B"
-                sparkGradientId="sparkOrangeGrad"
-                sparkPath="M0,24 Q15,6 32,18 T65,10 T95,14 L110,8"
-                footer={
-                  <span>
-                    Ambient Air: <strong className="text-black dark:text-white font-medium">{currentTemp}°F</strong>
-                  </span>
-                }
-              />
-
-              {/* 2. Solar Irradiance GHI */}
-              <KPICard
-                label="Solar Irradiance (GHI)"
-                icon={<Sun className="w-4 h-4" />}
-                accentColor="text-amber-500"
-                borderHover="hover:border-amber-500/40"
-                value={solarGhi.toFixed(0)}
-                unit="W/m²"
-                valueSuffix={
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-1.5 mb-1 bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                    {solarGhi >= 600 ? "Peak Flux" : "Nominal"}
-                  </span>
-                }
-                darkMode={darkMode}
-                sparkStroke="#F59E0B"
-                sparkGradientId="sparkAmberGrad"
-                sparkPath="M0,28 Q20,12 45,20 T80,8 T100,16 L110,10"
-                footer={
-                  <span>
-                    Clear Sky DNI: <strong className="text-black dark:text-white font-medium">{(solarGhi * 1.3).toFixed(0)} W/m²</strong>
-                  </span>
-                }
-              />
-
-              {/* 3. Relative Humidity */}
-              <KPICard
-                label="Relative Humidity"
-                icon={<Droplets className="w-4 h-4" />}
-                accentColor="text-cyan-500"
-                borderHover="hover:border-cyan-500/40"
-                value={humidity.toFixed(1)}
-                unit="%"
-                valueSuffix={
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-1.5 mb-1 bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
-                    {humidity > 50 ? "Elevated" : "Nominal"}
-                  </span>
-                }
-                darkMode={darkMode}
-                sparkStroke="#06B6D4"
-                sparkGradientId="sparkCyanGrad"
-                sparkPath="M0,16 Q25,24 50,14 T85,20 T105,10 L110,14"
-                footer={
-                  <span>
-                    Wet-Bulb: <strong className="text-cyan-400 font-medium">{currentReading?.wet_bulb_f ? `${currentReading.wet_bulb_f.toFixed(1)}°F` : "74.1°F"}</strong>
-                  </span>
-                }
-              />
-
-              {/* 4. Real-Time WBGT with Radial Gauge */}
-              <div className="bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-between shadow-xs transition-all hover:border-orange-500/40">
-                <RadialGauge
-                  value={wbgt}
-                  min={60}
-                  max={100}
-                  threshold={85}
+        {/* Dynamic Animated Tab View Routing */}
+        <AnimatePresence mode="wait">
+          {/* Tab 1: Operations Console */}
+          {activeTab === "operations" && (
+            <motion.div
+              key="operations"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
+              className="space-y-4"
+            >
+              {/* 4-Card Mission Control Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                {/* 1. Surface vs Ambient Temp */}
+                <KPICard
+                  label="Surface Temperature"
+                  icon={<Thermometer className="w-4 h-4" />}
+                  accentColor="text-orange-500"
+                  borderHover="hover:border-orange-500/40"
+                  value={surfaceTemp.toFixed(1)}
                   unit="°F"
-                  label="Liljegren WBGT Index"
-                  size={120}
+                  valueSuffix={
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-1.5 mb-1 bg-orange-500/15 text-orange-500 border border-orange-500/30">
+                      +{surfaceDelta.toFixed(1)}°F ΔT
+                    </span>
+                  }
+                  darkMode={darkMode}
+                  sparkStroke="#FF6B2B"
+                  sparkGradientId="sparkOrangeGrad"
+                  sparkPath="M0,24 Q15,6 32,18 T65,10 T95,14 L110,8"
+                  delay={0}
+                  footer={
+                    <span>
+                      Ambient Air: <strong className="text-black dark:text-white font-medium">{currentTemp}°F</strong>
+                    </span>
+                  }
                 />
-                <div className="w-full flex items-center justify-between pt-2 border-t border-gray-100 dark:border-zinc-800/80 font-mono text-[10px] text-gray-500 dark:text-zinc-400">
-                  <span>Advisory Limit: <strong className="text-rose-500">85.0°F</strong></span>
-                  <span className={wbgt >= 85 ? "text-rose-500 font-medium" : "text-emerald-500 font-medium"}>
-                    {wbgt >= 85 ? "Triggered" : "Nominal"}
-                  </span>
-                </div>
-              </div>
-            </div>
 
-            {/* Workspace Row: Telemetry Chart + Dispatch Log */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5">
-              {/* Telemetry chart */}
-              <div className="lg:col-span-8 bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col justify-between shadow-xs">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 pb-3 border-b border-gray-100 dark:border-zinc-800/80">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Activity className="w-4 h-4 text-orange-500" />
-                      <h2 className="font-display text-sm font-semibold tracking-tight text-black dark:text-white">
-                        Thermal Telemetry Stream · {selectedCity}
-                      </h2>
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                      Real-time surface radiometric vs. ambient canopy temperature (rolling window)
-                    </p>
+                {/* 2. Solar Irradiance GHI */}
+                <KPICard
+                  label="Solar Irradiance (GHI)"
+                  icon={<Sun className="w-4 h-4" />}
+                  accentColor="text-amber-500"
+                  borderHover="hover:border-amber-500/40"
+                  value={solarGhi.toFixed(0)}
+                  unit="W/m²"
+                  valueSuffix={
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-1.5 mb-1 bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                      {solarGhi >= 600 ? "Peak Flux" : "Nominal"}
+                    </span>
+                  }
+                  darkMode={darkMode}
+                  sparkStroke="#F59E0B"
+                  sparkGradientId="sparkAmberGrad"
+                  sparkPath="M0,28 Q20,12 45,20 T80,8 T100,16 L110,10"
+                  delay={0.06}
+                  footer={
+                    <span>
+                      Clear Sky DNI: <strong className="text-black dark:text-white font-medium">{(solarGhi * 1.3).toFixed(0)} W/m²</strong>
+                    </span>
+                  }
+                />
+
+                {/* 3. Relative Humidity */}
+                <KPICard
+                  label="Relative Humidity"
+                  icon={<Droplets className="w-4 h-4" />}
+                  accentColor="text-cyan-500"
+                  borderHover="hover:border-cyan-500/40"
+                  value={humidity.toFixed(1)}
+                  unit="%"
+                  valueSuffix={
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-1.5 mb-1 bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+                      {humidity > 50 ? "Elevated" : "Nominal"}
+                    </span>
+                  }
+                  darkMode={darkMode}
+                  sparkStroke="#06B6D4"
+                  sparkGradientId="sparkCyanGrad"
+                  sparkPath="M0,16 Q25,24 50,14 T85,20 T105,10 L110,14"
+                  delay={0.12}
+                  footer={
+                    <span>
+                      Wet-Bulb: <strong className="text-cyan-400 font-medium">{currentReading?.wet_bulb_f ? `${currentReading.wet_bulb_f.toFixed(1)}°F` : "74.1°F"}</strong>
+                    </span>
+                  }
+                />
+
+                {/* 4. Real-Time WBGT with Radial Gauge */}
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.18, ease: [0.25, 1, 0.5, 1] }}
+                  whileHover={{ y: -2.5, transition: { duration: 0.15 } }}
+                  className="bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-between shadow-xs transition-all hover:border-orange-500/40"
+                >
+                  <RadialGauge
+                    value={wbgt}
+                    min={60}
+                    max={100}
+                    threshold={85}
+                    unit="°F"
+                    label="Liljegren WBGT Index"
+                    size={120}
+                  />
+                  <div className="w-full flex items-center justify-between pt-2 border-t border-gray-100 dark:border-zinc-800/80 font-mono text-[10px] text-gray-500 dark:text-zinc-400">
+                    <span>Advisory Limit: <strong className="text-rose-500 font-semibold">85.0°F</strong></span>
+                    <span className={wbgt >= 85 ? "text-rose-500 font-semibold" : "text-emerald-500 font-medium"}>
+                      {wbgt >= 85 ? "Triggered" : "Nominal"}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5 text-xs font-mono">
-                      <span className="w-2 h-2 rounded-full bg-orange-500" />
-                      <span className="text-gray-600 dark:text-zinc-400">Surface (°F)</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs font-mono">
-                      <span className="w-2 h-2 rounded-full bg-cyan-400" />
-                      <span className="text-gray-600 dark:text-zinc-400">Ambient (°F)</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="w-full h-72 relative">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={telemetryData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="surfaceFill" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#FF6B2B" stopOpacity={0.2} />
-                          <stop offset="95%" stopColor="#FF6B2B" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-
-                      <XAxis
-                        dataKey="time"
-                        stroke={darkMode ? "#27272a" : "#e2e8f0"}
-                        tick={{ fill: darkMode ? "#71717a" : "#64748b", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
-                        tickLine={false}
-                        axisLine={{ stroke: darkMode ? "#27272a" : "#e2e8f0" }}
-                        interval="preserveStartEnd"
-                        minTickGap={28}
-                      />
-
-                      <YAxis
-                        domain={[75, 125]}
-                        ticks={[75, 85, 95, 105, 115, 125]}
-                        allowDataOverflow={false}
-                        stroke={darkMode ? "#27272a" : "#e2e8f0"}
-                        tick={{ fill: darkMode ? "#71717a" : "#64748b", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
-                        tickLine={false}
-                        axisLine={{ stroke: darkMode ? "#27272a" : "#e2e8f0" }}
-                        tickFormatter={(v) => `${v}°`}
-                      />
-
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: darkMode ? "#0E1015" : "#ffffff",
-                          borderColor: "#FF6B2B",
-                          borderRadius: "8px",
-                          color: darkMode ? "#ffffff" : "#000000",
-                          fontFamily: "JetBrains Mono, monospace",
-                          fontSize: "11px",
-                        }}
-                      />
-
-                      <ReferenceLine
-                        y={110}
-                        stroke="#F43F5E"
-                        strokeDasharray="4 4"
-                        strokeWidth={1.25}
-                        label={{
-                          value: "Critical Limit (110°F)",
-                          fill: "#F43F5E",
-                          fontSize: 10,
-                          fontFamily: "JetBrains Mono, monospace",
-                          position: "insideTopRight",
-                        }}
-                      />
-
-                      <Area
-                        type="monotone"
-                        dataKey="surface"
-                        name="Surface (°F)"
-                        stroke="#FF6B2B"
-                        strokeWidth={2}
-                        fill="url(#surfaceFill)"
-                      />
-
-                      <Line
-                        type="monotone"
-                        dataKey="ambient"
-                        name="Ambient (°F)"
-                        stroke="#38BDF8"
-                        strokeWidth={1.5}
-                        strokeDasharray="3 3"
-                        dot={false}
-                      />
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                </div>
+                </motion.div>
               </div>
 
-              {/* Event Log */}
-              <AgentEventLog
-                logs={logs}
-                onClear={() => setLogs([])}
+              {/* Workspace Row: Telemetry Chart + Dispatch Log */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5">
+                {/* Telemetry chart */}
+                <div className="lg:col-span-8 bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col justify-between shadow-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 pb-3 border-b border-gray-100 dark:border-zinc-800/80">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Activity className="w-4 h-4 text-orange-500" />
+                        <h2 className="font-display text-sm font-bold tracking-tight text-black dark:text-white">
+                          Thermal Telemetry Stream · {selectedCity}
+                        </h2>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                        Real-time surface radiometric vs. ambient canopy temperature (rolling window)
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1.5 text-xs font-mono">
+                        <span className="w-2 h-2 rounded-full bg-orange-500" />
+                        <span className="text-gray-600 dark:text-zinc-400">Surface (°F)</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs font-mono">
+                        <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                        <span className="text-gray-600 dark:text-zinc-400">Ambient (°F)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="w-full h-72 relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart data={telemetryData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="surfaceFill" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#FF6B2B" stopOpacity={0.22} />
+                            <stop offset="95%" stopColor="#FF6B2B" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+
+                        <XAxis
+                          dataKey="time"
+                          stroke={darkMode ? "#27272a" : "#e2e8f0"}
+                          tick={{ fill: darkMode ? "#71717a" : "#64748b", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
+                          tickLine={false}
+                          axisLine={{ stroke: darkMode ? "#27272a" : "#e2e8f0" }}
+                          interval="preserveStartEnd"
+                          minTickGap={28}
+                        />
+
+                        <YAxis
+                          domain={[75, 125]}
+                          ticks={[75, 85, 95, 105, 115, 125]}
+                          allowDataOverflow={false}
+                          stroke={darkMode ? "#27272a" : "#e2e8f0"}
+                          tick={{ fill: darkMode ? "#71717a" : "#64748b", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
+                          tickLine={false}
+                          axisLine={{ stroke: darkMode ? "#27272a" : "#e2e8f0" }}
+                          tickFormatter={(v) => `${v}°`}
+                        />
+
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: darkMode ? "#0E1015" : "#ffffff",
+                            borderColor: "#FF6B2B",
+                            borderRadius: "8px",
+                            color: darkMode ? "#ffffff" : "#000000",
+                            fontFamily: "JetBrains Mono, monospace",
+                            fontSize: "11px",
+                          }}
+                        />
+
+                        <ReferenceLine
+                          y={110}
+                          stroke="#F43F5E"
+                          strokeDasharray="4 4"
+                          strokeWidth={1.25}
+                          label={{
+                            value: "Critical Limit (110°F)",
+                            fill: "#F43F5E",
+                            fontSize: 10,
+                            fontFamily: "JetBrains Mono, monospace",
+                            position: "insideTopRight",
+                          }}
+                        />
+
+                        <Area
+                          type="monotone"
+                          dataKey="surface"
+                          name="Surface (°F)"
+                          stroke="#FF6B2B"
+                          strokeWidth={2.25}
+                          fill="url(#surfaceFill)"
+                        />
+
+                        <Line
+                          type="monotone"
+                          dataKey="ambient"
+                          name="Ambient (°F)"
+                          stroke="#38BDF8"
+                          strokeWidth={1.5}
+                          strokeDasharray="3 3"
+                          dot={false}
+                        />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Event Log */}
+                <AgentEventLog
+                  logs={logs}
+                  onClear={() => setLogs([])}
+                />
+              </div>
+
+              {/* Dedicated Surface Segmentation Card */}
+              <SurfaceSegmentationCard
+                segmentation={currentReading?.surface_segmentation}
+                city={selectedCity}
+                darkMode={darkMode}
               />
-            </div>
 
-            {/* Dedicated Surface Segmentation Card */}
-            <SurfaceSegmentationCard
-              segmentation={currentReading?.surface_segmentation}
-              city={selectedCity}
-              darkMode={darkMode}
-            />
+              {/* Autonomous Agents Simulation */}
+              <AgentVisualization agentStates={agentStates} darkMode={darkMode} />
+            </motion.div>
+          )}
 
-            {/* Autonomous Agents Simulation */}
-            <AgentVisualization agentStates={agentStates} darkMode={darkMode} />
-          </div>
-        )}
+          {/* Tab 2: FortyGuard Spatial Heatmap */}
+          {activeTab === "spatial_heatmap" && (
+            <motion.div
+              key="spatial_heatmap"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
+            >
+              <SpatialHeatmapView
+                selectedCity={selectedCity}
+                onSelectCity={handleSelectCity}
+                darkMode={darkMode}
+              />
+            </motion.div>
+          )}
 
-        {/* Tab 2: FortyGuard Spatial Heatmap */}
-        {activeTab === "spatial_heatmap" && (
-          <SpatialHeatmapView
-            selectedCity={selectedCity}
-            onSelectCity={handleSelectCity}
-            darkMode={darkMode}
-          />
-        )}
+          {/* Tab 3: 24H Diurnal Simulator */}
+          {activeTab === "diurnal_sim" && (
+            <motion.div
+              key="diurnal_sim"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
+            >
+              <DiurnalTimelineScrubber
+                selectedCity={selectedCity}
+                darkMode={darkMode}
+              />
+            </motion.div>
+          )}
 
-        {/* Tab 3: 24H Diurnal Simulator */}
-        {activeTab === "diurnal_sim" && (
-          <DiurnalTimelineScrubber
-            selectedCity={selectedCity}
-            darkMode={darkMode}
-          />
-        )}
-
-        {/* Tab 4: National Thermal Grid Matrix */}
-        {activeTab === "national_grid" && (
-          <NationalThermalGridMatrix
-            selectedCity={selectedCity}
-            onSelectCity={handleSelectCity}
-          />
-        )}
+          {/* Tab 4: National Thermal Grid Matrix */}
+          {activeTab === "national_grid" && (
+            <motion.div
+              key="national_grid"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
+            >
+              <NationalThermalGridMatrix
+                selectedCity={selectedCity}
+                onSelectCity={handleSelectCity}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       {/* Executive Footer */}
