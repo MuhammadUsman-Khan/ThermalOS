@@ -1176,13 +1176,22 @@ export default function AgentVisualization({
       },
     };
 
-    const game = new Phaser.Game(config);
-    gameRef.current = game;
+    let game = null;
+    try {
+      game = new Phaser.Game(config);
+      gameRef.current = game;
+    } catch (err) {
+      console.warn("Phaser initialization safely caught:", err);
+    }
 
     const handleResize = () => {
-      if (gameRef.current && containerRef.current) {
-        const newWidth = containerRef.current.clientWidth;
-        gameRef.current.scale.resize(newWidth, containerHeight);
+      try {
+        if (gameRef.current && containerRef.current) {
+          const newWidth = containerRef.current.clientWidth;
+          gameRef.current.scale.resize(newWidth, containerHeight);
+        }
+      } catch (err) {
+        console.warn("Resize error:", err);
       }
     };
 
@@ -1190,31 +1199,43 @@ export default function AgentVisualization({
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      if (gameRef.current) {
-        gameRef.current.destroy(true);
-        gameRef.current = null;
-        sceneRef.current = null;
+      try {
+        if (gameRef.current) {
+          gameRef.current.destroy(true);
+          gameRef.current = null;
+          sceneRef.current = null;
+        }
+      } catch (err) {
+        console.warn("Cleanup error:", err);
       }
     };
   }, []);
 
   useEffect(() => {
-    if (sceneRef.current) {
-      sceneRef.current.updateTheme(darkMode);
+    try {
+      if (sceneRef.current && typeof sceneRef.current.updateTheme === "function") {
+        sceneRef.current.updateTheme(darkMode);
+      }
+    } catch (err) {
+      console.warn("Theme update error:", err);
     }
   }, [darkMode]);
 
   useEffect(() => {
-    if (!sceneRef.current || !agentStates) return;
+    try {
+      if (!sceneRef.current || !agentStates || typeof sceneRef.current.applyAgentState !== "function") return;
 
-    if (agentStates.agent1) {
-      sceneRef.current.applyAgentState("agent1", agentStates.agent1);
-    }
-    if (agentStates.agent2) {
-      sceneRef.current.applyAgentState("agent2", agentStates.agent2);
-    }
-    if (agentStates.agent3) {
-      sceneRef.current.applyAgentState("agent3", agentStates.agent3);
+      if (agentStates.agent1) {
+        sceneRef.current.applyAgentState("agent1", agentStates.agent1);
+      }
+      if (agentStates.agent2) {
+        sceneRef.current.applyAgentState("agent2", agentStates.agent2);
+      }
+      if (agentStates.agent3) {
+        sceneRef.current.applyAgentState("agent3", agentStates.agent3);
+      }
+    } catch (err) {
+      console.warn("Agent state apply error:", err);
     }
   }, [agentStates]);
 
