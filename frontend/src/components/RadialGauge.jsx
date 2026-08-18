@@ -6,14 +6,13 @@ export default function RadialGauge({
   max = 120,
   threshold = 85,
   unit = "°F",
-  label = "WBGT INDEX",
-  size = 140,
-  strokeWidth = 10,
-  color = "#F43F5E",
+  label = "WBGT Heat Stress",
+  size = 130,
+  strokeWidth = 8,
+  color = "#f43f5e",
 }) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  // Arc spans 240 degrees (from 150deg to 390deg)
   const arcLength = circumference * (240 / 360);
   const normalizedValue = Math.min(Math.max(value, min), max);
   const percentage = (normalizedValue - min) / (max - min);
@@ -41,18 +40,6 @@ export default function RadialGauge({
             strokeLinecap="round"
           />
 
-          {/* Safety / Critical Zone Highlight Arc */}
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill="none"
-            stroke={isCritical ? "rgba(244, 63, 94, 0.25)" : "rgba(16, 185, 129, 0.2)"}
-            strokeWidth={strokeWidth + 4}
-            strokeDasharray={`${arcLength} ${circumference}`}
-            strokeLinecap="round"
-          />
-
           {/* Active Value Arc */}
           <circle
             cx={size / 2}
@@ -65,8 +52,7 @@ export default function RadialGauge({
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
             style={{
-              transition: "stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
-              filter: isCritical ? `drop-shadow(0 0 8px ${color})` : "none",
+              transition: "stroke-dashoffset 0.5s ease-out",
             }}
           />
         </svg>
@@ -74,26 +60,26 @@ export default function RadialGauge({
         {/* Center Display Value */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pt-2">
           <div className="flex items-baseline">
-            <span className="text-2xl font-bold font-mono text-slate-800 dark:text-white tabular-nums">
+            <span className="text-2xl font-semibold font-mono text-slate-900 dark:text-white tabular-nums">
               {typeof value === "number" ? value.toFixed(1) : value}
             </span>
-            <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 ml-0.5">
+            <span className="text-xs font-mono text-gray-500 dark:text-zinc-400 ml-0.5">
               {unit}
             </span>
           </div>
           <span
-            className={`text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.2 rounded mt-0.5 ${
+            className={`text-[9px] font-mono font-medium px-1.5 py-0.5 rounded mt-1 ${
               isCritical
-                ? "bg-red-500/20 text-red-500 border border-red-500/30 animate-pulse"
-                : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                ? "bg-rose-500/10 text-rose-500 border border-rose-500/20"
+                : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
             }`}
           >
-            {isCritical ? "CRITICAL" : "SAFE"}
+            {isCritical ? "Advisory Triggered" : "Nominal Range"}
           </span>
         </div>
       </div>
 
-      <div className="text-[10px] font-bold font-mono tracking-wider uppercase text-gray-400 dark:text-zinc-500 mt-1">
+      <div className="text-[10px] font-mono uppercase tracking-wider text-gray-500 dark:text-zinc-400 mt-1">
         {label}
       </div>
     </div>

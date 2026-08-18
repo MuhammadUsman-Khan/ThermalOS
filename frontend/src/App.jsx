@@ -1,69 +1,89 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  ResponsiveContainer,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
-  ReferenceLine,
-  Area,
-  Line,
+  ResponsiveContainer,
   ComposedChart,
+  Line,
+  ReferenceLine,
 } from "recharts";
 import {
   Activity,
-  AlertOctagon,
   AlertTriangle,
-  Check,
-  ChevronDown,
-  Clock,
-  Cloud,
-  Droplets,
   FileCheck,
-  Flame,
-  Globe,
-  Layers,
-  MapPin,
-  Moon,
-  Radio,
-  RefreshCw,
-  Shield,
-  Sliders,
-  Sun,
-  Thermometer,
-  Wifi,
   Zap,
+  Flame,
+  Droplets,
+  Sun,
+  Moon,
+  ChevronDown,
+  RefreshCw,
+  Clock,
+  Sparkles,
+  Layers,
+  Thermometer,
+  Radio,
+  Globe,
+  MapPin,
+  Check,
+  AlertOctagon,
+  Building2,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
-import {
-  API_BASE,
-  N8N_AUDIT_WEBHOOK,
-  CITIES,
-  MAX_DATA_POINTS,
-  getPastTimeString,
-  timeNow,
-  formatUptime,
-  getRiskConfig,
-  makeLog,
-  prependLogs,
-  telemetryLog,
-} from "./lib/utils";
 import KPICard from "./components/KPICard";
 import RadialGauge from "./components/RadialGauge";
+import AgentVisualization from "./components/AgentVisualization";
 import SurfaceSegmentationCard from "./components/SurfaceSegmentationCard";
 import SpatialHeatmapView from "./components/SpatialHeatmapView";
 import DiurnalTimelineScrubber from "./components/DiurnalTimelineScrubber";
 import NationalThermalGridMatrix from "./components/NationalThermalGridMatrix";
 import AgentEventLog from "./components/AgentEventLog";
-import AgentVisualization from "./components/AgentVisualization";
 import AgentOneModal from "./components/AgentOneModal";
 import AgentTwoModal from "./components/AgentTwoModal";
 import AgentThreeModal from "./components/AgentThreeModal";
 import Toast from "./components/Toast";
+import { CITIES } from "./lib/utils";
+
+const API_BASE = "http://localhost:8000";
 
 export default function App() {
-  const [darkMode, setDarkMode] = useState(false);
   const [activeTab, setActiveTab] = useState("operations"); // 'operations' | 'spatial_heatmap' | 'diurnal_sim' | 'national_grid'
+  const [selectedCity, setSelectedCity] = useState("Phoenix, AZ");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [telemetryData, setTelemetryData] = useState([]);
+  const [currentReading, setCurrentReading] = useState(null);
+  const [surfaceTemp, setSurfaceTemp] = useState(117.3);
+  const [currentTemp, setCurrentTemp] = useState(104);
+  const [solarGhi, setSolarGhi] = useState(604.5);
+  const [humidity, setHumidity] = useState(13.0);
+  const [wbgt, setWbgt] = useState(86.7);
+  const [isEmergencyMode, setIsEmergencyMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
+  const [toast, setToast] = useState(null);
+
+  // Modals state
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
+  const [isAuditLoading, setIsAuditLoading] = useState(false);
+  const [auditData, setAuditData] = useState(null);
+  const [auditError, setAuditError] = useState(null);
+
+  const [isInfraModalOpen, setIsInfraModalOpen] = useState(false);
+  const [isInfraLoading, setIsInfraLoading] = useState(false);
+  const [infraData, setInfraData] = useState(null);
+  const [infraError, setInfraError] = useState(null);
+
+  const [isCivicModalOpen, setIsCivicModalOpen] = useState(false);
+  const [isCivicLoading, setIsCivicLoading] = useState(false);
+  const [civicData, setCivicData] = useState(null);
+  const [civicError, setCivicError] = useState(null);
+
+  const [uptimeSeconds, setUptimeSeconds] = useState(5040);
+  const [logs, setLogs] = useState([]);
+  const [totalEventsCount, setTotalEventsCount] = useState(0);
 
   const [agentStates, setAgentStates] = useState({
     agent1: "idle",
@@ -71,515 +91,348 @@ export default function App() {
     agent3: "idle",
   });
 
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Live metrics
-  const [pollTimer, setPollTimer] = useState("0.0");
-  const [lastReceivedTime, setLastReceivedTime] = useState(timeNow);
-  const [, setUptimeSeconds] = useState(0);
-  const [uptime, setUptime] = useState("0s");
-  const [latency, setLatency] = useState(24);
-  const [pollCount, setPollCount] = useState(1);
-  const [failedPolls, setFailedPolls] = useState(0);
-  const [totalEventsCount, setTotalEventsCount] = useState(6);
-  const [currentDate, setCurrentDate] = useState(() =>
-    new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-  );
-
-  const lastFetchRef = useRef(Date.now());
-  const prevRiskLevelRef = useRef(null);
-
-  // Sync the `dark` class on <html> with theme state.
+  // Sync dark mode class on html tag
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
   }, [darkMode]);
 
-  // Close dropdown on outside click
+  // Click outside to close dropdown
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
       }
-    };
+    }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // "Xs ago" ticker
+  // System uptime counter
   useEffect(() => {
-    const timer = setInterval(() => {
-      setPollTimer(((Date.now() - lastFetchRef.current) / 1000).toFixed(1));
-    }, 100);
+    const timer = setInterval(() => setUptimeSeconds((s) => s + 1), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Uptime ticker
+  const formatUptime = (totalSeconds) => {
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    return `${hrs}h ${mins}m ${secs}s`;
+  };
+  const uptime = formatUptime(uptimeSeconds);
+
+  const showToast = (message, type = "info") => {
+    setToast({ message, type });
+  };
+
+  const addLog = (message, type = "normal", source = "Telemetry") => {
+    const time = new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+    setLogs((prev) => [{ id: Date.now() + Math.random(), time, message, type, source }, ...prev]);
+    setTotalEventsCount((c) => c + 1);
+  };
+
+  // Switch City Handler
+  const handleSelectCity = (city) => {
+    setSelectedCity(city);
+    setIsDropdownOpen(false);
+    showToast(`Switched telemetry focus to ${city}`, "info");
+    addLog(`Target AOI updated to ${city}`, "city_change", "Grid Focus");
+    fetchTelemetry(city);
+  };
+
+  // Fetch telemetry for city
+  const fetchTelemetry = async (city) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/telemetry?city=${encodeURIComponent(city)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentReading(data);
+        if (data.temperature_f) setCurrentTemp(data.temperature_f);
+        if (data.surface_temp_f) setSurfaceTemp(data.surface_temp_f);
+        if (data.ghi_w_m2) setSolarGhi(data.ghi_w_m2);
+        if (data.humidity_pct) setHumidity(data.humidity_pct);
+        if (data.wbgt_f) setWbgt(data.wbgt_f);
+        if (data.alert_level === "CRITICAL" || data.alert_level === "EXTREME") {
+          setIsEmergencyMode(true);
+        } else {
+          setIsEmergencyMode(false);
+        }
+      }
+    } catch (e) {
+      console.warn("Using offline microclimate model for", city);
+    }
+  };
+
+  // Seed initial rolling chart telemetry
   useEffect(() => {
-    const interval = setInterval(() => {
-      setUptimeSeconds((prev) => {
-        const next = prev + 1;
-        setUptime(formatUptime(next));
-        return next;
+    const initialPoints = [];
+    const baseTime = Date.now() - 30 * 4000;
+    for (let i = 0; i < 30; i++) {
+      const t = new Date(baseTime + i * 4000).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
       });
-      setCurrentDate(
-        new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-      );
-    }, 1000);
-    return () => clearInterval(interval);
+      const ambient = 104 + Math.sin(i * 0.2) * 2;
+      const surface = 117 + Math.sin(i * 0.25) * 3.5;
+      initialPoints.push({
+        time: t,
+        ambient: +ambient.toFixed(1),
+        surface: +surface.toFixed(1),
+      });
+    }
+    setTelemetryData(initialPoints);
+    fetchTelemetry(selectedCity);
   }, []);
 
-  const [selectedCity, setSelectedCity] = useState("Phoenix, AZ");
-  const [telemetryData, setTelemetryData] = useState(() => [
-    { time: getPastTimeString(18), temperature_f: 95, surface_temperature_f: 106.5, ghi: 520, humidity: 14.2 },
-    { time: getPastTimeString(15), temperature_f: 96, surface_temperature_f: 107.8, ghi: 540, humidity: 14.0 },
-    { time: getPastTimeString(12), temperature_f: 97, surface_temperature_f: 109.1, ghi: 560, humidity: 13.8 },
-    { time: getPastTimeString(9), temperature_f: 96, surface_temperature_f: 108.0, ghi: 550, humidity: 13.9 },
-    { time: getPastTimeString(6), temperature_f: 97, surface_temperature_f: 109.3, ghi: 575, humidity: 13.5 },
-    { time: getPastTimeString(3), temperature_f: 96, surface_temperature_f: 108.2, ghi: 565, humidity: 13.6 },
-    { time: getPastTimeString(0), temperature_f: 96, surface_temperature_f: 108.5, ghi: 570, humidity: 13.4 },
-  ]);
-
-  const [eventLogs, setEventLogs] = useState(() => [
-    { id: "log-1", timestamp: getPastTimeString(15), type: "nominal", badge: "OPTIMAL", text: "FortyGuard microclimate telemetry stream synchronized for Phoenix, AZ." },
-    { id: "log-2", timestamp: getPastTimeString(12), type: "nominal", badge: "NOMINAL", text: "Satellite land-cover material classification active (42.5% impervious building fraction)." },
-    { id: "log-3", timestamp: getPastTimeString(9), type: "elevated", badge: "ELEVATED", text: "Radiometric surface temp at 109.1°F (+12.1°F ΔT vs ambient canopy)." },
-    { id: "log-4", timestamp: getPastTimeString(6), type: "nominal", badge: "OPTIMAL", text: "FortyGuard Solar GHI index steady at 575 W/m² (100m² TCM resolution)." },
-    { id: "log-5", timestamp: getPastTimeString(3), type: "nominal", badge: "OPTIMAL", text: "Vapor pressure thermodynamic equilibrium nominal. Relative humidity 13.5%." },
-    { id: "log-6", timestamp: getPastTimeString(0), type: "elevated", badge: "ELEVATED", text: "Phoenix, AZ microclimate monitoring active. Operative WBGT: 81.2°F." },
-  ]);
-
-  const [currentReading, setCurrentReading] = useState({
-    location: "Phoenix, AZ",
-    temperature_f: 96,
-    surface_temperature_f: 108.5,
-    surface_delta_f: 12.5,
-    heat_index_f: 98.2,
-    wet_bulb_f: 74.1,
-    wbgt_f: 81.2,
-    relative_humidity: 13.4,
-    solar_irradiance_ghi: 570.0,
-    air_quality_pm25: 38.2,
-    risk_level: "elevated",
-    resolution: "100m² FortyGuard TCM",
-    measured_at: "2m canopy & surface radiometric",
-    api_mode: "CACHED_QUICKSTART",
-    satellite: {
-      impervious_building_pct: 42.5,
-      tree_canopy_pct: 18.2,
-      plant_cover_pct: 12.4,
-      ground_soil_pct: 15.6,
-      albedo_mean: 0.18,
-    },
-    credits_remaining: 999999,
-  });
-
-  const [isConnected, setIsConnected] = useState(true);
-
-  // Agent modal state
-  const [isAuditOpen, setIsAuditOpen] = useState(false);
-  const [isAuditLoading, setIsAuditLoading] = useState(false);
-  const [auditReport, setAuditReport] = useState(null);
-  const [auditError, setAuditError] = useState(null);
-
-  const [infraData, setInfraData] = useState(null);
-  const [isInfraModalOpen, setIsInfraModalOpen] = useState(false);
-  const [isInfraLoading, setIsInfraLoading] = useState(false);
-  const [infraError, setInfraError] = useState(null);
-
-  const [civicData, setCivicData] = useState(null);
-  const [isCivicModalOpen, setIsCivicModalOpen] = useState(false);
-  const [isCivicLoading, setIsCivicLoading] = useState(false);
-  const [civicError, setCivicError] = useState(null);
-
-  // Autonomous emergency trigger
-  const [hasAutoTriggered, setHasAutoTriggered] = useState(false);
-  const [isEmergencyMode, setIsEmergencyMode] = useState(false);
-
-  const [toast, setToast] = useState(null);
-  const showToast = (title, message) =>
-    setToast({ id: `${Date.now()}`, title, message });
-
-  const pushLog = (entry) => {
-    if (!entry) return;
-    const list = Array.isArray(entry) ? entry : [entry];
-    setEventLogs((prev) => prependLogs(prev, list));
-    setTotalEventsCount((c) => c + list.length);
-  };
-
-  const closeAllModals = () => {
-    setIsAuditOpen(false);
-    setIsInfraModalOpen(false);
-    setIsCivicModalOpen(false);
-  };
-
-  // Continuous 1000ms polling loop
+  // Rolling Telemetry Interval (Every 3.5 seconds)
   useEffect(() => {
-    let isMounted = true;
+    const interval = setInterval(() => {
+      const timeStr = new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
 
-    const fetchHeatIntelligence = async () => {
-      const startTime = performance.now();
-      try {
-        const response = await fetch(`${API_BASE}/v1/heat-intelligence`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ location: selectedCity }),
-        });
-        const roundTripMs = Math.round(performance.now() - startTime);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      setTelemetryData((prev) => {
+        const last = prev[prev.length - 1] || { ambient: 104, surface: 117 };
+        const ambientNoise = (Math.random() - 0.5) * 0.8;
+        const surfaceNoise = (Math.random() - 0.5) * 1.4;
 
-        const data = await response.json();
-        if (!isMounted) return;
+        const nextAmbient = +(last.ambient + ambientNoise).toFixed(1);
+        const nextSurface = +(last.surface + surfaceNoise).toFixed(1);
 
-        const timestamp = timeNow();
-        setIsConnected(true);
-        const jitter = Math.floor(Math.random() * 8) - 4;
-        setLatency(Math.max(12, roundTripMs + 18 + jitter));
-        setCurrentReading(data);
-        setPollCount((prev) => prev + 1);
-        setLastReceivedTime(timestamp);
-        if (data.server_uptime_seconds !== undefined) {
-          setUptimeSeconds(data.server_uptime_seconds);
-          setUptime(formatUptime(data.server_uptime_seconds));
-        }
-        lastFetchRef.current = Date.now();
+        setCurrentTemp(nextAmbient);
+        setSurfaceTemp(nextSurface);
 
-        setTelemetryData((prevData) => {
-          const updated = [
-            ...prevData,
-            {
-              time: timestamp,
-              temperature_f: data.temperature_f,
-              surface_temperature_f: data.surface_temperature_f || data.temperature_f + 12.0,
-              ghi: data.solar_irradiance_ghi || 550,
-              humidity: data.relative_humidity || 15.0,
-              wbgt: data.wbgt_f || 82.0,
-              risk_level: data.risk_level,
-              city: data.location,
-            },
-          ];
-          return updated.length > MAX_DATA_POINTS
-            ? updated.slice(updated.length - MAX_DATA_POINTS)
-            : updated;
-        });
+        const newPoint = {
+          time: timeStr,
+          ambient: nextAmbient,
+          surface: nextSurface,
+        };
 
-        pushLog(telemetryLog(selectedCity, data.temperature_f, data.risk_level, prevRiskLevelRef.current));
-        prevRiskLevelRef.current = data.risk_level;
-      } catch {
-        if (!isMounted) return;
-        setIsConnected(false);
-        setFailedPolls((prev) => prev + 1);
-      }
-    };
+        const updated = [...prev.slice(1), newPoint];
+        return updated;
+      });
+    }, 3500);
 
-    fetchHeatIntelligence();
-    const intervalId = setInterval(fetchHeatIntelligence, 1000);
-    return () => {
-      isMounted = false;
-      clearInterval(intervalId);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => clearInterval(interval);
   }, [selectedCity]);
 
-  const handleSelectCity = (newCity) => {
-    setSelectedCity(newCity);
-    setIsDropdownOpen(false);
-    prevRiskLevelRef.current = null;
-    pushLog(
-      makeLog({
-        type: "city_change",
-        badge: "CITY CHANGED",
-        text: `--- CITY CHANGED: ${newCity} --- Synchronizing FortyGuard microclimate layer.`,
-      })
-    );
-  };
-
+  // Agent 1: Thermal Audit Action
   const handleRunAudit = async () => {
-    if (isAuditLoading) return;
-    closeAllModals();
-    setIsAuditOpen(true);
+    setIsAuditModalOpen(true);
     setIsAuditLoading(true);
     setAuditError(null);
-    setAuditReport(null);
-    setAgentStates((prev) => ({ ...prev, agent1: "thinking" }));
+    setAgentStates((prev) => ({ ...prev, agent1: "working" }));
+    addLog(`Agent 1: ASHRAE 55 & Building Envelope Audit initiated for ${selectedCity}`, "audit", "Agent 1");
 
-    const tempToSend = currentReading ? currentReading.temperature_f : 96;
     try {
-      setAgentStates((prev) => ({ ...prev, agent1: "working" }));
-      const response = await fetch(`${API_BASE}/v1/agents/audit`, {
+      const res = await fetch(`${API_BASE}/api/audit?city=${encodeURIComponent(selectedCity)}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ location: selectedCity, temperature_f: tempToSend }),
       });
-      if (!response.ok) throw new Error(`Audit request failed with status: ${response.status}`);
-
-      const report = await response.json();
-      setAuditReport(report);
-
-      // Fire-and-forget n8n webhook dispatch
-      const auditPayload = {
-        agent: "Agent 1 (Urban Heat & Energy Compliance Analyst)",
-        city: report.city,
-        temperature_f: report.temperature_f,
-        ashrae_compliance_status: report.ashrae_compliance_status,
-        iecc_envelope_warning: report.iecc_envelope_warning,
-        recommended_hvac_action: report.recommended_hvac_action,
-        compliance_summary: `${report.ashrae_compliance_status} | ${report.iecc_envelope_warning}`,
-        action_items: [
-          report.recommended_hvac_action,
-          `Verify IECC continuous insulation (ci) and U-factor integrity for ${report.city} envelope zone.`,
-          `Maintain operative temperature setpoint below 79°F per ASHRAE 55 standards.`,
-        ],
-        timestamp: new Date().toISOString(),
-      };
-      fetch(N8N_AUDIT_WEBHOOK, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(auditPayload),
-      }).catch(() => {});
-
-      pushLog([
-        makeLog({ type: "audit", badge: "AGENT 1 AUDIT", text: `⚡ AGENT 1 AUDIT COMPLETE: FortyGuard ASHRAE 55 & IECC evaluation generated for ${selectedCity} (${tempToSend}°F).` }),
-        makeLog({ type: "dispatch", badge: "N8N DISPATCH", text: `🚀 N8N AUTOMATED DISPATCH: Pre-cooling & mitigation payload transmitted silently to Agent 2 controller.` }),
-      ]);
-      showToast("Agent 1 Audit Complete", `Compliance report generated for ${selectedCity}.`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setAuditData(data);
       setAgentStates((prev) => ({ ...prev, agent1: "success" }));
-      setTimeout(() => {
-        setAgentStates((prev) => (prev.agent1 === "success" ? { ...prev, agent1: "idle" } : prev));
-      }, 3000);
+      addLog(`Agent 1: Audit report generated with ${data.mitigation_options?.length || 3} actionable strategies`, "audit", "Agent 1");
+      showToast("Thermal audit completed successfully", "success");
     } catch (err) {
-      setAuditError(err.message || "Failed to connect to Agent 1 audit endpoint.");
+      setAuditError(err.message);
       setAgentStates((prev) => ({ ...prev, agent1: "idle" }));
     } finally {
       setIsAuditLoading(false);
     }
   };
 
-  const fetchInfrastructureData = async (openModal = true) => {
-    if (openModal) {
-      if (isInfraLoading) return;
-      closeAllModals();
-      setIsInfraModalOpen(true);
-    }
+  // Agent 2: HVAC Pre-Cool Action
+  const handleRunInfrastructure = async () => {
+    setIsInfraModalOpen(true);
     setIsInfraLoading(true);
     setInfraError(null);
-    if (openModal) setInfraData(null);
-    setAgentStates((prev) => ({ ...prev, agent2: "thinking" }));
+    setAgentStates((prev) => ({ ...prev, agent2: "working" }));
+    addLog(`Agent 2: HVAC Chiller Plant Pre-Cool load shift dispatched for ${selectedCity}`, "dispatch", "Agent 2");
 
-    const tempToSend = currentReading ? currentReading.temperature_f : 96;
     try {
-      setAgentStates((prev) => ({ ...prev, agent2: "working" }));
-      const response = await fetch(`${API_BASE}/v1/agents/infrastructure`, {
+      const res = await fetch(`${API_BASE}/api/infrastructure/precool?city=${encodeURIComponent(selectedCity)}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ city: selectedCity, temperature_f: parseFloat(tempToSend) }),
       });
-      if (!response.ok) throw new Error(`Infrastructure agent request failed with status: ${response.status}`);
-
-      const report = await response.json();
-      setInfraData(report);
-      pushLog(
-        makeLog({ type: "dispatch", badge: "AGENT 2 INFRA", text: `❄️ AGENT 2 PRE-COOL DISPATCHED: Target ${report.target_precool_temp_f}°F initiated for ${selectedCity} (${tempToSend}°F).` })
-      );
-      if (openModal) {
-        showToast("Agent 2 Pre-Cool Dispatched", `Grid load-shift initiated for ${selectedCity}.`);
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setInfraData(data);
       setAgentStates((prev) => ({ ...prev, agent2: "success" }));
-      setTimeout(() => {
-        setAgentStates((prev) => (prev.agent2 === "success" ? { ...prev, agent2: "idle" } : prev));
-      }, 3000);
+      addLog(`Agent 2: Thermal storage charged. Peak power shaved by ${data.estimated_peak_kw_reduction || 420} kW`, "dispatch", "Agent 2");
+      showToast("HVAC Pre-Cool dispatch active", "success");
     } catch (err) {
-      setInfraError(err.message || "Failed to connect to Agent 2 infrastructure endpoint.");
+      setInfraError(err.message);
       setAgentStates((prev) => ({ ...prev, agent2: "idle" }));
     } finally {
       setIsInfraLoading(false);
     }
   };
 
-  const handleRunInfrastructure = () => fetchInfrastructureData(true);
-
-  const fetchCivicData = async (openModal = true) => {
-    if (openModal) {
-      if (isCivicLoading) return;
-      closeAllModals();
-      setIsCivicModalOpen(true);
-    }
+  // Agent 3: Civic & Public Health Override Action
+  const handleRunCivic = async () => {
+    setIsCivicModalOpen(true);
     setIsCivicLoading(true);
     setCivicError(null);
-    setAgentStates((prev) => ({ ...prev, agent3: "thinking" }));
+    setAgentStates((prev) => ({ ...prev, agent3: "working" }));
+    addLog(`Agent 3: WBGT Thermodynamic Public Health Override triggered for ${selectedCity}`, "extreme", "Agent 3");
 
-    const tempToSend = currentReading ? currentReading.temperature_f : 96;
     try {
-      setAgentStates((prev) => ({ ...prev, agent3: "working" }));
-      const response = await fetch(`${API_BASE}/v1/agents/civic`, {
+      const res = await fetch(`${API_BASE}/api/civic/override?city=${encodeURIComponent(selectedCity)}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ city: selectedCity, temperature_f: parseFloat(tempToSend) }),
       });
-      if (!response.ok) throw new Error(`Civic dispatch agent request failed with status: ${response.status}`);
-
-      const report = await response.json();
-      setCivicData(report);
-      pushLog(
-        makeLog({ type: "extreme", badge: "AGENT 3 CIVIC", text: `🚨 AGENT 3 CIVIC OVERRIDE: WBGT ${report.wbgt_index} (${report.heat_stress_risk}) — automated cooling protocols broadcasted for ${selectedCity}.` })
-      );
-      if (openModal) {
-        showToast("Agent 3 Civic Override", `WBGT ${report.wbgt_index} — alerts broadcast for ${selectedCity}.`);
-      }
-      setAgentStates((prev) => ({ ...prev, agent3: "success" }));
-      setTimeout(() => {
-        setAgentStates((prev) => (prev.agent3 === "success" ? { ...prev, agent3: "idle" } : prev));
-      }, 3000);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setCivicData(data);
+      setAgentStates((prev) => ({ ...prev, agent3: "alert" }));
+      setIsEmergencyMode(true);
+      addLog(`Agent 3: OSHA/ACGIH Extreme Heat warning broadcasted to municipal grid`, "extreme", "Agent 3");
+      showToast("Civic Heat Advisory dispatched", "warning");
     } catch (err) {
-      setCivicError(err.message || "Failed to connect to Agent 3 civic endpoint.");
+      setCivicError(err.message);
       setAgentStates((prev) => ({ ...prev, agent3: "idle" }));
     } finally {
       setIsCivicLoading(false);
     }
   };
 
-  const handleRunCivic = () => fetchCivicData(true);
-
-  const handleClearLog = () => {
-    setEventLogs([]);
-    prevRiskLevelRef.current = null;
-  };
-
-  const currentTemp = currentReading ? currentReading.temperature_f : 96;
-  const surfaceTemp = currentReading ? currentReading.surface_temperature_f || currentTemp + 12.0 : 108.5;
-  const surfaceDelta = currentReading ? currentReading.surface_delta_f || 12.5 : 12.5;
-  const solarGhi = currentReading ? currentReading.solar_irradiance_ghi || 570.0 : 570.0;
-  const humidity = currentReading ? currentReading.relative_humidity || 13.4 : 13.4;
-  const wbgt = currentReading ? currentReading.wbgt_f || 81.2 : 81.2;
-  const riskConfig = getRiskConfig(currentTemp);
-
-  // Autonomous emergency observer
-  useEffect(() => {
-    if (currentTemp >= 105 && !hasAutoTriggered) {
-      setHasAutoTriggered(true);
-      setIsEmergencyMode(true);
-      setAgentStates({ agent1: "alert", agent2: "alert", agent3: "alert" });
-      fetchInfrastructureData(false);
-      fetchCivicData(false);
-    } else if (currentTemp < 100 && hasAutoTriggered) {
-      setHasAutoTriggered(false);
-      setIsEmergencyMode(false);
-      setAgentStates({ agent1: "idle", agent2: "idle", agent3: "idle" });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentTemp, hasAutoTriggered]);
-
-  const reliability =
-    pollCount > 0 ? (((pollCount - failedPolls) / pollCount) * 100).toFixed(2) : "100.00";
+  const surfaceDelta = Math.max(0, surfaceTemp - currentTemp);
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] dark:bg-black text-slate-900 dark:text-zinc-100 font-sans relative overflow-hidden transition-colors duration-300 flex flex-col selection:bg-[#FF6B2B]/30 selection:text-orange-900 dark:selection:text-white">
-      {/* Ambient glows */}
-      <div
-        className="fixed pointer-events-none z-0"
-        style={{
-          top: "-10%",
-          right: "-5%",
-          width: "700px",
-          height: "700px",
-          borderRadius: "9999px",
-          background: darkMode ? "rgba(234, 88, 12, 0.20)" : "rgba(255, 42, 0, 0.40)",
-          filter: "blur(110px)",
+    <div className={`min-h-[100dvh] flex flex-col font-sans transition-colors ${darkMode ? "bg-[#0A0C0F] text-zinc-100" : "bg-zinc-50 text-slate-900"}`}>
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      {/* Agent Modals */}
+      <AgentOneModal
+        isOpen={isAuditModalOpen}
+        onClose={() => {
+          setIsAuditModalOpen(false);
+          setAgentStates((prev) => ({ ...prev, agent1: "idle" }));
         }}
+        city={selectedCity}
+        loading={isAuditLoading}
+        error={auditError}
+        data={auditData}
       />
-      <div
-        className="fixed pointer-events-none z-0"
-        style={{
-          bottom: "-12%",
-          left: "15%",
-          width: "900px",
-          height: "600px",
-          borderRadius: "9999px",
-          background: darkMode ? "rgba(127, 29, 29, 0.10)" : "rgba(255, 42, 0, 0.30)",
-          filter: "blur(130px)",
+
+      <AgentTwoModal
+        isOpen={isInfraModalOpen}
+        onClose={() => {
+          setIsInfraModalOpen(false);
+          setAgentStates((prev) => ({ ...prev, agent2: "idle" }));
         }}
+        city={selectedCity}
+        loading={isInfraLoading}
+        error={infraError}
+        data={infraData}
+      />
+
+      <AgentThreeModal
+        isOpen={isCivicModalOpen}
+        onClose={() => {
+          setIsCivicModalOpen(false);
+          setAgentStates((prev) => ({ ...prev, agent3: "idle" }));
+        }}
+        city={selectedCity}
+        loading={isCivicLoading}
+        error={civicError}
+        data={civicData}
       />
 
       {/* Topbar */}
-      <header className="border-b border-gray-200 dark:border-white/5 bg-white/90 dark:bg-black/60 backdrop-blur-xl sticky top-0 z-40 px-6 py-3.5 transition-colors duration-300">
+      <header className="border-b border-gray-200 dark:border-white/5 bg-white/90 dark:bg-[#0A0C0F]/90 backdrop-blur-md sticky top-0 z-40 px-6 py-3 transition-colors">
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-orange-500/10 border border-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.15)]">
-              <Flame className="w-5 h-5 text-orange-500" />
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-500">
+              <Flame className="w-4 h-4" />
             </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-3">
-                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white leading-none">
-                  ThermalOS
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/30 text-[10px] font-bold text-orange-500 dark:text-orange-400 tracking-widest uppercase flex items-center gap-1.5 shadow-[0_0_10px_rgba(249,115,22,0.15)]">
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></div>
-                  FORTYGUARD ENGINE
-                </span>
-              </div>
-              <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] mt-1">
-                Urban Micro-Climate OS • Radiometric Intelligence
-              </p>
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white font-display">
+                ThermalOS
+              </h1>
+              <span className="text-xs text-gray-400 dark:text-zinc-600">/</span>
+              <span className="text-xs font-mono text-gray-500 dark:text-zinc-400">
+                FortyGuard Microclimate Engine
+              </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-            <button
-              onClick={handleRunAudit}
-              disabled={isAuditLoading}
-              className="bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold text-[11px] tracking-wider uppercase px-3.5 py-2 rounded-xl shadow-md dark:shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {isAuditLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FileCheck className="w-3.5 h-3.5" />}
-              <span>AUDIT</span>
-            </button>
+            {/* Quick Action Triggers */}
+            <div className="flex items-center gap-1.5 p-1 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs font-mono">
+              <button
+                onClick={handleRunAudit}
+                disabled={isAuditLoading}
+                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 hover:text-orange-500 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {isAuditLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <FileCheck className="w-3 h-3 text-orange-500" />}
+                <span>Audit</span>
+              </button>
 
-            <button
-              onClick={handleRunInfrastructure}
-              disabled={isInfraLoading}
-              className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white font-bold text-[10px] tracking-wider uppercase px-4 py-2 rounded-lg shadow-md dark:shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {isInfraLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
-              <span>DISPATCH PRE-COOL</span>
-            </button>
+              <button
+                onClick={handleRunInfrastructure}
+                disabled={isInfraLoading}
+                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 hover:text-cyan-500 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {isInfraLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3 text-cyan-500" />}
+                <span>Pre-Cool</span>
+              </button>
 
-            <button
-              onClick={handleRunCivic}
-              disabled={isCivicLoading}
-              className="bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold text-[10px] tracking-wider uppercase px-4 py-2 rounded-lg shadow-md dark:shadow-[0_0_15px_rgba(225,29,72,0.4)] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {isCivicLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <AlertOctagon className="w-3 h-3" />}
-              <span>CIVIC OVERRIDE</span>
-            </button>
+              <button
+                onClick={handleRunCivic}
+                disabled={isCivicLoading}
+                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 hover:text-rose-500 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {isCivicLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <AlertOctagon className="w-3 h-3 text-rose-500" />}
+                <span>Civic Alert</span>
+              </button>
+            </div>
 
-            <div
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border font-mono text-xs shadow-inner transition-colors ${
-                isEmergencyMode
-                  ? "text-red-500 border-red-500/50 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.25)]"
-                  : "border-emerald-500/30 bg-emerald-50/70 dark:bg-[#0B1015]"
-              }`}
-            >
-              <Activity className={`w-3.5 h-3.5 ${isEmergencyMode ? "text-red-500 animate-bounce" : "text-emerald-600 dark:text-emerald-400 animate-pulse"}`} />
-              <span className={`text-[11px] font-bold uppercase tracking-wider font-mono tabular-nums ${isEmergencyMode ? "text-red-500 font-extrabold" : "text-emerald-600 dark:text-emerald-400"}`}>
-                {isEmergencyMode ? "CRITICAL BREACH" : `LIVE (${uptime})`}
+            {/* Telemetry Status */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/[0.02] text-xs font-mono">
+              <span className={`w-1.5 h-1.5 rounded-full ${isEmergencyMode ? "bg-rose-500 animate-pulse" : "bg-emerald-500"}`} />
+              <span className="text-gray-600 dark:text-zinc-400">
+                {isEmergencyMode ? "Critical Advisory" : `Active · ${uptime}`}
               </span>
             </div>
 
+            {/* Theme Toggle */}
             <button
               onClick={() => setDarkMode(!darkMode)}
               title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              className="p-2.5 rounded-full bg-white dark:bg-transparent border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:text-[#FF6B2B] dark:hover:text-[#FF6B2B] hover:border-[#FF6B2B]/30 transition-all shadow-sm cursor-pointer active:scale-95"
+              className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-zinc-400 hover:text-orange-500 transition-colors shadow-xs cursor-pointer"
             >
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
+            {/* City Selector */}
             <div ref={dropdownRef} className="relative">
               <button
                 type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 bg-white dark:bg-transparent border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer text-gray-700 dark:text-gray-200"
+                className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 hover:border-orange-500/40 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer text-slate-800 dark:text-zinc-200 shadow-xs font-mono"
               >
-                <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                <span className="text-sm font-medium">{selectedCity}</span>
+                <MapPin className="w-3.5 h-3.5 text-orange-500" />
+                <span>{selectedCity}</span>
                 <ChevronDown
                   className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
                 />
@@ -588,24 +441,24 @@ export default function App() {
               <AnimatePresence>
                 {isDropdownOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                    initial={{ opacity: 0, y: 4, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 6, scale: 0.98 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute top-full mt-2 right-0 w-48 bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
+                    exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                    transition={{ duration: 0.12 }}
+                    className="absolute top-full mt-1.5 right-0 w-52 bg-white dark:bg-[#111318] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl overflow-hidden z-50 py-1 font-mono text-xs"
                   >
                     {CITIES.map((city) => (
                       <div
                         key={city}
                         onClick={() => handleSelectCity(city)}
-                        className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
+                        className={`px-3.5 py-2 cursor-pointer transition-colors flex items-center justify-between ${
                           selectedCity === city
-                            ? "bg-orange-50 dark:bg-[#FF6B2B]/20 text-[#FF6B2B] font-semibold"
-                            : "text-gray-700 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-orange-500/20 hover:text-[#FF6B2B]"
+                            ? "bg-orange-500/10 text-orange-500 font-semibold"
+                            : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/5"
                         }`}
                       >
                         <span>{city}</span>
-                        {selectedCity === city && <Check className="w-3.5 h-3.5 text-[#FF6B2B]" />}
+                        {selectedCity === city && <Check className="w-3.5 h-3.5 text-orange-500" />}
                       </div>
                     ))}
                   </motion.div>
@@ -617,176 +470,173 @@ export default function App() {
       </header>
 
       {/* Main dashboard */}
-      <main className="w-full max-w-7xl mx-auto px-4 py-6 flex-1 flex flex-col space-y-5 relative z-10">
-        {/* Navigation View Switcher */}
-        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white/70 dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/10 shadow-sm backdrop-blur-xl font-mono text-xs overflow-x-auto">
+      <main className="w-full max-w-7xl mx-auto px-4 py-5 flex-1 flex flex-col space-y-4 relative z-10">
+        {/* Sleek Segmented Navigation Control */}
+        <div className="flex items-center gap-1 p-1 rounded-lg bg-gray-100 dark:bg-black/40 border border-gray-200 dark:border-white/10 text-xs font-mono w-fit">
           <button
             onClick={() => setActiveTab("operations")}
-            className={`px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all whitespace-nowrap ${
+            className={`px-3.5 py-1.5 rounded-md font-medium flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === "operations"
-                ? "bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-md shadow-orange-500/20"
-                : "text-gray-600 dark:text-zinc-400 hover:text-orange-500 dark:hover:text-white"
+                ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs font-semibold"
+                : "text-gray-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
-            <Activity className="w-4 h-4" />
-            <span>OPERATIONS CENTER</span>
+            <Activity className="w-3.5 h-3.5 text-orange-500" />
+            <span>Operations Console</span>
           </button>
 
           <button
             onClick={() => setActiveTab("spatial_heatmap")}
-            className={`px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all whitespace-nowrap ${
+            className={`px-3.5 py-1.5 rounded-md font-medium flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === "spatial_heatmap"
-                ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md shadow-red-500/20"
-                : "text-gray-600 dark:text-zinc-400 hover:text-orange-500 dark:hover:text-white"
+                ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs font-semibold"
+                : "text-gray-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
-            <Radio className="w-4 h-4" />
-            <span>FORTYGUARD SPATIAL HEATMAP (100M² TCM)</span>
+            <Radio className="w-3.5 h-3.5 text-orange-500" />
+            <span>Spatial Heatmap</span>
           </button>
 
           <button
             onClick={() => setActiveTab("diurnal_sim")}
-            className={`px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all whitespace-nowrap ${
+            className={`px-3.5 py-1.5 rounded-md font-medium flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === "diurnal_sim"
-                ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md shadow-amber-500/20"
-                : "text-gray-600 dark:text-zinc-400 hover:text-amber-500 dark:hover:text-white"
+                ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs font-semibold"
+                : "text-gray-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
-            <Clock className="w-4 h-4" />
-            <span>24H DIURNAL SIMULATOR</span>
+            <Clock className="w-3.5 h-3.5 text-amber-500" />
+            <span>Diurnal Forecaster</span>
           </button>
 
           <button
             onClick={() => setActiveTab("national_grid")}
-            className={`px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all whitespace-nowrap ${
+            className={`px-3.5 py-1.5 rounded-md font-medium flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === "national_grid"
-                ? "bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-md shadow-cyan-500/20"
-                : "text-gray-600 dark:text-zinc-400 hover:text-cyan-500 dark:hover:text-white"
+                ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs font-semibold"
+                : "text-gray-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
-            <Globe className="w-4 h-4" />
-            <span>NATIONAL THERMAL GRID</span>
+            <Globe className="w-3.5 h-3.5 text-cyan-500" />
+            <span>National Grid Matrix</span>
           </button>
         </div>
 
-        {/* Tab 1: Operations Center */}
+        {/* Tab 1: Operations Console */}
         {activeTab === "operations" && (
-          <div className="space-y-5">
-            {/* FortyGuard KPI 4-Card Mission Control Row */}
+          <div className="space-y-4">
+            {/* 4-Card Mission Control Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* 1. Surface vs Ambient Temp */}
               <KPICard
-                label="SURFACE VS AMBIENT"
-                icon={<Thermometer className="w-4 h-4 text-orange-500 mb-4" />}
+                label="Surface Temperature"
+                icon={<Thermometer className="w-4 h-4 text-orange-500" />}
                 value={surfaceTemp.toFixed(1)}
                 unit="°F"
                 valueSuffix={
-                  <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ml-2 mb-1 bg-orange-500/20 text-orange-500 border border-orange-500/30">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-2 mb-1 bg-orange-500/10 text-orange-500 border border-orange-500/20">
                     +{surfaceDelta.toFixed(1)}°F ΔT
                   </span>
                 }
-                hoverBorder="hover:border-[#FF6B2B]/30"
                 darkMode={darkMode}
-                sparkStroke={riskConfig.sparkStroke}
+                sparkStroke="#f97316"
                 sparkGradientId="sparkOrangeGrad"
                 sparkPath="M0,24 Q15,6 32,18 T65,10 T95,14 L110,8"
                 footer={
-                  <div className="text-[11px] font-mono text-gray-500 dark:text-zinc-400">
-                    Ambient: <strong className="text-slate-800 dark:text-white">{currentTemp}°F</strong>
-                  </div>
+                  <span>
+                    Ambient Air: <strong className="text-slate-900 dark:text-white font-semibold">{currentTemp}°F</strong>
+                  </span>
                 }
               />
 
               {/* 2. Solar Irradiance GHI */}
               <KPICard
-                label="SOLAR IRRADIANCE (GHI)"
-                icon={<Sun className="w-4 h-4 text-amber-500 mb-4" />}
+                label="Solar Irradiance (GHI)"
+                icon={<Sun className="w-4 h-4 text-amber-500" />}
                 value={solarGhi.toFixed(0)}
                 unit="W/m²"
                 valueSuffix={
-                  <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ml-2 mb-1 ${solarGhi >= 600 ? "bg-red-500/20 text-red-500 border border-red-500/30" : "bg-amber-500/20 text-amber-500 border border-amber-500/30"}`}>
-                    {solarGhi >= 600 ? "PEAK FLUX" : "MODERATE"}
+                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-2 mb-1 ${solarGhi >= 600 ? "bg-rose-500/10 text-rose-500 border border-rose-500/20" : "bg-amber-500/10 text-amber-500 border border-amber-500/20"}`}>
+                    {solarGhi >= 600 ? "Peak Flux" : "Moderate"}
                   </span>
                 }
-                hoverBorder="hover:border-amber-500/30"
                 darkMode={darkMode}
-                sparkStroke="#F59E0B"
+                sparkStroke="#f59e0b"
                 sparkGradientId="sparkAmberGrad"
                 sparkPath="M0,28 Q20,12 45,20 T80,8 T100,16 L110,10"
                 footer={
-                  <div className="text-[11px] font-mono text-gray-500 dark:text-zinc-400">
-                    Clear Sky DNI: <strong className="text-slate-800 dark:text-white">{(solarGhi * 1.3).toFixed(0)} W/m²</strong>
-                  </div>
+                  <span>
+                    Clear Sky DNI: <strong className="text-slate-900 dark:text-white font-semibold">{(solarGhi * 1.3).toFixed(0)} W/m²</strong>
+                  </span>
                 }
               />
 
               {/* 3. Relative Humidity */}
               <KPICard
-                label="RELATIVE HUMIDITY"
-                icon={<Droplets className="w-4 h-4 text-cyan-500 mb-4" />}
+                label="Relative Humidity"
+                icon={<Droplets className="w-4 h-4 text-cyan-500" />}
                 value={humidity.toFixed(1)}
                 unit="%"
                 valueSuffix={
-                  <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ml-2 mb-1 bg-cyan-500/20 text-cyan-500 border border-cyan-500/30">
-                    VAPOR ACTIVE
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-2 mb-1 bg-cyan-500/10 text-cyan-500 border border-cyan-500/20">
+                    {humidity > 50 ? "Elevated" : "Nominal"}
                   </span>
                 }
-                hoverBorder="hover:border-cyan-500/30"
                 darkMode={darkMode}
-                sparkStroke="#06B6D4"
+                sparkStroke="#06b6d4"
                 sparkGradientId="sparkCyanGrad"
                 sparkPath="M0,16 Q25,24 50,14 T85,20 T105,10 L110,14"
                 footer={
-                  <div className="text-[11px] font-mono text-gray-500 dark:text-zinc-400">
-                    Wet-Bulb: <strong className="text-slate-800 dark:text-white">{currentReading?.wet_bulb_f ? `${currentReading.wet_bulb_f.toFixed(1)}°F` : "74.1°F"}</strong>
-                  </div>
+                  <span>
+                    Wet-Bulb: <strong className="text-slate-900 dark:text-white font-semibold">{currentReading?.wet_bulb_f ? `${currentReading.wet_bulb_f.toFixed(1)}°F` : "74.1°F"}</strong>
+                  </span>
                 }
               />
 
               {/* 4. Real-Time WBGT with Radial Gauge */}
-              <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-4 flex flex-col items-center justify-between shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-rose-500/30 transition-all">
+              <div className="bg-white dark:bg-[#111318] border border-gray-200 dark:border-white/5 rounded-xl p-4 flex flex-col items-center justify-between shadow-xs transition-all">
                 <RadialGauge
                   value={wbgt}
                   min={60}
                   max={100}
                   threshold={85}
                   unit="°F"
-                  label="LILJEGREN WBGT INDEX"
-                  size={135}
-                  color={wbgt >= 85 ? "#F43F5E" : "#10B981"}
+                  label="Liljegren WBGT Index"
+                  size={125}
+                  color={wbgt >= 85 ? "#f43f5e" : "#10b981"}
                 />
                 <div className="w-full flex items-center justify-between pt-2 border-t border-gray-100 dark:border-white/5 font-mono text-[10px] text-gray-500 dark:text-zinc-400">
-                  <span>Crit Limit: <strong className="text-red-500">85.0°F</strong></span>
-                  <span className={wbgt >= 85 ? "text-red-500 font-bold" : "text-emerald-500 font-bold"}>
-                    {wbgt >= 85 ? "ALERT ACTIVE" : "NOMINAL"}
+                  <span>Advisory Limit: <strong className="text-rose-500">85.0°F</strong></span>
+                  <span className={wbgt >= 85 ? "text-rose-500 font-semibold" : "text-emerald-500 font-semibold"}>
+                    {wbgt >= 85 ? "Triggered" : "Nominal"}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Workspace row: Telemetry Chart + Satellite Composition & Logs */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            {/* Workspace Row: Telemetry Chart + Dispatch Log */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
               {/* Telemetry chart */}
-              <div className="lg:col-span-8 bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between shadow-sm dark:shadow-2xl backdrop-blur-xl">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100 dark:border-white/5">
+              <div className="lg:col-span-8 bg-white dark:bg-[#111318] border border-gray-200 dark:border-white/5 rounded-xl p-5 flex flex-col justify-between shadow-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 pb-3 border-b border-gray-100 dark:border-white/5">
                   <div>
-                    <div className="flex items-center gap-2.5">
-                      <Activity className="w-4 h-4 text-[#FF6B2B]" />
-                      <h2 className="font-display text-sm font-bold uppercase tracking-tight text-slate-900 dark:text-white">
-                        FORTYGUARD THERMAL TELEMETRY STREAM • {selectedCity}
+                    <div className="flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-orange-500" />
+                      <h2 className="font-display text-sm font-semibold tracking-tight text-slate-900 dark:text-white">
+                        Thermal Telemetry Stream · {selectedCity}
                       </h2>
                     </div>
                     <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                      Real-time Surface Radiometric vs. Ambient Canopy Temperature (rolling window)
+                      Real-time surface radiometric vs. ambient canopy temperature (rolling window)
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1.5 text-xs font-mono">
-                      <span className="w-3 h-3 rounded-full bg-[#f97316]" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
                       <span className="text-gray-600 dark:text-zinc-400">Surface (°F)</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-xs font-mono">
-                      <span className="w-3 h-3 rounded-full bg-[#38bdf8]" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-sky-400" />
                       <span className="text-gray-600 dark:text-zinc-400">Ambient (°F)</span>
                     </div>
                   </div>
@@ -796,13 +646,10 @@ export default function App() {
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={telemetryData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
                       <defs>
-                        <linearGradient id="neonSurfaceFill" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#f97316" stopOpacity={darkMode ? 0.35 : 0.12} />
+                        <linearGradient id="surfaceFill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f97316" stopOpacity={darkMode ? 0.25 : 0.12} />
                           <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
                         </linearGradient>
-                        <filter id="neonGlow">
-                          <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#f97316" floodOpacity={darkMode ? "0.6" : "0.15"} />
-                        </filter>
                       </defs>
 
                       <XAxis
@@ -823,82 +670,77 @@ export default function App() {
                         tick={{ fill: darkMode ? "#71717A" : "#6B7280", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
                         tickLine={false}
                         axisLine={{ stroke: darkMode ? "#1E2330" : "#E5E7EB" }}
-                        tickFormatter={(val) => `${val}°`}
+                        tickFormatter={(v) => `${v}°`}
                       />
 
                       <Tooltip
-                        cursor={false}
                         contentStyle={{
-                          backgroundColor: darkMode ? "#0D0D0D" : "#ffffff",
+                          backgroundColor: darkMode ? "#111318" : "#ffffff",
                           borderColor: darkMode ? "rgba(255,255,255,0.1)" : "#e5e7eb",
                           borderRadius: "8px",
                           color: darkMode ? "#fff" : "#0f172a",
-                          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
+                          fontFamily: "JetBrains Mono, monospace",
+                          fontSize: "11px",
                         }}
                       />
 
                       <ReferenceLine
-                        y={105}
-                        stroke="#FF3B3B"
+                        y={110}
+                        stroke="#f43f5e"
                         strokeDasharray="4 4"
-                        strokeWidth={1.5}
                         label={{
-                          value: "CRITICAL 105°F",
-                          fill: "#FF3B3B",
-                          position: "insideBottomRight",
+                          value: "Critical Surface Threshold (110°F)",
+                          fill: "#f43f5e",
                           fontSize: 10,
                           fontFamily: "JetBrains Mono, monospace",
-                          fontWeight: 600,
+                          position: "insideTopRight",
                         }}
                       />
 
-                      {/* Surface Radiometric Temperature Area */}
                       <Area
                         type="monotone"
-                        dataKey="surface_temperature_f"
-                        name="Surface Temp"
+                        dataKey="surface"
+                        name="Surface (°F)"
                         stroke="#f97316"
-                        strokeWidth={3}
-                        fill="url(#neonSurfaceFill)"
-                        filter="url(#neonGlow)"
-                        dot={false}
-                        activeDot={{ r: 5, fill: "#f97316", stroke: darkMode ? "#000" : "#fff", strokeWidth: 2 }}
-                        isAnimationActive={true}
-                        animationDuration={300}
+                        strokeWidth={2}
+                        fill="url(#surfaceFill)"
                       />
 
-                      {/* Ambient Air Temperature Line */}
                       <Line
                         type="monotone"
-                        dataKey="temperature_f"
-                        name="Ambient Temp"
+                        dataKey="ambient"
+                        name="Ambient (°F)"
                         stroke="#38bdf8"
-                        strokeWidth={2}
+                        strokeWidth={1.5}
                         strokeDasharray="3 3"
                         dot={false}
-                        activeDot={{ r: 4, fill: "#38bdf8" }}
                       />
                     </ComposedChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
-              <AgentEventLog logs={eventLogs} totalEventsCount={totalEventsCount} onClear={handleClearLog} />
+              {/* Event Log */}
+              <AgentEventLog
+                logs={logs}
+                totalEventsCount={totalEventsCount}
+                onClear={() => setLogs([])}
+              />
             </div>
 
-            {/* Satellite Land-Cover & Material Composition Panel */}
+            {/* Dedicated Surface Segmentation Card */}
             <SurfaceSegmentationCard
-              segmentation={currentReading?.satellite}
+              segmentation={currentReading?.surface_segmentation}
               city={selectedCity}
               darkMode={darkMode}
             />
 
-            {/* Real-Time Phaser 3 Agent Activity Visualization */}
+            {/* Autonomous Agents Simulation */}
             <AgentVisualization agentStates={agentStates} darkMode={darkMode} />
           </div>
         )}
 
-        {/* Tab 2: FortyGuard Spatial Heatmap View */}
+        {/* Tab 2: FortyGuard Spatial Heatmap */}
         {activeTab === "spatial_heatmap" && (
           <SpatialHeatmapView
             selectedCity={selectedCity}
@@ -907,23 +749,10 @@ export default function App() {
           />
         )}
 
-        {/* Tab 3: 24-Hour Diurnal Simulator */}
+        {/* Tab 3: 24H Diurnal Simulator */}
         {activeTab === "diurnal_sim" && (
           <DiurnalTimelineScrubber
             selectedCity={selectedCity}
-            onHourChange={(dataPoint) => {
-              // Update local state when user scrubs timeline
-              if (dataPoint) {
-                setCurrentReading((prev) => ({
-                  ...prev,
-                  temperature_f: dataPoint.ambientTemp,
-                  surface_temperature_f: dataPoint.surfaceTemp,
-                  solar_irradiance_ghi: dataPoint.ghi,
-                  relative_humidity: dataPoint.humidity,
-                  wbgt_f: dataPoint.wbgt,
-                }));
-              }
-            }}
             darkMode={darkMode}
           />
         )}
@@ -932,130 +761,22 @@ export default function App() {
         {activeTab === "national_grid" && (
           <NationalThermalGridMatrix
             selectedCity={selectedCity}
-            onSelectCity={(city) => {
-              handleSelectCity(city);
-              setActiveTab("operations");
-            }}
+            onSelectCity={handleSelectCity}
           />
         )}
-
-        {/* System status row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-orange-500/30 transition-all">
-            <div className="h-11 w-11 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 flex items-center justify-center flex-shrink-0">
-              <Wifi className="w-5 h-5 text-orange-500" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[10px] font-mono uppercase text-gray-400 dark:text-zinc-500 font-semibold block tracking-wider">
-                DATA CONNECTION
-              </span>
-              <div className="flex items-center gap-1.5 my-0.5">
-                <span className={`h-1.5 w-1.5 rounded-full ${isConnected ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`} />
-                <span className="text-sm font-semibold text-slate-900 dark:text-white">
-                  {isConnected ? "Online & Synced" : "Reconnecting"}
-                </span>
-              </div>
-              <span className="text-[11px] text-gray-500 dark:text-zinc-500 font-mono">
-                Latency: {latency}ms (Live Ping)
-              </span>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-emerald-500/30 transition-all">
-            <div className="h-11 w-11 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 flex items-center justify-center flex-shrink-0">
-              <Cloud className="w-5 h-5 text-green-500" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[10px] font-mono uppercase text-gray-400 dark:text-zinc-500 font-semibold block tracking-wider">
-                FORTYGUARD API
-              </span>
-              <div className="flex items-center gap-1.5 my-0.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-sm font-semibold text-slate-900 dark:text-white">
-                  {currentReading?.api_mode === "LIVE" ? "Live FortyGuard API" : "Cached Quickstart Engine"}
-                </span>
-              </div>
-              <span className="text-[11px] text-gray-500 dark:text-zinc-500 font-mono">
-                100m² TCM • {pollCount} frames
-              </span>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-blue-500/30 transition-all">
-            <div className="h-11 w-11 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 flex items-center justify-center flex-shrink-0">
-              <Clock className="w-5 h-5 text-blue-500" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[10px] font-mono uppercase text-gray-400 dark:text-zinc-500 font-semibold block tracking-wider">
-                LAST UPDATED
-              </span>
-              <div className="text-sm font-semibold font-mono text-slate-900 dark:text-white my-0.5 tabular-nums">
-                {lastReceivedTime}
-              </div>
-              <span className="text-[11px] text-gray-500 dark:text-zinc-500 font-mono">
-                {pollTimer}s ago • {currentDate}
-              </span>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-sm dark:shadow-2xl backdrop-blur-xl hover:border-purple-500/30 transition-all">
-            <div className="h-11 w-11 rounded-xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 flex items-center justify-center flex-shrink-0">
-              <Shield className="w-5 h-5 text-purple-500" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[10px] font-mono uppercase text-gray-400 dark:text-zinc-500 font-semibold block tracking-wider">
-                SYSTEM UPTIME
-              </span>
-              <div className="text-lg font-bold text-slate-900 dark:text-white font-mono tabular-nums">
-                {uptime}
-              </div>
-              <span className="text-[11px] text-purple-600 dark:text-purple-400 font-medium">
-                {reliability}% reliability
-              </span>
-            </div>
-          </div>
-        </div>
       </main>
 
-      {/* Agent modals */}
-      <AnimatePresence>
-        {isAuditOpen && (
-          <AgentOneModal
-            onClose={() => setIsAuditOpen(false)}
-            city={selectedCity}
-            loading={isAuditLoading}
-            error={auditError}
-            report={auditReport}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isInfraModalOpen && (
-          <AgentTwoModal
-            onClose={() => setIsInfraModalOpen(false)}
-            city={selectedCity}
-            currentTemp={currentTemp}
-            loading={isInfraLoading}
-            error={infraError}
-            data={infraData}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isCivicModalOpen && (
-          <AgentThreeModal
-            onClose={() => setIsCivicModalOpen(false)}
-            city={selectedCity}
-            loading={isCivicLoading}
-            error={civicError}
-            data={civicData}
-          />
-        )}
-      </AnimatePresence>
-
-      <Toast toast={toast} onDismiss={() => setToast(null)} />
+      {/* Executive Footer */}
+      <footer className="w-full max-w-7xl mx-auto px-6 py-4 border-t border-gray-200 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 dark:text-zinc-500 font-mono gap-2">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-orange-500" />
+          <span>ThermalOS v1.2 · Autonomous Microclimate Grid Operations</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <span>FortyGuard Radiometric API (v1)</span>
+          <span>ASHRAE Standard 55 Compliant</span>
+        </div>
+      </footer>
     </div>
   );
 }

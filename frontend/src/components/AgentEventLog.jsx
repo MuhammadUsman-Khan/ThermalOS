@@ -6,69 +6,67 @@ import {
   AlertTriangle,
   Check,
   FileCheck,
-  Link2,
+  Zap,
   Trash2,
+  Radio,
 } from "lucide-react";
 
-// Badge, border and icon styling per log entry type.
 const getLogConfig = (type) => {
   switch (type) {
     case "extreme":
       return {
-        borderClass: "border-l-red-500",
-        badgeClass:
-          "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30 shadow-[0_0_8px_rgba(239,68,68,0.2)]",
-        textClass: "text-red-700 dark:text-red-300",
-        icon: <AlertOctagon className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />,
+        badgeClass: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20",
+        textClass: "text-rose-700 dark:text-rose-300 font-medium",
+        tag: "Critical",
+        icon: <AlertOctagon className="w-3.5 h-3.5 text-rose-500 shrink-0" />,
       };
     case "high":
       return {
-        borderClass: "border-l-orange-500",
-        badgeClass:
-          "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30",
-        textClass: "text-orange-700 dark:text-orange-300",
-        icon: <AlertTriangle className="w-3.5 h-3.5 text-orange-500 flex-shrink-0" />,
+        badgeClass: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20",
+        textClass: "text-slate-800 dark:text-zinc-200",
+        tag: "Elevated",
+        icon: <AlertTriangle className="w-3.5 h-3.5 text-orange-500 shrink-0" />,
       };
     case "elevated":
       return {
-        borderClass: "border-l-amber-500",
-        badgeClass:
-          "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30",
-        textClass: "text-amber-700 dark:text-amber-300",
-        icon: <Activity className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />,
+        badgeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
+        textClass: "text-slate-800 dark:text-zinc-200",
+        tag: "Advisory",
+        icon: <Activity className="w-3.5 h-3.5 text-amber-500 shrink-0" />,
       };
     case "city_change":
       return {
-        borderClass: "border-l-sky-500",
-        badgeClass:
-          "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30",
-        textClass: "text-sky-700 dark:text-sky-300 font-semibold",
-        icon: <Link2 className="w-3.5 h-3.5 text-sky-500 flex-shrink-0" />,
+        badgeClass: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20",
+        textClass: "text-slate-800 dark:text-zinc-200",
+        tag: "Location",
+        icon: <Radio className="w-3.5 h-3.5 text-sky-500 shrink-0" />,
       };
     case "audit":
+      return {
+        badgeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
+        textClass: "text-slate-800 dark:text-zinc-200",
+        tag: "Audit",
+        icon: <FileCheck className="w-3.5 h-3.5 text-amber-500 shrink-0" />,
+      };
     case "dispatch":
       return {
-        borderClass: "border-l-purple-500",
-        badgeClass:
-          "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30",
-        textClass: "text-purple-700 dark:text-purple-300",
-        icon: <FileCheck className="w-3.5 h-3.5 text-purple-500 flex-shrink-0" />,
+        badgeClass: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20",
+        textClass: "text-slate-800 dark:text-zinc-200",
+        tag: "Pre-Cool",
+        icon: <Zap className="w-3.5 h-3.5 text-cyan-500 shrink-0" />,
       };
     default:
       return {
-        borderClass: "border-l-emerald-500",
-        badgeClass:
-          "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
-        textClass: "text-gray-700 dark:text-zinc-300",
-        icon: <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />,
+        badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
+        textClass: "text-slate-800 dark:text-zinc-200",
+        tag: "Telemetry",
+        icon: <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />,
       };
   }
 };
 
 export default function AgentEventLog({ logs, totalEventsCount, onClear }) {
   const scrollRef = useRef(null);
-  // Newest entries are prepended at the top, so we keep the view pinned to the
-  // top on new arrivals — unless the user has scrolled down to read history.
   const pinnedToTopRef = useRef(true);
 
   const handleScroll = () => {
@@ -83,12 +81,13 @@ export default function AgentEventLog({ logs, totalEventsCount, onClear }) {
   }, [logs]);
 
   return (
-    <div className="lg:col-span-4 bg-white dark:bg-[#0D0D0D]/80 border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col shadow-sm dark:shadow-2xl backdrop-blur-xl h-full">
-      <div className="flex items-center justify-between pb-3.5 border-b border-gray-100 dark:border-white/5 mb-3">
+    <div className="lg:col-span-4 bg-white dark:bg-[#111318] border border-gray-200 dark:border-white/5 rounded-xl p-4 flex flex-col shadow-xs h-full">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-white/5 mb-3">
         <div className="flex items-center gap-2">
-          <Link2 className="w-4 h-4 text-gray-400 dark:text-zinc-400" />
-          <h2 className="font-display text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
-            AGENT EVENT LOG
+          <Activity className="w-4 h-4 text-orange-500" />
+          <h2 className="font-display text-sm font-semibold tracking-tight text-slate-900 dark:text-white">
+            Dispatch & Telemetry Log
           </h2>
         </div>
         <div className="flex items-center gap-2">
@@ -96,21 +95,23 @@ export default function AgentEventLog({ logs, totalEventsCount, onClear }) {
             onClick={onClear}
             disabled={logs.length === 0}
             title="Clear event log"
-            className="flex items-center gap-1 text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full border border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-400 hover:text-red-500 hover:border-red-500/40 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-md border border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-400 hover:text-rose-500 transition-colors cursor-pointer disabled:opacity-40"
           >
             <Trash2 className="w-3 h-3" />
-            CLEAR
+            <span>Clear</span>
           </button>
-          <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 font-bold">
-            LIVE FEED
-          </span>
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono text-emerald-600 dark:text-emerald-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span>Live Sync</span>
+          </div>
         </div>
       </div>
 
+      {/* Log list */}
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto max-h-[350px] pr-1.5 font-mono text-xs pb-1 space-y-2.5"
+        className="flex-1 overflow-y-auto max-h-[340px] pr-1.5 font-mono text-xs space-y-2"
       >
         <AnimatePresence initial={false}>
           {logs.map((log) => {
@@ -118,40 +119,42 @@ export default function AgentEventLog({ logs, totalEventsCount, onClear }) {
             return (
               <motion.div
                 key={log.id}
-                initial={{ opacity: 0, y: -15, scale: 0.96 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                className={`bg-white dark:bg-[#141414] border border-gray-200 dark:border-white/5 rounded-xl p-3.5 mb-2.5 relative overflow-hidden shadow-sm dark:shadow-none border-l-4 ${cfg.borderClass}`}
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.15 }}
+                className="p-2.5 rounded-lg border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] flex flex-col gap-1 hover:border-gray-300 dark:hover:border-white/15 transition-all"
               >
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     {cfg.icon}
-                    <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
-                      {log.timestamp}
+                    <span className="text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase">
+                      {log.source || "System"}
                     </span>
                   </div>
-                  <span
-                    className={`text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded border font-mono ${cfg.badgeClass}`}
-                  >
-                    {log.badge}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[9px] px-1.5 py-0.2 rounded font-medium ${cfg.badgeClass}`}>
+                      {cfg.tag}
+                    </span>
+                    <span className="text-[10px] text-gray-400 dark:text-zinc-500">
+                      {log.time}
+                    </span>
+                  </div>
                 </div>
-                <p className={`text-xs leading-relaxed font-sans font-medium ${cfg.textClass}`}>
-                  {log.text}
-                </p>
+                <div className={`text-xs pl-5 leading-relaxed ${cfg.textClass}`}>
+                  {log.message}
+                </div>
               </motion.div>
             );
           })}
         </AnimatePresence>
-      </div>
 
-      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-[11px] font-mono text-gray-400 dark:text-zinc-500">
-        <div className="flex items-center gap-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          <span>Telemetry: Active</span>
-        </div>
-        <span>Events: {totalEventsCount}</span>
+        {logs.length === 0 && (
+          <div className="h-40 flex flex-col items-center justify-center text-center text-gray-400 dark:text-zinc-500 gap-1 font-mono text-xs">
+            <span>No logged dispatch events</span>
+            <span className="text-[10px]">Real-time telemetry and agent actions will appear here</span>
+          </div>
+        )}
       </div>
     </div>
   );
