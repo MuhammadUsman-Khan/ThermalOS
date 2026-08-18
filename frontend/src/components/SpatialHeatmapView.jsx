@@ -729,24 +729,24 @@ export default function SpatialHeatmapView({
 
                     {/* Spotlight Search Header */}
                     <div className="p-3 border-b border-gray-200/80 dark:border-white/[0.08] bg-gray-50/70 dark:bg-white/[0.02] relative flex items-center">
-                      <Search className="w-4 h-4 absolute left-4.5 text-gray-400" />
+                      <Search className="w-3.5 h-3.5 absolute left-6 text-gray-400 pointer-events-none" />
                       <input
                         type="text"
                         placeholder="Search 22+ cities..."
                         value={citySearchQuery}
                         onChange={(e) => setCitySearchQuery(e.target.value)}
-                        className="w-full bg-white dark:bg-black/70 border border-gray-200 dark:border-zinc-800 rounded-xl pl-8 pr-12 py-2 text-xs text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/30 transition-all font-mono"
+                        className="w-full bg-white dark:bg-black/70 border border-gray-200 dark:border-zinc-800 rounded-xl pl-9 pr-12 py-2 text-xs text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/30 transition-all font-mono"
                         autoFocus
                       />
                       {citySearchQuery ? (
                         <button
                           onClick={() => setCitySearchQuery("")}
-                          className="absolute right-4.5 p-1 rounded-md text-gray-400 hover:text-white transition-colors"
+                          className="absolute right-6 p-1 rounded-md text-gray-400 hover:text-white transition-colors cursor-pointer"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
                       ) : (
-                        <span className="absolute right-4.5 text-[9px] font-mono px-1.5 py-0.5 rounded bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-500 border border-gray-200 dark:border-zinc-700">
+                        <span className="absolute right-6 text-[9px] font-mono px-1.5 py-0.5 rounded bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-500 border border-gray-200 dark:border-zinc-700 pointer-events-none">
                           ESC
                         </span>
                       )}
