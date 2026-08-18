@@ -81,9 +81,9 @@ export default function AgentEventLog({ logs, onClear }) {
   }, [logs]);
 
   return (
-    <div className="lg:col-span-4 bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col shadow-xs h-full">
+    <div className="lg:col-span-4 glass-panel rounded-2xl p-4 flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-zinc-800/80 mb-3">
+      <div className="flex items-center justify-between pb-3 border-b border-gray-200/60 dark:border-white/[0.06] mb-3">
         <div className="flex items-center gap-2">
           <Activity className="w-4 h-4 text-orange-500" />
           <h2 className="font-display text-sm font-semibold tracking-tight text-black dark:text-white">
@@ -95,65 +95,66 @@ export default function AgentEventLog({ logs, onClear }) {
             onClick={onClear}
             disabled={logs.length === 0}
             title="Clear event log"
-            className="flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-md border border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-orange-500 transition-colors cursor-pointer disabled:opacity-40"
+            className="flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-md glass-panel-subtle text-gray-500 dark:text-zinc-400 hover:text-orange-500 transition-colors cursor-pointer disabled:opacity-40"
           >
             <Trash2 className="w-3 h-3" />
             <span>Clear</span>
           </button>
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono text-emerald-500">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Live Sync</span>
-          </div>
+          <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+            {logs.length} events
+          </span>
         </div>
       </div>
 
-      {/* Log list */}
+      {/* Log Feed */}
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto max-h-[340px] pr-1.5 font-mono text-xs space-y-2"
+        className="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[300px]"
       >
-        <AnimatePresence initial={false}>
-          {logs.map((log) => {
-            const cfg = getLogConfig(log.type);
-            return (
-              <motion.div
-                key={log.id}
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.15 }}
-                className="p-2.5 rounded-lg border border-gray-100 dark:border-zinc-800/60 bg-gray-50/50 dark:bg-zinc-900/30 flex flex-col gap-1 hover:border-orange-500/30 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    {cfg.icon}
-                    <span className="text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase">
-                      {log.source || "System"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-[9px] px-1.5 py-0.2 rounded font-medium ${cfg.badgeClass}`}>
-                      {cfg.tag}
-                    </span>
-                    <span className="text-[10px] text-gray-400 dark:text-zinc-500">
-                      {log.time}
-                    </span>
-                  </div>
-                </div>
-                <div className={`text-xs pl-5 leading-relaxed ${cfg.textClass}`}>
-                  {log.message}
-                </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-
-        {logs.length === 0 && (
-          <div className="h-40 flex flex-col items-center justify-center text-center text-gray-400 dark:text-zinc-500 gap-1 font-mono text-xs">
-            <span>No logged dispatch events</span>
-            <span className="text-[10px]">Real-time telemetry and agent actions will appear here</span>
+        {logs.length === 0 ? (
+          <div className="h-40 flex flex-col items-center justify-center text-gray-400 dark:text-zinc-600 text-xs font-mono">
+            <Activity className="w-6 h-6 mb-2 opacity-40 animate-pulse" />
+            <span>Awaiting telemetry stream...</span>
           </div>
+        ) : (
+          <AnimatePresence initial={false}>
+            {logs.map((log) => {
+              const cfg = getLogConfig(log.type);
+              return (
+                <motion.div
+                  key={log.id}
+                  initial={{ opacity: 0, x: 8, scale: 0.98 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="p-2.5 rounded-xl glass-panel-subtle hover:border-orange-500/30 transition-all font-mono text-xs flex flex-col gap-1.5"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      {cfg.icon}
+                      <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400">
+                        {log.source || "System"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md ${cfg.badgeClass}`}
+                      >
+                        {cfg.tag}
+                      </span>
+                      <span className="text-[10px] text-gray-400 dark:text-zinc-500 tabular-nums">
+                        {log.time}
+                      </span>
+                    </div>
+                  </div>
+                  <p className={`text-[11.5px] leading-relaxed break-words ${cfg.textClass}`}>
+                    {log.message}
+                  </p>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
         )}
       </div>
     </div>

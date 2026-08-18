@@ -38,7 +38,7 @@ export default function Toast({ toast, message, type = "info", onClose, onDismis
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 15, scale: 0.92 }}
           transition={{ type: "spring", stiffness: 450, damping: 25 }}
-          className="pointer-events-auto flex items-start gap-3 max-w-sm bg-white dark:bg-[#0E1015] border border-orange-500/30 rounded-xl shadow-2xl px-4 py-3 font-sans relative overflow-hidden"
+          className="pointer-events-auto flex items-start gap-3 max-w-sm glass-panel border-orange-500/30 rounded-xl shadow-2xl px-4 py-3 font-sans relative overflow-hidden"
         >
           {/* Subtle top edge glow */}
           <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-orange-500/60 via-amber-500/60 to-transparent" />

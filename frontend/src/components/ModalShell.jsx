@@ -33,13 +33,13 @@ export default function ModalShell({ isOpen, onClose, icon, title, subtitle, chi
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 14 }}
           transition={{ type: "spring", stiffness: 420, damping: 28 }}
-          className="bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh] text-black dark:text-white font-sans"
+          className="glass-panel rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh] text-black dark:text-white font-sans"
         >
           {/* Subtle top edge glow */}
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-orange-500/50 to-transparent" />
 
           {/* Header */}
-          <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-zinc-800/80">
+          <div className="flex items-center justify-between pb-4 border-b border-gray-200/60 dark:border-white/[0.06]">
             <div className="flex items-center gap-3">
               {icon}
               <div>

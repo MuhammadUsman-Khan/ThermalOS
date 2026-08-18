@@ -231,9 +231,9 @@ export default function NationalThermalGridMatrix({ selectedCity, onSelectCity }
   });
 
   return (
-    <div className="bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800/90 rounded-2xl p-4 flex flex-col shadow-xs space-y-4 font-sans">
+    <div className="glass-panel rounded-2xl p-4 flex flex-col space-y-4 font-sans">
       {/* Header & Filter Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b border-gray-100 dark:border-zinc-800/80">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b border-gray-200/60 dark:border-white/[0.06]">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.2)]">
             <Globe className="w-4 h-4" />
@@ -262,11 +262,11 @@ export default function NationalThermalGridMatrix({ selectedCity, onSelectCity }
               placeholder="Filter cities..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700/80 rounded-xl pl-8 pr-3 py-1.5 text-xs font-mono text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50 shadow-xs w-36 sm:w-48"
+              className="glass-panel-subtle rounded-xl pl-8 pr-3 py-1.5 text-xs font-mono text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50 shadow-xs w-36 sm:w-48"
             />
           </div>
 
-          <div className="flex items-center gap-1 p-0.5 rounded-xl bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-xs font-mono">
+          <div className="flex items-center gap-1 p-0.5 rounded-xl glass-panel-subtle text-xs font-mono">
             {["all", "critical", "precool", "nominal"].map((st) => (
               <button
                 key={st}
@@ -285,10 +285,10 @@ export default function NationalThermalGridMatrix({ selectedCity, onSelectCity }
       </div>
 
       {/* Comparison Table */}
-      <div className="overflow-x-auto rounded-xl border border-gray-100 dark:border-zinc-800/80">
+      <div className="overflow-x-auto rounded-xl border border-gray-200/60 dark:border-white/[0.06]">
         <table className="w-full text-left font-mono text-xs border-collapse">
           <thead>
-            <tr className="bg-gray-50/75 dark:bg-zinc-900/60 border-b border-gray-200 dark:border-zinc-800 text-[10.5px] text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
+            <tr className="bg-gray-50/75 dark:bg-white/[0.02] border-b border-gray-200/60 dark:border-white/[0.06] text-[10.5px] text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
               <th className="py-3 px-3.5">City / Grid Zone</th>
               <th className="py-3 px-2">Ambient Air</th>
               <th className="py-3 px-2">Surface Temp</th>

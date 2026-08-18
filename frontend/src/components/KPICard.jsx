@@ -21,10 +21,10 @@ export default function KPICard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay, ease: [0.25, 1, 0.5, 1] }}
       whileHover={{ y: -2.5, transition: { duration: 0.15 } }}
-      className={`bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800/90 rounded-xl p-4 flex flex-col justify-between shadow-xs transition-colors ${borderHover} group relative overflow-hidden`}
+      className={`glass-panel rounded-2xl p-4 flex flex-col justify-between transition-all ${borderHover} group relative overflow-hidden`}
     >
       {/* Subtle top edge accent line on hover */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-transparent group-hover:bg-gradient-to-r group-hover:from-transparent group-hover:via-orange-500/40 group-hover:to-transparent transition-all duration-300" />
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-transparent group-hover:bg-gradient-to-r group-hover:from-transparent group-hover:via-orange-500/50 group-hover:to-transparent transition-all duration-300" />
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -50,7 +50,7 @@ export default function KPICard({
       </div>
 
       {/* Footer & Sparkline */}
-      <div className="flex items-center justify-between pt-2.5 border-t border-gray-100 dark:border-zinc-800/80">
+      <div className="flex items-center justify-between pt-2.5 border-t border-gray-200/60 dark:border-white/[0.06]">
         <div className="text-[11px] text-gray-600 dark:text-zinc-400 font-mono">
           {footer}
         </div>
@@ -59,7 +59,7 @@ export default function KPICard({
           <svg className="w-20 h-5 overflow-visible" viewBox="0 0 110 32">
             <defs>
               <linearGradient id={sparkGradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={sparkStroke} stopOpacity={darkMode ? 0.3 : 0.18} />
+                <stop offset="0%" stopColor={sparkStroke} stopOpacity={darkMode ? 0.35 : 0.2} />
                 <stop offset="100%" stopColor={sparkStroke} stopOpacity={0} />
               </linearGradient>
             </defs>

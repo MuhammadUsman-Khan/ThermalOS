@@ -368,7 +368,7 @@ export default function App() {
       />
 
       {/* Executive Topbar */}
-      <header className="border-b border-gray-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-[#090A0D]/90 backdrop-blur-md sticky top-0 z-40 px-6 py-2.5 transition-colors">
+      <header className="border-b border-gray-200/80 dark:border-white/[0.08] bg-white/80 dark:bg-[#090A0D]/80 backdrop-blur-xl sticky top-0 z-40 px-6 py-2.5 transition-colors">
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4">
           {/* Brand Logo & Tag */}
           <div className="flex items-center gap-3">
@@ -392,7 +392,7 @@ export default function App() {
 
           <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
             {/* Unified Professional Agent Dispatch Toolbar */}
-            <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100/90 dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 shadow-xs">
+            <div className="flex items-center gap-1 p-1 rounded-xl glass-panel-subtle shadow-xs">
               {/* Agent 1: Audit */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -468,7 +468,7 @@ export default function App() {
               whileTap={{ scale: 0.95 }}
               onClick={() => setDarkMode(!darkMode)}
               title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              className="p-2 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-500/30 transition-colors shadow-xs cursor-pointer h-9 w-9 flex items-center justify-center"
+              className="p-2 rounded-xl glass-panel-subtle text-gray-600 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-500/30 transition-colors shadow-xs cursor-pointer h-9 w-9 flex items-center justify-center"
             >
               {darkMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </motion.button>
@@ -480,7 +480,7 @@ export default function App() {
                 whileTap={{ scale: 0.98 }}
                 type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700/80 hover:border-orange-500/50 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer text-black dark:text-white shadow-xs font-mono group h-9"
+                className="flex items-center gap-2 glass-panel-subtle hover:border-orange-500/50 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer text-black dark:text-white shadow-xs font-mono group h-9"
               >
                 <MapPin className="w-3.5 h-3.5 text-orange-500 group-hover:scale-110 transition-transform" />
                 <span className="font-semibold">{selectedCity}</span>
@@ -496,20 +496,20 @@ export default function App() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.96 }}
                     transition={{ type: "spring", stiffness: 450, damping: 25 }}
-                    className="absolute top-full mt-2 right-0 w-72 bg-white/95 dark:bg-[#0E1015]/95 backdrop-blur-xl border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden z-50 flex flex-col max-h-80 font-mono text-xs"
+                    className="absolute top-full mt-2 right-0 w-72 glass-panel rounded-2xl shadow-2xl overflow-hidden z-50 flex flex-col max-h-80 font-mono text-xs"
                   >
                     {/* Top edge gradient glow */}
                     <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
 
                     {/* Search Input */}
-                    <div className="p-2 border-b border-gray-100 dark:border-zinc-800/80 relative">
+                    <div className="p-2 border-b border-gray-100 dark:border-white/[0.06] relative">
                       <Search className="w-3.5 h-3.5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                       <input
                         type="text"
                         placeholder="Search city..."
                         value={dropdownSearch}
                         onChange={(e) => setDropdownSearch(e.target.value)}
-                        className="w-full bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg pl-7 pr-6 py-1 text-xs text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50"
+                        className="w-full bg-gray-100 dark:bg-zinc-900/80 border border-gray-200 dark:border-zinc-800 rounded-lg pl-7 pr-6 py-1 text-xs text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50"
                         autoFocus
                       />
                       {dropdownSearch && (
@@ -571,7 +571,7 @@ export default function App() {
       {/* Main Dashboard Canvas */}
       <main className="w-full max-w-7xl mx-auto px-4 py-4 flex-1 flex flex-col space-y-4 relative z-10">
         {/* Segmented Navigation Control */}
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-xs font-mono w-fit">
+        <div className="flex items-center gap-1 p-1 rounded-xl glass-panel-subtle text-xs font-mono w-fit">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -724,7 +724,7 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.18, ease: [0.25, 1, 0.5, 1] }}
                   whileHover={{ y: -2.5, transition: { duration: 0.15 } }}
-                  className="bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-between shadow-xs transition-all hover:border-orange-500/40"
+                  className="glass-panel rounded-2xl p-4 flex flex-col items-center justify-between transition-all hover:border-orange-500/40"
                 >
                   <RadialGauge
                     value={wbgt}
@@ -735,7 +735,7 @@ export default function App() {
                     label="Liljegren WBGT Index"
                     size={120}
                   />
-                  <div className="w-full flex items-center justify-between pt-2 border-t border-gray-100 dark:border-zinc-800/80 font-mono text-[10px] text-gray-500 dark:text-zinc-400">
+                  <div className="w-full flex items-center justify-between pt-2 border-t border-gray-200/60 dark:border-white/[0.06] font-mono text-[10px] text-gray-500 dark:text-zinc-400">
                     <span>Advisory Limit: <strong className="text-rose-500 font-semibold">85.0°F</strong></span>
                     <span className={wbgt >= 85 ? "text-rose-500 font-semibold" : "text-emerald-500 font-medium"}>
                       {wbgt >= 85 ? "Triggered" : "Nominal"}
@@ -747,8 +747,8 @@ export default function App() {
               {/* Workspace Row: Telemetry Chart + Dispatch Log */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5">
                 {/* Telemetry chart */}
-                <div className="lg:col-span-8 bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col justify-between shadow-xs">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 pb-3 border-b border-gray-100 dark:border-zinc-800/80">
+                <div className="lg:col-span-8 glass-panel rounded-2xl p-4 flex flex-col justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 pb-3 border-b border-gray-200/60 dark:border-white/[0.06]">
                     <div>
                       <div className="flex items-center gap-2">
                         <Activity className="w-4 h-4 text-orange-500" />
@@ -922,7 +922,7 @@ export default function App() {
       </main>
 
       {/* Executive Footer */}
-      <footer className="w-full max-w-7xl mx-auto px-6 py-3 border-t border-gray-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 dark:text-zinc-500 font-mono gap-2">
+      <footer className="w-full max-w-7xl mx-auto px-6 py-3 border-t border-gray-200 dark:border-white/[0.08] flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 dark:text-zinc-500 font-mono gap-2">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-orange-500" />
           <span>ThermalOS v1.2 · Autonomous Microclimate Grid Operations</span>

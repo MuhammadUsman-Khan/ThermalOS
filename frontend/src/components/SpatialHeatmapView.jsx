@@ -671,9 +671,9 @@ export default function SpatialHeatmapView({
   );
 
   return (
-    <div className="bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800/90 rounded-2xl p-4 flex flex-col shadow-xs space-y-3.5 font-sans relative">
+    <div className="glass-panel rounded-2xl p-4 flex flex-col space-y-3.5 font-sans relative">
       {/* Top Header Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3.5 border-b border-gray-100 dark:border-zinc-800/80">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3.5 border-b border-gray-200/60 dark:border-white/[0.06]">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.2)]">
             <Radio className="w-4 h-4" />
@@ -702,7 +702,7 @@ export default function SpatialHeatmapView({
               whileTap={{ scale: 0.98 }}
               type="button"
               onClick={() => setIsCityDropdownOpen(!isCityDropdownOpen)}
-              className="flex items-center gap-2 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700/80 hover:border-orange-500/50 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer text-black dark:text-white shadow-xs font-mono group"
+              className="flex items-center gap-2 glass-panel-subtle hover:border-orange-500/50 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer text-black dark:text-white shadow-xs font-mono group"
             >
               <MapPin className="w-3.5 h-3.5 text-orange-500 group-hover:scale-110 transition-transform" />
               <span className="font-medium">
@@ -722,20 +722,20 @@ export default function SpatialHeatmapView({
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.96 }}
                   transition={{ type: "spring", stiffness: 450, damping: 25 }}
-                  className="absolute top-full mt-2 right-0 w-80 bg-white/95 dark:bg-[#0E1015]/95 backdrop-blur-xl border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden z-50 flex flex-col max-h-[380px] font-mono text-xs"
+                  className="absolute top-full mt-2 right-0 w-80 glass-panel rounded-2xl shadow-2xl overflow-hidden z-50 flex flex-col max-h-[380px] font-mono text-xs"
                 >
                   {/* Subtle top edge glow */}
                   <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
 
                   {/* Search Input Bar */}
-                  <div className="p-2.5 border-b border-gray-100 dark:border-zinc-800/80 relative">
+                  <div className="p-2.5 border-b border-gray-100 dark:border-white/[0.06] relative">
                     <Search className="w-3.5 h-3.5 absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       placeholder="Search 22+ cities..."
                       value={citySearchQuery}
                       onChange={(e) => setCitySearchQuery(e.target.value)}
-                      className="w-full bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg pl-8 pr-7 py-1.5 text-xs text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50"
+                      className="w-full bg-gray-100 dark:bg-zinc-900/80 border border-gray-200 dark:border-zinc-800 rounded-lg pl-8 pr-7 py-1.5 text-xs text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50"
                       autoFocus
                     />
                     {citySearchQuery && (
@@ -819,7 +819,7 @@ export default function SpatialHeatmapView({
           </div>
 
           {/* AOI Scope Segmented Toggle */}
-          <div className="flex items-center gap-1 p-0.5 rounded-xl bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-xs font-mono">
+          <div className="flex items-center gap-1 p-0.5 rounded-xl glass-panel-subtle text-xs font-mono">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -849,7 +849,7 @@ export default function SpatialHeatmapView({
           </div>
 
           {/* Basemap Preset Toggle */}
-          <div className="flex items-center gap-1 p-0.5 rounded-xl bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-xs font-mono">
+          <div className="flex items-center gap-1 p-0.5 rounded-xl glass-panel-subtle text-xs font-mono">
             {Object.entries(BASEMAP_PRESETS).map(([key, item]) => {
               const Icon = item.icon;
               const isActive = baseMapStyle === key;
@@ -876,7 +876,7 @@ export default function SpatialHeatmapView({
       </div>
 
       {/* Main Single GIS Map Canvas with Floating FortyGuard Legend */}
-      <div className="relative w-full h-[540px] rounded-2xl overflow-hidden border border-gray-200 dark:border-zinc-800 bg-black shadow-inner">
+      <div className="relative w-full h-[540px] rounded-2xl overflow-hidden border border-gray-200/60 dark:border-white/[0.08] bg-black shadow-inner">
         <div ref={mapContainerRef} className="w-full h-full z-0" />
 
         {isLoading && (
@@ -887,11 +887,11 @@ export default function SpatialHeatmapView({
         )}
 
         {/* FortyGuard Legend Box */}
-        <div className="absolute top-3.5 left-3.5 z-20 bg-white/90 dark:bg-[#0E1015]/90 backdrop-blur-md p-3.5 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-2xl font-mono text-xs max-w-[230px]">
+        <div className="absolute top-3.5 left-3.5 z-20 glass-panel p-3.5 rounded-2xl shadow-2xl font-mono text-xs max-w-[230px]">
           <div className="font-bold text-black dark:text-white text-xs mb-0.5">
             Average Temperature (24h)
           </div>
-          <div className="text-[9.5px] text-gray-500 dark:text-zinc-400 mb-2 pb-1.5 border-b border-gray-200 dark:border-zinc-800">
+          <div className="text-[9.5px] text-gray-500 dark:text-zinc-400 mb-2 pb-1.5 border-b border-gray-200/60 dark:border-white/[0.06]">
             Equal-interval · 12 classes · 0.17 °C
           </div>
 
@@ -930,7 +930,7 @@ export default function SpatialHeatmapView({
             </button>
           )}
 
-          <div className="mt-2 pt-2 border-t border-gray-200 dark:border-zinc-800">
+          <div className="mt-2 pt-2 border-t border-gray-200/60 dark:border-white/[0.06]">
             <div className="flex justify-between items-center text-[10px] text-gray-500 dark:text-zinc-400 mb-1">
               <span>Opacity</span>
               <span className="font-mono font-semibold text-black dark:text-white">
@@ -954,9 +954,9 @@ export default function SpatialHeatmapView({
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: -4 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="absolute top-3.5 right-3.5 z-20 bg-white/95 dark:bg-[#0E1015]/95 backdrop-blur-md p-3.5 rounded-2xl border border-orange-500/40 shadow-2xl font-mono text-xs max-w-[250px] space-y-2"
+            className="absolute top-3.5 right-3.5 z-20 glass-panel p-3.5 rounded-2xl border-orange-500/40 shadow-2xl font-mono text-xs max-w-[250px] space-y-2"
           >
-            <div className="flex items-center justify-between pb-1.5 border-b border-gray-200 dark:border-zinc-800">
+            <div className="flex items-center justify-between pb-1.5 border-b border-gray-200/60 dark:border-white/[0.06]">
               <span className="text-orange-500 font-bold uppercase text-[10px] tracking-wider">
                 {selectedParcel.city_name || "PARCEL INSPECTION"}
               </span>
@@ -1006,7 +1006,7 @@ export default function SpatialHeatmapView({
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             onClick={() => mapInstanceRef.current && mapInstanceRef.current.zoomIn()}
-            className="p-2 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-orange-500 shadow-md cursor-pointer"
+            className="p-2 rounded-xl glass-panel text-gray-700 dark:text-zinc-300 hover:text-orange-500 shadow-md cursor-pointer"
             title="Zoom In"
           >
             <ZoomIn className="w-4 h-4" />
@@ -1015,7 +1015,7 @@ export default function SpatialHeatmapView({
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             onClick={() => mapInstanceRef.current && mapInstanceRef.current.zoomOut()}
-            className="p-2 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-orange-500 shadow-md cursor-pointer"
+            className="p-2 rounded-xl glass-panel text-gray-700 dark:text-zinc-300 hover:text-orange-500 shadow-md cursor-pointer"
             title="Zoom Out"
           >
             <ZoomOut className="w-4 h-4" />
@@ -1024,7 +1024,7 @@ export default function SpatialHeatmapView({
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             onClick={flyToNationalOverview}
-            className="p-2 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-orange-500 shadow-md cursor-pointer"
+            className="p-2 rounded-xl glass-panel text-gray-700 dark:text-zinc-300 hover:text-orange-500 shadow-md cursor-pointer"
             title="National Overview"
           >
             <Globe2 className="w-4 h-4" />
