@@ -12,20 +12,20 @@ import {
   Radio,
 } from "lucide-react";
 
-// Exact 12 FortyGuard equal-interval classes from official Quickstart Notebook
+// FortyGuard 12 equal-interval classes
 const FORTYGUARD_12_CLASSES = [
-  { minC: 28.20, maxC: 28.37, hex: "#cd1719", label: "28.20 – 28.37 °C", tempF: "82.8 – 83.1 °F" },
-  { minC: 28.03, maxC: 28.20, hex: "#e4402b", label: "28.03 – 28.20 °C", tempF: "82.5 – 82.8 °F" },
-  { minC: 27.86, maxC: 28.03, hex: "#f36e39", label: "27.86 – 28.03 °C", tempF: "82.1 – 82.5 °F" },
-  { minC: 27.69, maxC: 27.86, hex: "#fd9a4b", label: "27.69 – 27.86 °C", tempF: "81.8 – 82.1 °F" },
-  { minC: 27.52, maxC: 27.69, hex: "#febe6c", label: "27.52 – 27.69 °C", tempF: "81.5 – 81.8 °F" },
-  { minC: 27.35, maxC: 27.52, hex: "#fee090", label: "27.35 – 27.52 °C", tempF: "81.2 – 81.5 °F" },
-  { minC: 27.18, maxC: 27.35, hex: "#f5f7b4", label: "27.18 – 27.35 °C", tempF: "80.9 – 81.2 °F" },
-  { minC: 27.01, maxC: 27.18, hex: "#d9efa3", label: "27.01 – 27.18 °C", tempF: "80.6 – 80.9 °F" },
-  { minC: 26.84, maxC: 27.01, hex: "#afdd91", label: "26.84 – 27.01 °C", tempF: "80.3 – 80.6 °F" },
-  { minC: 26.67, maxC: 26.84, hex: "#80bf9b", label: "26.67 – 26.84 °C", tempF: "80.0 – 80.3 °F" },
-  { minC: 26.50, maxC: 26.67, hex: "#529bb2", label: "26.50 – 26.67 °C", tempF: "79.7 – 80.0 °F" },
-  { minC: 26.33, maxC: 26.50, hex: "#2c72a5", label: "26.33 – 26.50 °C", tempF: "79.4 – 79.7 °F" },
+  { minC: 28.20, maxC: 28.37, hex: "#ff3700", label: "28.20 – 28.37 °C", tempF: "82.8 – 83.1 °F" },
+  { minC: 28.03, maxC: 28.20, hex: "#ff5500", label: "28.03 – 28.20 °C", tempF: "82.5 – 82.8 °F" },
+  { minC: 27.86, maxC: 28.03, hex: "#ff6b2b", label: "27.86 – 28.03 °C", tempF: "82.1 – 82.5 °F" },
+  { minC: 27.69, maxC: 27.86, hex: "#f97316", label: "27.69 – 27.86 °C", tempF: "81.8 – 82.1 °F" },
+  { minC: 27.52, maxC: 27.69, hex: "#fb923c", label: "27.52 – 27.69 °C", tempF: "81.5 – 81.8 °F" },
+  { minC: 27.35, maxC: 27.52, hex: "#fdba74", label: "27.35 – 27.52 °C", tempF: "81.2 – 81.5 °F" },
+  { minC: 27.18, maxC: 27.35, hex: "#fed7aa", label: "27.18 – 27.35 °C", tempF: "80.9 – 81.2 °F" },
+  { minC: 27.01, maxC: 27.18, hex: "#ffedd5", label: "27.01 – 27.18 °C", tempF: "80.6 – 80.9 °F" },
+  { minC: 26.84, maxC: 27.01, hex: "#d4d4d8", label: "26.84 – 27.01 °C", tempF: "80.3 – 80.6 °F" },
+  { minC: 26.67, maxC: 26.84, hex: "#a1a1aa", label: "26.67 – 26.84 °C", tempF: "80.0 – 80.3 °F" },
+  { minC: 26.50, maxC: 26.67, hex: "#71717a", label: "26.50 – 26.67 °C", tempF: "79.7 – 80.0 °F" },
+  { minC: 26.33, maxC: 26.50, hex: "#3f3f46", label: "26.33 – 26.50 °C", tempF: "79.4 – 79.7 °F" },
 ];
 
 export const MONITORED_CITIES = [
@@ -41,7 +41,7 @@ export const MONITORED_CITIES = [
     baseTemp: 33.5,
     tempF: "112.4°F",
     status: "Critical",
-    dotClass: "bg-rose-500",
+    dotClass: "bg-orange-500",
   },
   {
     id: "las_vegas",
@@ -54,7 +54,7 @@ export const MONITORED_CITIES = [
     baseTemp: 31.8,
     tempF: "106.8°F",
     status: "High",
-    dotClass: "bg-amber-500",
+    dotClass: "bg-orange-400",
   },
   {
     id: "tucson",
@@ -67,7 +67,7 @@ export const MONITORED_CITIES = [
     baseTemp: 32.2,
     tempF: "104.2°F",
     status: "High",
-    dotClass: "bg-amber-500",
+    dotClass: "bg-orange-400",
   },
   // Texas & South Central
   {
@@ -81,7 +81,7 @@ export const MONITORED_CITIES = [
     baseTemp: 29.2,
     tempF: "94.2°F",
     status: "Elevated",
-    dotClass: "bg-slate-400",
+    dotClass: "bg-orange-400",
   },
   {
     id: "dallas",
@@ -94,7 +94,7 @@ export const MONITORED_CITIES = [
     baseTemp: 30.1,
     tempF: "98.6°F",
     status: "High",
-    dotClass: "bg-amber-500",
+    dotClass: "bg-orange-400",
   },
   {
     id: "austin",
@@ -107,7 +107,7 @@ export const MONITORED_CITIES = [
     baseTemp: 30.8,
     tempF: "101.5°F",
     status: "High",
-    dotClass: "bg-amber-500",
+    dotClass: "bg-orange-400",
   },
   {
     id: "san_antonio",
@@ -120,7 +120,7 @@ export const MONITORED_CITIES = [
     baseTemp: 30.5,
     tempF: "100.2°F",
     status: "High",
-    dotClass: "bg-amber-500",
+    dotClass: "bg-orange-400",
   },
   // California & Pacific Northwest
   {
@@ -134,7 +134,7 @@ export const MONITORED_CITIES = [
     baseTemp: 27.4,
     tempF: "82.5°F",
     status: "Nominal",
-    dotClass: "bg-slate-400",
+    dotClass: "bg-zinc-400",
   },
   {
     id: "los_angeles",
@@ -147,7 +147,7 @@ export const MONITORED_CITIES = [
     baseTemp: 31.0,
     tempF: "95.8°F",
     status: "High",
-    dotClass: "bg-amber-500",
+    dotClass: "bg-orange-400",
   },
   {
     id: "san_francisco",
@@ -160,7 +160,7 @@ export const MONITORED_CITIES = [
     baseTemp: 22.0,
     tempF: "72.4°F",
     status: "Nominal",
-    dotClass: "bg-slate-400",
+    dotClass: "bg-zinc-400",
   },
   {
     id: "seattle",
@@ -173,7 +173,7 @@ export const MONITORED_CITIES = [
     baseTemp: 24.5,
     tempF: "76.1°F",
     status: "Nominal",
-    dotClass: "bg-slate-400",
+    dotClass: "bg-zinc-400",
   },
   // Mountain & Central
   {
@@ -187,7 +187,7 @@ export const MONITORED_CITIES = [
     baseTemp: 28.0,
     tempF: "87.3°F",
     status: "Elevated",
-    dotClass: "bg-slate-400",
+    dotClass: "bg-zinc-400",
   },
   {
     id: "salt_lake_city",
@@ -200,7 +200,7 @@ export const MONITORED_CITIES = [
     baseTemp: 29.8,
     tempF: "92.1°F",
     status: "High",
-    dotClass: "bg-amber-500",
+    dotClass: "bg-orange-400",
   },
   // Midwest & Great Lakes
   {
@@ -214,7 +214,7 @@ export const MONITORED_CITIES = [
     baseTemp: 27.8,
     tempF: "84.1°F",
     status: "Nominal",
-    dotClass: "bg-slate-400",
+    dotClass: "bg-zinc-400",
   },
   {
     id: "minneapolis",
@@ -227,7 +227,7 @@ export const MONITORED_CITIES = [
     baseTemp: 26.5,
     tempF: "81.0°F",
     status: "Nominal",
-    dotClass: "bg-slate-400",
+    dotClass: "bg-zinc-400",
   },
   {
     id: "st_louis",
@@ -240,7 +240,7 @@ export const MONITORED_CITIES = [
     baseTemp: 29.4,
     tempF: "90.5°F",
     status: "Elevated",
-    dotClass: "bg-slate-400",
+    dotClass: "bg-zinc-400",
   },
   // East Coast & Mid-Atlantic
   {
@@ -254,7 +254,7 @@ export const MONITORED_CITIES = [
     baseTemp: 28.5,
     tempF: "88.4°F",
     status: "Elevated",
-    dotClass: "bg-slate-400",
+    dotClass: "bg-zinc-400",
   },
   {
     id: "boston",
@@ -267,7 +267,7 @@ export const MONITORED_CITIES = [
     baseTemp: 26.8,
     tempF: "82.1°F",
     status: "Nominal",
-    dotClass: "bg-slate-400",
+    dotClass: "bg-zinc-400",
   },
   {
     id: "philadelphia",
@@ -280,7 +280,7 @@ export const MONITORED_CITIES = [
     baseTemp: 28.6,
     tempF: "88.8°F",
     status: "Elevated",
-    dotClass: "bg-slate-400",
+    dotClass: "bg-zinc-400",
   },
   {
     id: "washington_dc",
@@ -293,7 +293,7 @@ export const MONITORED_CITIES = [
     baseTemp: 29.0,
     tempF: "89.5°F",
     status: "Elevated",
-    dotClass: "bg-slate-400",
+    dotClass: "bg-zinc-400",
   },
   // Southeast & Florida
   {
@@ -307,7 +307,7 @@ export const MONITORED_CITIES = [
     baseTemp: 30.2,
     tempF: "92.6°F",
     status: "High",
-    dotClass: "bg-rose-500",
+    dotClass: "bg-orange-500",
   },
   {
     id: "orlando",
@@ -320,7 +320,7 @@ export const MONITORED_CITIES = [
     baseTemp: 30.0,
     tempF: "91.8°F",
     status: "High",
-    dotClass: "bg-amber-500",
+    dotClass: "bg-orange-400",
   },
   {
     id: "atlanta",
@@ -333,7 +333,7 @@ export const MONITORED_CITIES = [
     baseTemp: 29.5,
     tempF: "91.3°F",
     status: "Elevated",
-    dotClass: "bg-slate-400",
+    dotClass: "bg-zinc-400",
   },
   {
     id: "new_orleans",
@@ -346,7 +346,7 @@ export const MONITORED_CITIES = [
     baseTemp: 30.0,
     tempF: "93.0°F",
     status: "High",
-    dotClass: "bg-amber-500",
+    dotClass: "bg-orange-400",
   },
 ];
 
@@ -368,7 +368,6 @@ const BASEMAP_PRESETS = {
   },
 };
 
-// Generates an authentic continuous 2D spatial thermal grid for any city center
 function generateCityThermalGrid(city, scope = "core") {
   const features = [];
   const isMetro = scope === "metro";
@@ -448,7 +447,7 @@ function generateAllCitiesThermalGrid(scope = "core") {
 export default function SpatialHeatmapView({
   selectedCity = "Phoenix, AZ",
   onSelectCity,
-  darkMode,
+  darkMode = true,
 }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -457,17 +456,15 @@ export default function SpatialHeatmapView({
   const baseTileLayerRef = useRef(null);
   const labelsTileLayerRef = useRef(null);
 
-  const [activeLayer, setActiveLayer] = useState("tcm"); // 'tcm' | 'exceedance' | 'persistence'
-  const [scope, setScope] = useState("core"); // 'core' | 'metro'
+  const [scope, setScope] = useState("core");
   const [currentView, setCurrentView] = useState("national");
   const [focusedCityName, setFocusedCityName] = useState(selectedCity);
   const [baseMapStyle, setBaseMapStyle] = useState(darkMode ? "dark" : "voyager");
-  const [opacity, setOpacity] = useState(0.65);
+  const [opacity, setOpacity] = useState(0.7);
   const [selectedParcel, setSelectedParcel] = useState(null);
   const [selectedClassHex, setSelectedClassHex] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fly to specific city
   const flyToCity = (cityName) => {
     const targetCity = MONITORED_CITIES.find((c) => c.name === cityName);
     if (targetCity && mapInstanceRef.current) {
@@ -481,7 +478,6 @@ export default function SpatialHeatmapView({
     }
   };
 
-  // Fly to national overview
   const flyToNationalOverview = () => {
     if (mapInstanceRef.current) {
       setCurrentView("national");
@@ -492,7 +488,6 @@ export default function SpatialHeatmapView({
     }
   };
 
-  // Initialize Leaflet Map
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
@@ -512,7 +507,7 @@ export default function SpatialHeatmapView({
     map.getPane("topLabelsPane").style.zIndex = 650;
     map.getPane("topLabelsPane").style.pointerEvents = "none";
 
-    const preset = BASEMAP_PRESETS[baseMapStyle] || BASEMAP_PRESETS.voyager;
+    const preset = BASEMAP_PRESETS[baseMapStyle] || BASEMAP_PRESETS.dark;
 
     const baseLayer = L.tileLayer(preset.base, {
       maxZoom: 19,
@@ -537,7 +532,6 @@ export default function SpatialHeatmapView({
     };
   }, [baseMapStyle]);
 
-  // Render Multi-City Thermal Polygon Meshes and City Hub Markers
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
@@ -552,16 +546,15 @@ export default function SpatialHeatmapView({
       mapInstanceRef.current.removeLayer(markersLayerGroupRef.current);
     }
 
-    // Add Thermal GeoJSON Layer
     const layer = L.geoJSON(unifiedGeoData, {
       style: (feature) => {
-        const hex = feature.properties?.color || "#febe6c";
+        const hex = feature.properties?.color || "#ff6b2b";
         const isFilterActive = selectedClassHex !== null;
         const isMatched = selectedClassHex === hex;
 
         return {
           fillColor: hex,
-          fillOpacity: isFilterActive ? (isMatched ? 0.9 : 0.1) : opacity,
+          fillOpacity: isFilterActive ? (isMatched ? 0.95 : 0.1) : opacity,
           stroke: false,
           weight: 0,
         };
@@ -573,8 +566,8 @@ export default function SpatialHeatmapView({
             target.setStyle({
               stroke: true,
               color: "#ffffff",
-              weight: 1.5,
-              fillOpacity: 0.9,
+              weight: 2,
+              fillOpacity: 0.95,
             });
             target.bringToFront();
             setSelectedParcel(feature.properties);
@@ -606,16 +599,16 @@ export default function SpatialHeatmapView({
 
       const markerHtml = `
         <div class="cursor-pointer group flex flex-col items-center select-none" style="transform: translate(-50%, -100%);">
-          <div class="px-2 py-0.5 rounded-md bg-slate-900/90 border ${
-            isCurrent ? "border-slate-300 ring-1 ring-white/30" : "border-slate-700/60"
-          } text-white font-mono text-[10px] shadow-sm flex items-center gap-1.5 backdrop-blur-xs">
-            <span class="w-1.5 h-1.5 rounded-full ${city.dotClass}"></span>
-            <span class="font-medium text-slate-200">${city.shortName}</span>
-            <span class="text-[9px] font-mono text-slate-400">${city.tempF}</span>
+          <div class="px-2.5 py-1 rounded-lg bg-black/95 border ${
+            isCurrent ? "border-orange-500 ring-2 ring-orange-500/30" : "border-zinc-800"
+          } text-white font-mono text-[11px] shadow-lg flex items-center gap-1.5 backdrop-blur-sm transition-transform hover:scale-105">
+            <span class="w-2 h-2 rounded-full ${city.dotClass}"></span>
+            <span class="font-medium text-white">${city.shortName}</span>
+            <span class="px-1 py-0.2 rounded text-[10px] font-mono text-orange-400 bg-orange-500/15">${city.tempF}</span>
           </div>
-          <div class="w-1.5 h-1.5 bg-slate-900 border-r border-b ${
-            isCurrent ? "border-slate-300" : "border-slate-700/60"
-          } rotate-45 -mt-0.5"></div>
+          <div class="w-2 h-2 bg-black border-r border-b ${
+            isCurrent ? "border-orange-500" : "border-zinc-800"
+          } rotate-45 -mt-1"></div>
         </div>
       `;
 
@@ -640,23 +633,23 @@ export default function SpatialHeatmapView({
   }, [opacity, selectedClassHex, scope, focusedCityName, currentView]);
 
   return (
-    <div className="bg-white dark:bg-[#12151B] border border-slate-200/80 dark:border-zinc-800/80 rounded-xl p-4 flex flex-col shadow-xs space-y-3.5 font-sans">
+    <div className="bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col shadow-xs space-y-3.5 font-sans">
       {/* Top Header Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-zinc-800/60">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-gray-100 dark:border-zinc-800/80">
         <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-700 dark:text-zinc-300">
-            <Radio className="w-3.5 h-3.5" />
+          <div className="h-8 w-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
+            <Radio className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-display text-sm font-semibold tracking-tight text-slate-900 dark:text-zinc-100">
+              <h2 className="font-display text-sm font-semibold tracking-tight text-black dark:text-white">
                 Spatial Microclimate Heatmap
               </h2>
-              <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700/60 text-xs font-mono text-slate-600 dark:text-zinc-400">
+              <span className="px-2 py-0.5 rounded-md bg-orange-500/10 border border-orange-500/20 text-xs font-mono text-orange-500">
                 {currentView === "national" ? "National Overview" : focusedCityName}
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-zinc-400">
+            <p className="text-xs text-gray-500 dark:text-zinc-400">
               FortyGuard 100m² Radiometric Grid Overlaid on CartoDB / OpenStreetMap
             </p>
           </div>
@@ -666,7 +659,7 @@ export default function SpatialHeatmapView({
         <div className="flex flex-wrap items-center gap-2">
           {/* City Dropdown Selector */}
           <div className="relative flex items-center">
-            <div className="absolute left-2.5 pointer-events-none text-slate-400">
+            <div className="absolute left-2.5 pointer-events-none text-orange-500">
               <MapPin className="w-3.5 h-3.5" />
             </div>
             <select
@@ -678,7 +671,7 @@ export default function SpatialHeatmapView({
                   flyToCity(e.target.value);
                 }
               }}
-              className="bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700/60 rounded-lg pl-8 pr-7 py-1.5 font-mono text-xs text-slate-800 dark:text-zinc-200 cursor-pointer focus:outline-none transition-colors appearance-none shadow-xs"
+              className="bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg pl-8 pr-7 py-1.5 font-mono text-xs text-black dark:text-white cursor-pointer focus:outline-none transition-colors appearance-none shadow-xs"
             >
               <option value="national">National Overview (All US Cities)</option>
               <optgroup label="Southwest & Desert">
@@ -717,45 +710,55 @@ export default function SpatialHeatmapView({
                 ))}
               </optgroup>
             </select>
-            <div className="absolute right-2 pointer-events-none text-slate-400">
+            <div className="absolute right-2 pointer-events-none text-gray-400">
               <ChevronDown className="w-3.5 h-3.5" />
             </div>
           </div>
 
           {/* AOI Scope Toggle */}
-          <div className="flex items-center gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 text-xs font-mono">
+          <div className="flex items-center gap-1 p-0.5 rounded-lg bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-xs font-mono">
             <button
               onClick={() => setScope("core")}
               className={`px-2.5 py-1 rounded-md font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
                 scope === "core"
-                  ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs font-semibold"
-                  : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
+                  ? "bg-white dark:bg-zinc-800 text-orange-500 shadow-xs font-semibold"
+                  : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
               }`}
             >
-              <Scan className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
+              <Scan className="w-3.5 h-3.5 text-orange-500" />
               <span>Core AOI</span>
             </button>
             <button
               onClick={() => setScope("metro")}
               className={`px-2.5 py-1 rounded-md font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
                 scope === "metro"
-                  ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs font-semibold"
-                  : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
+                  ? "bg-white dark:bg-zinc-800 text-orange-500 shadow-xs font-semibold"
+                  : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
               }`}
             >
-              <Globe2 className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
+              <Globe2 className="w-3.5 h-3.5 text-orange-500" />
               <span>Metro Valley</span>
             </button>
           </div>
 
           {/* Basemap Preset Toggle */}
-          <div className="flex items-center gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 text-xs font-mono">
+          <div className="flex items-center gap-1 p-0.5 rounded-lg bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-xs font-mono">
+            <button
+              onClick={() => setBaseMapStyle("dark")}
+              className={`px-2 py-1 rounded-md font-medium transition-colors cursor-pointer ${
+                baseMapStyle === "dark"
+                  ? "bg-white dark:bg-zinc-800 text-orange-500 shadow-xs font-semibold"
+                  : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+              }`}
+            >
+              Dark
+            </button>
             <button
               onClick={() => setBaseMapStyle("voyager")}
               className={`px-2 py-1 rounded-md font-medium transition-colors cursor-pointer ${
                 baseMapStyle === "voyager"
-                  ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs font-semibold"
-                  : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
+                  ? "bg-white dark:bg-zinc-800 text-orange-500 shadow-xs font-semibold"
+                  : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
               }`}
             >
               Voyager
@@ -764,43 +767,33 @@ export default function SpatialHeatmapView({
               onClick={() => setBaseMapStyle("positron")}
               className={`px-2 py-1 rounded-md font-medium transition-colors cursor-pointer ${
                 baseMapStyle === "positron"
-                  ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs font-semibold"
-                  : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
+                  ? "bg-white dark:bg-zinc-800 text-orange-500 shadow-xs font-semibold"
+                  : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
               }`}
             >
               Light
-            </button>
-            <button
-              onClick={() => setBaseMapStyle("dark")}
-              className={`px-2 py-1 rounded-md font-medium transition-colors cursor-pointer ${
-                baseMapStyle === "dark"
-                  ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs font-semibold"
-                  : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
-              }`}
-            >
-              Dark
             </button>
           </div>
         </div>
       </div>
 
       {/* Main Single GIS Map Canvas with Floating FortyGuard Legend */}
-      <div className="relative w-full h-[520px] rounded-xl overflow-hidden border border-slate-200/80 dark:border-zinc-800/80 bg-slate-950">
+      <div className="relative w-full h-[520px] rounded-xl overflow-hidden border border-gray-200 dark:border-zinc-800 bg-black">
         <div ref={mapContainerRef} className="w-full h-full z-0" />
 
         {isLoading && (
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-30 font-mono text-xs text-slate-300 gap-2">
-            <RefreshCw className="w-4 h-4 animate-spin text-slate-400" />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-30 font-mono text-xs text-orange-400 gap-2">
+            <RefreshCw className="w-4 h-4 animate-spin text-orange-500" />
             <span>Rendering FortyGuard Thermal Model...</span>
           </div>
         )}
 
         {/* FortyGuard Legend Box */}
-        <div className="absolute top-3.5 left-3.5 z-20 bg-white/95 dark:bg-[#12151B]/95 backdrop-blur-md p-3 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-lg font-mono text-xs max-w-[220px]">
-          <div className="font-semibold text-slate-900 dark:text-zinc-100 text-[11px] mb-0.5">
+        <div className="absolute top-3.5 left-3.5 z-20 bg-white/95 dark:bg-[#0E1015]/95 backdrop-blur-md p-3 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-lg font-mono text-xs max-w-[220px]">
+          <div className="font-semibold text-black dark:text-white text-[11px] mb-0.5">
             Average Temperature (24h)
           </div>
-          <div className="text-[9px] text-slate-500 dark:text-zinc-400 mb-2 pb-1.5 border-b border-slate-200 dark:border-zinc-800">
+          <div className="text-[9px] text-gray-500 dark:text-zinc-400 mb-2 pb-1.5 border-b border-gray-200 dark:border-zinc-800">
             Equal-interval · 12 classes · 0.17 °C
           </div>
 
@@ -814,15 +807,15 @@ export default function SpatialHeatmapView({
                   title={`Filter ${cls.label}`}
                   className={`w-full flex items-center gap-1.5 text-[9px] px-1 py-0.5 rounded transition-colors cursor-pointer text-left ${
                     isSelected
-                      ? "bg-slate-200 dark:bg-zinc-800 font-semibold"
-                      : "hover:bg-slate-100 dark:hover:bg-zinc-800/50"
+                      ? "bg-orange-500/20 text-orange-400 font-semibold ring-1 ring-orange-500/40"
+                      : "hover:bg-gray-100 dark:hover:bg-zinc-800/50 text-gray-700 dark:text-zinc-300"
                   }`}
                 >
                   <span
                     className="w-3.5 h-2.5 rounded-xs shrink-0 border border-black/10"
                     style={{ backgroundColor: cls.hex }}
                   />
-                  <span className="text-slate-700 dark:text-zinc-300 tabular-nums">
+                  <span className="tabular-nums">
                     {cls.label}
                   </span>
                 </button>
@@ -833,16 +826,16 @@ export default function SpatialHeatmapView({
           {selectedClassHex && (
             <button
               onClick={() => setSelectedClassHex(null)}
-              className="mt-2 w-full text-center text-[9px] text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-mono uppercase"
+              className="mt-2 w-full text-center text-[9px] text-orange-500 hover:underline font-mono uppercase"
             >
               Reset Filter
             </button>
           )}
 
-          <div className="mt-2 pt-1.5 border-t border-slate-200 dark:border-zinc-800">
-            <div className="flex justify-between items-center text-[9px] text-slate-500 dark:text-zinc-400 mb-1">
+          <div className="mt-2 pt-1.5 border-t border-gray-200 dark:border-zinc-800">
+            <div className="flex justify-between items-center text-[9px] text-gray-500 dark:text-zinc-400 mb-1">
               <span>Opacity</span>
-              <span className="font-mono text-slate-800 dark:text-zinc-200">
+              <span className="font-mono text-black dark:text-white">
                 {(opacity * 100).toFixed(0)}%
               </span>
             </div>
@@ -853,26 +846,26 @@ export default function SpatialHeatmapView({
               step="0.05"
               value={opacity}
               onChange={(e) => setOpacity(parseFloat(e.target.value))}
-              className="w-full h-1 bg-slate-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-slate-600 dark:accent-zinc-400"
+              className="w-full h-1 bg-gray-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#FF6B2B]"
             />
           </div>
         </div>
 
         {/* Floating Parcel Inspector */}
         {selectedParcel && (
-          <div className="absolute top-3.5 right-3.5 z-20 bg-white/95 dark:bg-[#12151B]/95 backdrop-blur-md p-3 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-lg font-mono text-xs max-w-[240px] space-y-1.5">
-            <div className="flex items-center justify-between pb-1.5 border-b border-slate-200 dark:border-zinc-800">
-              <span className="text-slate-500 dark:text-zinc-400 font-semibold uppercase text-[10px]">
+          <div className="absolute top-3.5 right-3.5 z-20 bg-white/95 dark:bg-[#0E1015]/95 backdrop-blur-md p-3.5 rounded-xl border border-orange-500/30 shadow-lg font-mono text-xs max-w-[240px] space-y-2">
+            <div className="flex items-center justify-between pb-1.5 border-b border-gray-200 dark:border-zinc-800">
+              <span className="text-orange-500 font-semibold uppercase text-[10px]">
                 {selectedParcel.city_name || "PARCEL INSPECTION"}
               </span>
-              <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 text-[9px]">
+              <span className="px-1.5 py-0.2 rounded bg-orange-500/10 text-orange-400 text-[9px]">
                 {selectedParcel.tile_id ?? "AOI-049"}
               </span>
             </div>
 
             <div className="space-y-1 text-[10px]">
               <div className="flex justify-between items-center">
-                <span className="text-slate-500 dark:text-zinc-400">Radiometric:</span>
+                <span className="text-gray-500 dark:text-zinc-400">Radiometric:</span>
                 <span
                   className="px-1.5 py-0.2 rounded text-white font-semibold text-[10px]"
                   style={{ backgroundColor: selectedParcel.color }}
@@ -882,22 +875,22 @@ export default function SpatialHeatmapView({
               </div>
 
               <div className="flex justify-between">
-                <span className="text-slate-500 dark:text-zinc-400">Classification:</span>
-                <span className="text-slate-800 dark:text-zinc-200 font-medium">
+                <span className="text-gray-500 dark:text-zinc-400">Classification:</span>
+                <span className="text-black dark:text-white font-medium">
                   {selectedParcel.class_label}
                 </span>
               </div>
 
               <div className="flex justify-between">
-                <span className="text-slate-500 dark:text-zinc-400">Exceedance Hours:</span>
-                <span className="text-slate-900 dark:text-zinc-100 font-medium">
+                <span className="text-gray-500 dark:text-zinc-400">Exceedance Hours:</span>
+                <span className="text-orange-500 font-medium">
                   {selectedParcel.exceedance_hours}h / week
                 </span>
               </div>
 
               <div className="flex justify-between">
-                <span className="text-slate-500 dark:text-zinc-400">Persistence:</span>
-                <span className="text-slate-900 dark:text-zinc-100 font-medium">
+                <span className="text-gray-500 dark:text-zinc-400">Persistence:</span>
+                <span className="text-orange-400 font-medium">
                   {selectedParcel.persistence_runs} runs
                 </span>
               </div>
@@ -909,21 +902,21 @@ export default function SpatialHeatmapView({
         <div className="absolute bottom-3.5 right-3.5 z-20 flex flex-col gap-1">
           <button
             onClick={() => mapInstanceRef.current && mapInstanceRef.current.zoomIn()}
-            className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white shadow-sm cursor-pointer"
+            className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-orange-500 shadow-sm cursor-pointer"
             title="Zoom In"
           >
             <ZoomIn className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => mapInstanceRef.current && mapInstanceRef.current.zoomOut()}
-            className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white shadow-sm cursor-pointer"
+            className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-orange-500 shadow-sm cursor-pointer"
             title="Zoom Out"
           >
             <ZoomOut className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={flyToNationalOverview}
-            className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white shadow-sm cursor-pointer"
+            className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-orange-500 shadow-sm cursor-pointer"
             title="National Overview"
           >
             <Globe2 className="w-3.5 h-3.5" />
@@ -931,7 +924,7 @@ export default function SpatialHeatmapView({
         </div>
 
         {/* Map Attribution */}
-        <div className="absolute bottom-2 left-3.5 z-20 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded text-[8px] font-mono text-zinc-400 pointer-events-none">
+        <div className="absolute bottom-2 left-3.5 z-20 bg-black/70 backdrop-blur-xs px-2 py-0.5 rounded text-[8px] font-mono text-zinc-400 pointer-events-none">
           CartoDB · OpenStreetMap · FortyGuard Radiometric Model
         </div>
       </div>

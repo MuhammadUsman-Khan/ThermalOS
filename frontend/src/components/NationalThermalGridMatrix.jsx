@@ -217,23 +217,23 @@ const CITY_METRICS = [
 
 export default function NationalThermalGridMatrix({ selectedCity, onSelectCity }) {
   return (
-    <div className="bg-white dark:bg-[#12151B] border border-slate-200/80 dark:border-zinc-800/80 rounded-xl p-4 flex flex-col shadow-xs space-y-3.5 font-sans">
+    <div className="bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col shadow-xs space-y-3.5 font-sans">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-zinc-800/60">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100 dark:border-zinc-800/80">
         <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-700 dark:text-zinc-300">
-            <Globe className="w-3.5 h-3.5" />
+          <div className="h-8 w-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
+            <Globe className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-display text-sm font-semibold tracking-tight text-slate-900 dark:text-zinc-100">
+              <h2 className="font-display text-sm font-semibold tracking-tight text-black dark:text-white">
                 National Thermal Grid Matrix
               </h2>
-              <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700/60 text-xs font-mono text-slate-600 dark:text-zinc-400">
-                Cross-City Comparative Telemetry
+              <span className="px-2 py-0.5 rounded-md bg-orange-500/10 border border-orange-500/20 text-xs font-mono text-orange-500">
+                Cross-City Telemetry
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-zinc-400">
+            <p className="text-xs text-gray-500 dark:text-zinc-400">
               Synchronized microclimate metrics across major metropolitan thermal corridors
             </p>
           </div>
@@ -244,7 +244,7 @@ export default function NationalThermalGridMatrix({ selectedCity, onSelectCity }
       <div className="overflow-x-auto">
         <table className="w-full text-left font-mono text-xs border-collapse">
           <thead>
-            <tr className="border-b border-slate-200/80 dark:border-zinc-800 text-[11px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
+            <tr className="border-b border-gray-200 dark:border-zinc-800 text-[11px] text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
               <th className="py-2.5 px-3">City / Grid Zone</th>
               <th className="py-2.5 px-2">Ambient Air</th>
               <th className="py-2.5 px-2">Surface Temp</th>
@@ -258,7 +258,7 @@ export default function NationalThermalGridMatrix({ selectedCity, onSelectCity }
               <th className="py-2.5 px-2 text-right">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/50">
+          <tbody className="divide-y divide-gray-100 dark:divide-zinc-800/60">
             {CITY_METRICS.map((row) => {
               const isSelected = selectedCity === row.city;
 
@@ -268,36 +268,34 @@ export default function NationalThermalGridMatrix({ selectedCity, onSelectCity }
                   onClick={() => onSelectCity && onSelectCity(row.city)}
                   className={`cursor-pointer transition-colors ${
                     isSelected
-                      ? "bg-slate-100 dark:bg-zinc-800/80 font-semibold text-slate-900 dark:text-white"
-                      : "hover:bg-slate-50 dark:hover:bg-zinc-900/40 text-slate-700 dark:text-zinc-300"
+                      ? "bg-orange-500/10 dark:bg-orange-500/15 font-semibold text-black dark:text-white"
+                      : "hover:bg-gray-50 dark:hover:bg-zinc-900/40 text-gray-700 dark:text-zinc-300"
                   }`}
                 >
                   <td className="py-2.5 px-3 flex items-center gap-2">
-                    <MapPin className={`w-3.5 h-3.5 ${isSelected ? "text-slate-900 dark:text-zinc-100" : "text-slate-400 dark:text-zinc-500"}`} />
+                    <MapPin className={`w-3.5 h-3.5 ${isSelected ? "text-orange-500" : "text-gray-400 dark:text-zinc-500"}`} />
                     <span>{row.city}</span>
                   </td>
-                  <td className="py-2.5 px-2 tabular-nums text-slate-600 dark:text-zinc-400">{row.ambient}°F</td>
-                  <td className="py-2.5 px-2 tabular-nums font-semibold text-slate-900 dark:text-zinc-100">{row.surface}°F</td>
-                  <td className="py-2.5 px-2 tabular-nums text-slate-600 dark:text-zinc-400">+{row.delta}°F</td>
-                  <td className="py-2.5 px-2 tabular-nums text-slate-600 dark:text-zinc-400">{row.ghi} W/m²</td>
-                  <td className="py-2.5 px-2 tabular-nums text-slate-600 dark:text-zinc-400">{row.humidity}%</td>
-                  <td className="py-2.5 px-2 tabular-nums text-slate-600 dark:text-zinc-400">{row.wetBulb}°F</td>
-                  <td className="py-2.5 px-2 tabular-nums">
-                    <span className={row.wbgt >= 85 ? "text-rose-500 font-semibold" : "text-slate-700 dark:text-zinc-300"}>
-                      {row.wbgt}°F
-                    </span>
+                  <td className="py-2.5 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.ambient}°F</td>
+                  <td className="py-2.5 px-2 tabular-nums font-semibold text-orange-500">{row.surface}°F</td>
+                  <td className="py-2.5 px-2 tabular-nums text-gray-600 dark:text-zinc-400">+{row.delta}°F</td>
+                  <td className="py-2.5 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.ghi} W/m²</td>
+                  <td className="py-2.5 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.humidity}%</td>
+                  <td className="py-2.5 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.wetBulb}°F</td>
+                  <td className="py-2.5 px-2 tabular-nums font-semibold text-orange-500">
+                    {row.wbgt}°F
                   </td>
-                  <td className="py-2.5 px-2 tabular-nums text-slate-600 dark:text-zinc-400">{row.buildingPct}%</td>
+                  <td className="py-2.5 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.buildingPct}%</td>
                   <td className="py-2.5 px-3">
                     <span
                       className={`inline-block px-2 py-0.5 rounded text-[10px] ${
                         row.statusType === "critical"
-                          ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-medium"
+                          ? "bg-orange-500 text-black font-semibold"
                           : row.statusType === "precool"
-                          ? "bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 font-medium"
+                          ? "bg-orange-500/20 text-orange-400 border border-orange-500/30 font-medium"
                           : row.statusType === "elevated"
-                          ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 font-medium"
-                          : "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 font-normal"
+                          ? "bg-orange-500/10 text-orange-400 border border-orange-500/20 font-medium"
+                          : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 font-normal"
                       }`}
                     >
                       {row.status}
@@ -309,7 +307,7 @@ export default function NationalThermalGridMatrix({ selectedCity, onSelectCity }
                         e.stopPropagation();
                         if (onSelectCity) onSelectCity(row.city);
                       }}
-                      className="text-xs text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-medium inline-flex items-center gap-0.5"
+                      className="text-xs text-orange-500 hover:text-orange-400 font-medium inline-flex items-center gap-0.5"
                     >
                       <span>Focus</span>
                       <ChevronRight className="w-3 h-3" />

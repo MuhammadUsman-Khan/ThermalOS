@@ -9,7 +9,7 @@ export default function RadialGauge({
   label = "Liljegren WBGT",
   size = 120,
   strokeWidth = 7,
-  color = "#f43f5e",
+  color = "#FF6B2B",
 }) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -34,7 +34,7 @@ export default function RadialGauge({
             r={radius}
             fill="none"
             stroke="currentColor"
-            className="text-slate-200 dark:text-zinc-800"
+            className="text-gray-200 dark:text-zinc-800"
             strokeWidth={strokeWidth}
             strokeDasharray={`${arcLength} ${circumference}`}
             strokeLinecap="round"
@@ -60,18 +60,18 @@ export default function RadialGauge({
         {/* Center Display Value */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pt-2">
           <div className="flex items-baseline gap-0.5">
-            <span className="text-2xl font-semibold font-mono text-slate-900 dark:text-zinc-100 tabular-nums">
+            <span className="text-2xl font-semibold font-mono text-black dark:text-white tabular-nums">
               {typeof value === "number" ? value.toFixed(1) : value}
             </span>
-            <span className="text-xs font-mono text-slate-500 dark:text-zinc-400">
+            <span className="text-xs font-mono text-gray-500 dark:text-zinc-400">
               {unit}
             </span>
           </div>
           <span
             className={`text-[9px] font-mono px-1.5 py-0.5 rounded mt-0.5 ${
               isCritical
-                ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-medium"
-                : "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 font-normal"
+                ? "bg-orange-500/15 text-orange-500 border border-orange-500/30 font-medium"
+                : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 font-normal"
             }`}
           >
             {isCritical ? "Advisory" : "Nominal"}
@@ -79,7 +79,7 @@ export default function RadialGauge({
         </div>
       </div>
 
-      <div className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 mt-1">
+      <div className="text-[10px] font-mono uppercase tracking-wider text-gray-500 dark:text-zinc-400 mt-1">
         {label}
       </div>
     </div>

@@ -61,7 +61,7 @@ function generateDiurnalProfile(city) {
   return hours;
 }
 
-export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, darkMode }) {
+export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, darkMode = true }) {
   const [currentHour, setCurrentHour] = useState(14); // default 2:00 PM
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -90,23 +90,23 @@ export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, da
   };
 
   return (
-    <div className="bg-white dark:bg-[#12151B] border border-slate-200/80 dark:border-zinc-800/80 rounded-xl p-4 flex flex-col shadow-xs space-y-3.5 font-sans">
+    <div className="bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col shadow-xs space-y-3.5 font-sans">
       {/* Header & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-zinc-800/60">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100 dark:border-zinc-800/80">
         <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-700 dark:text-zinc-300">
-            <Clock className="w-3.5 h-3.5" />
+          <div className="h-8 w-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
+            <Clock className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-display text-sm font-semibold tracking-tight text-slate-900 dark:text-zinc-100">
-                24-Hour Diurnal Solar & Thermal Forecaster · {selectedCity}
+              <h2 className="font-display text-sm font-semibold tracking-tight text-black dark:text-white">
+                24-Hour Diurnal Forecaster · {selectedCity}
               </h2>
-              <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700/60 text-xs font-mono text-slate-600 dark:text-zinc-400">
-                Thermodynamic Model
+              <span className="px-2 py-0.5 rounded-md bg-orange-500/10 border border-orange-500/20 text-xs font-mono text-orange-500">
+                Thermodynamic Curve
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-zinc-400">
+            <p className="text-xs text-gray-500 dark:text-zinc-400">
               Simulate diurnal heat island lag, solar flux windows, and HVAC pre-cooling opportunities
             </p>
           </div>
@@ -118,11 +118,11 @@ export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, da
             onClick={() => setIsPlaying(!isPlaying)}
             className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors cursor-pointer ${
               isPlaying
-                ? "bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 border border-slate-300 dark:border-zinc-700"
-                : "bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700/60 hover:text-slate-900 dark:hover:text-white shadow-xs"
+                ? "bg-orange-500 text-black font-semibold"
+                : "bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-zinc-700 hover:text-orange-500 shadow-xs"
             }`}
           >
-            {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 text-slate-600 dark:text-zinc-300" />}
+            {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 text-orange-500" />}
             <span>{isPlaying ? "Pause" : "Play 24H"}</span>
           </button>
           <button
@@ -131,7 +131,7 @@ export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, da
               setIsPlaying(false);
               if (onHourChange) onHourChange(diurnalData[14]);
             }}
-            className="p-1.5 rounded-lg bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700/60 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-400 hover:text-orange-500 transition-colors cursor-pointer"
             title="Reset to 14:00 Solar Peak"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -145,8 +145,8 @@ export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, da
           <AreaChart data={diurnalData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="surfaceDiurnalFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={darkMode ? "#ffffff" : "#0f172a"} stopOpacity={0.08} />
-                <stop offset="95%" stopColor={darkMode ? "#ffffff" : "#0f172a"} stopOpacity={0} />
+                <stop offset="5%" stopColor="#FF6B2B" stopOpacity={darkMode ? 0.3 : 0.15} />
+                <stop offset="95%" stopColor="#FF6B2B" stopOpacity={0} />
               </linearGradient>
             </defs>
 
@@ -169,10 +169,10 @@ export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, da
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: darkMode ? "#12151B" : "#ffffff",
-                borderColor: darkMode ? "#27272a" : "#e2e8f0",
+                backgroundColor: darkMode ? "#0E1015" : "#ffffff",
+                borderColor: "#FF6B2B",
                 borderRadius: "8px",
-                color: darkMode ? "#f4f4f5" : "#0f172a",
+                color: darkMode ? "#ffffff" : "#000000",
                 fontFamily: "JetBrains Mono, monospace",
                 fontSize: "11px",
               }}
@@ -182,12 +182,12 @@ export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, da
             <ReferenceArea
               x1="03:00"
               x2="07:00"
-              fill={darkMode ? "rgba(255, 255, 255, 0.03)" : "rgba(15, 23, 42, 0.02)"}
-              stroke={darkMode ? "rgba(255, 255, 255, 0.15)" : "rgba(15, 23, 42, 0.15)"}
+              fill="rgba(255, 107, 43, 0.06)"
+              stroke="rgba(255, 107, 43, 0.3)"
               strokeDasharray="3 3"
               label={{
                 value: "Pre-Cool Window",
-                fill: darkMode ? "#a1a1aa" : "#64748b",
+                fill: "#FF6B2B",
                 fontSize: 10,
                 fontFamily: "JetBrains Mono, monospace",
                 position: "insideTopLeft",
@@ -198,12 +198,12 @@ export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, da
             <ReferenceArea
               x1="13:00"
               x2="17:00"
-              fill="rgba(244, 63, 94, 0.04)"
-              stroke="rgba(244, 63, 94, 0.2)"
+              fill="rgba(255, 85, 0, 0.08)"
+              stroke="rgba(255, 85, 0, 0.4)"
               strokeDasharray="3 3"
               label={{
                 value: "Peak Solar & Grid Load",
-                fill: "#f43f5e",
+                fill: "#FF5500",
                 fontSize: 10,
                 fontFamily: "JetBrains Mono, monospace",
                 position: "insideTopLeft",
@@ -214,16 +214,16 @@ export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, da
               type="monotone"
               dataKey="surfaceTemp"
               name="Surface Temp (°F)"
-              stroke={darkMode ? "#e4e4e7" : "#0f172a"}
-              strokeWidth={1.75}
+              stroke="#FF6B2B"
+              strokeWidth={2}
               fill="url(#surfaceDiurnalFill)"
             />
             <Area
               type="monotone"
               dataKey="ambientTemp"
               name="Ambient Temp (°F)"
-              stroke={darkMode ? "#71717a" : "#94a3b8"}
-              strokeWidth={1.25}
+              stroke={darkMode ? "#a1a1aa" : "#71717a"}
+              strokeWidth={1.5}
               fill="none"
               strokeDasharray="3 3"
             />
@@ -232,19 +232,19 @@ export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, da
       </div>
 
       {/* Interactive Timeline Scrubber Bar */}
-      <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/60 space-y-2">
+      <div className="pt-2 border-t border-gray-100 dark:border-zinc-800/80 space-y-2">
         <div className="flex justify-between items-center text-xs font-mono">
           <div className="flex items-center gap-2">
-            <span className="text-slate-500 dark:text-zinc-400">Position:</span>
-            <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 font-semibold">
+            <span className="text-gray-500 dark:text-zinc-400">Position:</span>
+            <span className="px-2 py-0.5 rounded-md bg-orange-500/10 border border-orange-500/20 text-orange-500 font-semibold">
               {activeDataPoint.time}
             </span>
           </div>
-          <div className="flex items-center gap-3 text-xs font-mono text-slate-500 dark:text-zinc-400">
-            <span>Surface: <strong className="text-slate-900 dark:text-zinc-100">{activeDataPoint.surfaceTemp}°F</strong></span>
-            <span>Ambient: <strong className="text-slate-700 dark:text-zinc-300">{activeDataPoint.ambientTemp}°F</strong></span>
-            <span>Solar: <strong className="text-slate-700 dark:text-zinc-300">{activeDataPoint.ghi} W/m²</strong></span>
-            <span>WBGT: <strong className={activeDataPoint.wbgt >= 85 ? "text-rose-500 font-medium" : "text-slate-700 dark:text-zinc-300"}>{activeDataPoint.wbgt}°F</strong></span>
+          <div className="flex items-center gap-3 text-xs font-mono text-gray-500 dark:text-zinc-400">
+            <span>Surface: <strong className="text-orange-500 font-semibold">{activeDataPoint.surfaceTemp}°F</strong></span>
+            <span>Ambient: <strong className="text-black dark:text-white">{activeDataPoint.ambientTemp}°F</strong></span>
+            <span>Solar: <strong className="text-orange-400">{activeDataPoint.ghi} W/m²</strong></span>
+            <span>WBGT: <strong className="text-orange-500">{activeDataPoint.wbgt}°F</strong></span>
           </div>
         </div>
 
@@ -255,9 +255,9 @@ export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, da
           step="1"
           value={currentHour}
           onChange={handleSliderChange}
-          className="w-full h-1.5 bg-slate-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-slate-700 dark:accent-zinc-400"
+          className="w-full h-2 bg-gray-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#FF6B2B]"
         />
-        <div className="flex justify-between text-[10px] font-mono text-slate-400 dark:text-zinc-500">
+        <div className="flex justify-between text-[10px] font-mono text-gray-400 dark:text-zinc-500">
           <span>00:00 (Night)</span>
           <span>06:00 (Dawn)</span>
           <span>12:00 (Noon)</span>
