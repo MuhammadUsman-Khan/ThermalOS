@@ -388,7 +388,7 @@ export default function App() {
       />
 
       {/* Executive Command Header Bar */}
-      <header className="border-b border-white/[0.12] dark:border-white/[0.08] bg-white/80 dark:bg-[#090B10]/80 backdrop-blur-2xl sticky top-0 z-40 px-5 sm:px-8 py-3 transition-colors shadow-xs">
+      <header className="border-b border-black/10 dark:border-white/[0.08] bg-white/90 dark:bg-[#090B10]/80 backdrop-blur-2xl sticky top-0 z-40 px-5 sm:px-8 py-3 transition-colors shadow-xs">
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4">
           {/* Brand Logo & Telemetry Indicator */}
           <div className="flex items-center gap-3.5">
@@ -776,8 +776,8 @@ export default function App() {
                   </div>
 
                   <div className="pt-3 border-t border-gray-200/60 dark:border-white/[0.06] flex items-center justify-between text-[11px] font-mono text-gray-500 dark:text-zinc-400">
-                    <span>Wet-Bulb: <strong className="text-cyan-400 font-medium">{currentReading?.wet_bulb_f ? `${currentReading.wet_bulb_f.toFixed(1)}°F` : "74.1°F"}</strong></span>
-                    <span className="text-cyan-400 font-semibold">Chiller Shifting</span>
+                    <span>Wet-Bulb: <strong className="text-cyan-600 dark:text-cyan-400 font-medium">{currentReading?.wet_bulb_f ? `${currentReading.wet_bulb_f.toFixed(1)}°F` : "74.1°F"}</strong></span>
+                    <span className="text-cyan-600 dark:text-cyan-400 font-semibold">Chiller Shifting</span>
                   </div>
                 </motion.div>
 
@@ -993,7 +993,7 @@ export default function App() {
       </main>
 
       {/* Executive Mission Control Footer */}
-      <footer className="w-full max-w-7xl mx-auto px-6 py-4 border-t border-white/[0.12] dark:border-white/[0.08] flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 dark:text-zinc-400 font-mono gap-2 relative z-10">
+      <footer className="w-full max-w-7xl mx-auto px-6 py-4 border-t border-black/10 dark:border-white/[0.08] flex flex-col sm:flex-row items-center justify-between text-xs text-gray-600 dark:text-zinc-400 font-mono gap-2 relative z-10">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]" />
           <span className="font-semibold text-black dark:text-white">ThermalOS Executive Grid Intelligence</span>

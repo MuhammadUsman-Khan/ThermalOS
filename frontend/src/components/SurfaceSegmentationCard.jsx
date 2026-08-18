@@ -92,8 +92,8 @@ export default function SurfaceSegmentationCard({ segmentation, city }) {
         {/* Tree Canopy */}
         <div className="p-3.5 rounded-2xl glass-panel-subtle flex flex-col justify-between hover:border-emerald-500/40 transition-colors">
           <div className="flex items-center gap-1.5 mb-1.5">
-            <Trees className="w-3.5 h-3.5 text-emerald-500" />
-            <span className="text-[11px] font-mono font-medium text-gray-600 dark:text-zinc-400">
+            <Trees className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-500" />
+            <span className="text-[11px] font-mono font-medium text-gray-700 dark:text-zinc-400">
               Tree Canopy
             </span>
           </div>
@@ -101,15 +101,15 @@ export default function SurfaceSegmentationCard({ segmentation, city }) {
             <span className="text-lg font-bold font-mono text-black dark:text-white">
               {treePct}%
             </span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Cooling Shade</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-semibold">Cooling Shade</span>
           </div>
         </div>
 
         {/* Plant Cover */}
         <div className="p-3.5 rounded-2xl glass-panel-subtle flex flex-col justify-between hover:border-cyan-500/40 transition-colors">
           <div className="flex items-center gap-1.5 mb-1.5">
-            <Sprout className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="text-[11px] font-mono font-medium text-gray-600 dark:text-zinc-400">
+            <Sprout className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+            <span className="text-[11px] font-mono font-medium text-gray-700 dark:text-zinc-400">
               Plant Cover
             </span>
           </div>
@@ -117,15 +117,15 @@ export default function SurfaceSegmentationCard({ segmentation, city }) {
             <span className="text-lg font-bold font-mono text-black dark:text-white">
               {plantPct}%
             </span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">Vegetation</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30 font-semibold">Vegetation</span>
           </div>
         </div>
 
         {/* Ground Soil */}
         <div className="p-3.5 rounded-2xl glass-panel-subtle flex flex-col justify-between hover:border-amber-500/40 transition-colors">
           <div className="flex items-center gap-1.5 mb-1.5">
-            <Layers className="w-3.5 h-3.5 text-amber-500" />
-            <span className="text-[11px] font-mono font-medium text-gray-600 dark:text-zinc-400">
+            <Layers className="w-3.5 h-3.5 text-amber-600 dark:text-amber-500" />
+            <span className="text-[11px] font-mono font-medium text-gray-700 dark:text-zinc-400">
               Ground / Soil
             </span>
           </div>
@@ -133,7 +133,7 @@ export default function SurfaceSegmentationCard({ segmentation, city }) {
             <span className="text-lg font-bold font-mono text-black dark:text-white">
               {soilPct}%
             </span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">Porous Soil</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-semibold">Porous Soil</span>
           </div>
         </div>
       </div>

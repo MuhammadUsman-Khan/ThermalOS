@@ -39,14 +39,14 @@ export default function AgentTwoModal({ isOpen, onClose, city, currentTemp, load
               <strong className="text-orange-500 font-semibold">{data.current_temp_f || "104.0"}°F</strong>
             </div>
             <div className="p-3 rounded-xl glass-panel-subtle border-cyan-500/25 flex items-center justify-between">
-              <span className="text-cyan-400 font-medium">Target Pre-Cool:</span>
-              <strong className="text-cyan-400 font-semibold">
+              <span className="text-cyan-700 dark:text-cyan-400 font-medium">Target Pre-Cool:</span>
+              <strong className="text-cyan-700 dark:text-cyan-400 font-semibold">
                 {data.target_precool_temp_f || "68.0"}°F
               </strong>
             </div>
             <div className="p-3 rounded-xl glass-panel-subtle border-cyan-500/25 flex items-center justify-between">
-              <span className="text-cyan-400 font-medium">Grid Load Shift:</span>
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+              <span className="text-cyan-700 dark:text-cyan-400 font-medium">Grid Load Shift:</span>
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30">
                 {data.grid_load_shift_active ? "Active" : "Dispatched"}
               </span>
             </div>
@@ -54,8 +54,8 @@ export default function AgentTwoModal({ isOpen, onClose, city, currentTemp, load
 
           <div className="p-3.5 rounded-2xl glass-panel-subtle border-cyan-500/25 space-y-2">
             <div className="flex items-center gap-2">
-              <Zap className="w-3.5 h-3.5 text-cyan-500" />
-              <span className="font-mono text-xs font-semibold uppercase text-cyan-400 tracking-tight">
+              <Zap className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-500" />
+              <span className="font-mono text-xs font-semibold uppercase text-cyan-700 dark:text-cyan-400 tracking-tight">
                 HVAC Pre-Cooling Action Plan
               </span>
             </div>

@@ -50,29 +50,29 @@ export default function AgentOneModal({ isOpen, onClose, city, loading, error, r
           <div className="p-3.5 rounded-2xl glass-panel-subtle border-amber-500/25 space-y-1">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-              <span className="font-mono text-xs font-semibold text-amber-500 uppercase tracking-tight">
+              <span className="font-mono text-xs font-semibold text-amber-700 dark:text-amber-500 uppercase tracking-tight">
                 1. ASHRAE 55 Thermal Comfort Standard
               </span>
             </div>
             <p className="text-[11px] font-mono text-gray-500 dark:text-zinc-400 pl-5">
               Ref: ASHRAE 55-2023 §5.3 — Operative Temperature Limits
             </p>
-            <p className="text-xs leading-relaxed font-mono text-gray-700 dark:text-zinc-300 pl-5">
+            <p className="text-xs leading-relaxed font-mono text-gray-800 dark:text-zinc-300 pl-5">
               {auditReport.ashrae_compliance_status || "Standard exceeded by +14.2°F. Microclimate radiative flux triggers mandatory envelope insulation review."}
             </p>
           </div>
 
           <div className="p-3.5 rounded-2xl glass-panel-subtle border-amber-500/25 space-y-1">
             <div className="flex items-center gap-2">
-              <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-              <span className="font-mono text-xs font-semibold text-amber-400 uppercase tracking-tight">
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span className="font-mono text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-tight">
                 2. IECC Building Envelope & Insulation Warning
               </span>
             </div>
             <p className="text-[11px] font-mono text-gray-500 dark:text-zinc-400 pl-5">
               Ref: IECC 2021 §C402 — Building Envelope Requirements
             </p>
-            <p className="text-xs leading-relaxed font-mono text-gray-700 dark:text-zinc-300 pl-5">
+            <p className="text-xs leading-relaxed font-mono text-gray-800 dark:text-zinc-300 pl-5">
               {auditReport.iecc_envelope_warning || "Low roof albedo (α = 0.18) contributes to thermal bridging. Cool roof retrofit recommended."}
             </p>
           </div>

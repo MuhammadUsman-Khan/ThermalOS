@@ -35,20 +35,20 @@ export default function AgentThreeModal({ isOpen, onClose, city, loading, error,
               <strong className="text-black dark:text-white">{data.city || city}</strong>
             </div>
             <div className="p-3 rounded-xl glass-panel-subtle border-rose-500/25 flex items-center justify-between">
-              <span className="text-rose-400 font-medium">WBGT Index:</span>
-              <strong className="text-rose-500 font-semibold">
+              <span className="text-rose-700 dark:text-rose-400 font-medium">WBGT Index:</span>
+              <strong className="text-rose-600 dark:text-rose-500 font-semibold">
                 {data.wbgt_index || "86.7°F"}
               </strong>
             </div>
             <div className="p-3 rounded-xl glass-panel-subtle border-rose-500/25 flex items-center justify-between">
-              <span className="text-rose-400 font-medium">Heat Stress Risk:</span>
+              <span className="text-rose-700 dark:text-rose-400 font-medium">Heat Stress Risk:</span>
               <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase bg-rose-500 text-white">
                 {data.heat_stress_risk || "EXTREME"}
               </span>
             </div>
             <div className="p-3 rounded-xl glass-panel-subtle border-rose-500/25 flex items-center justify-between">
-              <span className="text-rose-400 font-medium">Civic Alert:</span>
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase bg-rose-500/20 text-rose-400 border border-rose-500/30">
+              <span className="text-rose-700 dark:text-rose-400 font-medium">Civic Alert:</span>
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/30 font-semibold">
                 {data.civic_alert_dispatched ? "Dispatched" : "Active"}
               </span>
             </div>
@@ -57,7 +57,7 @@ export default function AgentThreeModal({ isOpen, onClose, city, loading, error,
           <div className="p-3.5 rounded-2xl glass-panel-subtle border-rose-500/25 space-y-2">
             <div className="flex items-center gap-2">
               <AlertOctagon className="w-3.5 h-3.5 text-rose-500" />
-              <span className="font-mono text-xs font-semibold uppercase text-rose-500 tracking-tight">
+              <span className="font-mono text-xs font-semibold uppercase text-rose-700 dark:text-rose-500 tracking-tight">
                 Emergency Civic & Field Dispatch Protocol
               </span>
             </div>

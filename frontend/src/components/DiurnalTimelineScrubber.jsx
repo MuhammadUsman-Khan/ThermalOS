@@ -275,30 +275,30 @@ export default function DiurnalTimelineScrubber({
       {/* Bottom Insights Tiles */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
         <div className="p-3 rounded-xl glass-panel-subtle border-cyan-500/20 flex items-center gap-2.5 hover:border-cyan-500/40 transition-colors">
-          <Zap className="w-4 h-4 text-cyan-400 shrink-0" />
+          <Zap className="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
           <div>
-            <div className="font-semibold text-cyan-400">03:00 - 07:00 · Pre-Cool Window</div>
-            <div className="text-[11px] text-gray-500 dark:text-zinc-400">
+            <div className="font-bold text-cyan-700 dark:text-cyan-400">03:00 - 07:00 · Pre-Cool Window</div>
+            <div className="text-[11px] text-gray-600 dark:text-zinc-400">
               Low tariff off-peak chiller charging shifts 420 kW load.
             </div>
           </div>
         </div>
 
         <div className="p-3 rounded-xl glass-panel-subtle border-orange-500/20 flex items-center gap-2.5 hover:border-orange-500/40 transition-colors">
-          <Sun className="w-4 h-4 text-orange-500 shrink-0" />
+          <Sun className="w-4 h-4 text-orange-600 dark:text-orange-500 shrink-0" />
           <div>
-            <div className="font-semibold text-orange-500">14:00 · Peak Surface Flux</div>
-            <div className="text-[11px] text-gray-500 dark:text-zinc-400">
+            <div className="font-bold text-orange-700 dark:text-orange-500">14:00 · Peak Surface Flux</div>
+            <div className="text-[11px] text-gray-600 dark:text-zinc-400">
               Max solar irradiance ({curveData[14].ghi} W/m²) precedes ambient peak by ~2 hrs.
             </div>
           </div>
         </div>
 
         <div className="p-3 rounded-xl glass-panel-subtle border-rose-500/20 flex items-center gap-2.5 hover:border-rose-500/40 transition-colors">
-          <ShieldAlert className="w-4 h-4 text-rose-500 shrink-0" />
+          <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-500 shrink-0" />
           <div>
-            <div className="font-semibold text-rose-500">13:00 - 17:00 · Thermal Stress Peak</div>
-            <div className="text-[11px] text-gray-500 dark:text-zinc-400">
+            <div className="font-bold text-rose-700 dark:text-rose-500">13:00 - 17:00 · Thermal Stress Peak</div>
+            <div className="text-[11px] text-gray-600 dark:text-zinc-400">
               Active municipal heat advisory & grid peak shaving sequence.
             </div>
           </div>
