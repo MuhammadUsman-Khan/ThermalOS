@@ -26,7 +26,8 @@ import {
   MapPin,
   Check,
   AlertOctagon,
-  Sparkles,
+  Search,
+  X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -34,7 +35,7 @@ import KPICard from "./components/KPICard";
 import RadialGauge from "./components/RadialGauge";
 import AgentVisualization from "./components/AgentVisualization";
 import SurfaceSegmentationCard from "./components/SurfaceSegmentationCard";
-import SpatialHeatmapView from "./components/SpatialHeatmapView";
+import SpatialHeatmapView, { MONITORED_CITIES } from "./components/SpatialHeatmapView";
 import DiurnalTimelineScrubber from "./components/DiurnalTimelineScrubber";
 import NationalThermalGridMatrix from "./components/NationalThermalGridMatrix";
 import AgentEventLog from "./components/AgentEventLog";
@@ -42,14 +43,22 @@ import AgentOneModal from "./components/AgentOneModal";
 import AgentTwoModal from "./components/AgentTwoModal";
 import AgentThreeModal from "./components/AgentThreeModal";
 import Toast from "./components/Toast";
-import { CITIES } from "./lib/utils";
 
 const API_BASE = "http://localhost:8000";
+
+const REGIONS = [
+  "Southwest & Desert",
+  "Texas & South Central",
+  "West Coast & Pacific",
+  "Mountain & Midwest",
+  "East Coast & Southeast",
+];
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("operations"); // 'operations' | 'spatial_heatmap' | 'diurnal_sim' | 'national_grid'
   const [selectedCity, setSelectedCity] = useState("Phoenix, AZ");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [dropdownSearch, setDropdownSearch] = useState("");
   const [telemetryData, setTelemetryData] = useState([]);
   const [currentReading, setCurrentReading] = useState(null);
   const [surfaceTemp, setSurfaceTemp] = useState(117.3);
@@ -304,6 +313,12 @@ export default function App() {
 
   const surfaceDelta = Math.max(0, surfaceTemp - currentTemp);
 
+  const filteredDropdownCities = MONITORED_CITIES.filter(
+    (c) =>
+      c.name.toLowerCase().includes(dropdownSearch.toLowerCase()) ||
+      c.region.toLowerCase().includes(dropdownSearch.toLowerCase())
+  );
+
   return (
     <div className={`min-h-[100dvh] flex flex-col font-sans transition-colors ${darkMode ? "bg-[#090A0D] text-zinc-100" : "bg-[#F9FAFB] text-black"}`}>
       {/* Toast Notification */}
@@ -377,13 +392,13 @@ export default function App() {
 
           <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
             {/* Action Triggers with Physics Springs */}
-            <div className="flex items-center gap-1 p-0.5 rounded-lg bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-xs font-mono">
+            <div className="flex items-center gap-1 p-0.5 rounded-xl bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-xs font-mono">
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.96 }}
                 onClick={handleRunAudit}
                 disabled={isAuditLoading}
-                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-amber-500 hover:border-amber-500/30 border border-transparent shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="px-2.5 py-1 rounded-lg font-medium bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-amber-500 hover:border-amber-500/30 border border-transparent shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {isAuditLoading ? <RefreshCw className="w-3 h-3 animate-spin text-amber-500" /> : <FileCheck className="w-3 h-3 text-amber-500" />}
                 <span>Audit</span>
@@ -394,7 +409,7 @@ export default function App() {
                 whileTap={{ scale: 0.96 }}
                 onClick={handleRunInfrastructure}
                 disabled={isInfraLoading}
-                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-cyan-500 hover:border-cyan-500/30 border border-transparent shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="px-2.5 py-1 rounded-lg font-medium bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-cyan-500 hover:border-cyan-500/30 border border-transparent shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {isInfraLoading ? <RefreshCw className="w-3 h-3 animate-spin text-cyan-500" /> : <Zap className="w-3 h-3 text-cyan-500" />}
                 <span>Pre-Cool</span>
@@ -405,7 +420,7 @@ export default function App() {
                 whileTap={{ scale: 0.96 }}
                 onClick={handleRunCivic}
                 disabled={isCivicLoading}
-                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-rose-500 hover:border-rose-500/30 border border-transparent shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="px-2.5 py-1 rounded-lg font-medium bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-rose-500 hover:border-rose-500/30 border border-transparent shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {isCivicLoading ? <RefreshCw className="w-3 h-3 animate-spin text-rose-500" /> : <AlertOctagon className="w-3 h-3 text-rose-500" />}
                 <span>Civic Alert</span>
@@ -413,7 +428,7 @@ export default function App() {
             </div>
 
             {/* Live Telemetry Radar Pulse */}
-            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg border border-emerald-500/20 bg-emerald-500/5 text-xs font-mono">
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-xs font-mono">
               <span className={`w-2 h-2 rounded-full ${isEmergencyMode ? "bg-rose-500 animate-ping" : "bg-emerald-500 animate-radar-ping"}`} />
               <span className={isEmergencyMode ? "text-rose-500 font-semibold" : "text-emerald-500 font-medium"}>
                 {isEmergencyMode ? "Advisory Active" : `Live · ${uptime}`}
@@ -426,50 +441,98 @@ export default function App() {
               whileTap={{ scale: 0.94 }}
               onClick={() => setDarkMode(!darkMode)}
               title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-500/30 transition-colors shadow-xs cursor-pointer"
+              className="p-1.5 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-500/30 transition-colors shadow-xs cursor-pointer"
             >
               {darkMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </motion.button>
 
-            {/* City Selector */}
+            {/* High-End Searchable City Dropdown */}
             <div ref={dropdownRef} className="relative">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 hover:border-orange-500/40 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer text-black dark:text-white shadow-xs font-mono"
+                className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700/80 hover:border-orange-500/50 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer text-black dark:text-white shadow-xs font-mono group"
               >
-                <MapPin className="w-3.5 h-3.5 text-orange-500" />
-                <span>{selectedCity}</span>
+                <MapPin className="w-3.5 h-3.5 text-orange-500 group-hover:scale-110 transition-transform" />
+                <span className="font-semibold">{selectedCity}</span>
                 <ChevronDown
-                  className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
+                  className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? "rotate-180 text-orange-500" : ""}`}
                 />
               </motion.button>
 
               <AnimatePresence>
                 {isDropdownOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
                     transition={{ type: "spring", stiffness: 450, damping: 25 }}
-                    className="absolute top-full mt-1.5 right-0 w-52 bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 rounded-xl shadow-xl overflow-hidden z-50 py-1 font-mono text-xs max-h-72 overflow-y-auto"
+                    className="absolute top-full mt-2 right-0 w-72 bg-white/95 dark:bg-[#0E1015]/95 backdrop-blur-xl border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden z-50 flex flex-col max-h-80 font-mono text-xs"
                   >
-                    {CITIES.map((city) => (
-                      <div
-                        key={city}
-                        onClick={() => handleSelectCity(city)}
-                        className={`px-3.5 py-2 cursor-pointer transition-colors flex items-center justify-between ${
-                          selectedCity === city
-                            ? "bg-orange-500/10 text-orange-500 font-semibold"
-                            : "text-gray-700 dark:text-zinc-300 hover:bg-orange-500/10 hover:text-orange-400"
-                        }`}
-                      >
-                        <span>{city}</span>
-                        {selectedCity === city && <Check className="w-3.5 h-3.5 text-orange-500" />}
-                      </div>
-                    ))}
+                    {/* Top edge gradient glow */}
+                    <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
+
+                    {/* Search Input */}
+                    <div className="p-2 border-b border-gray-100 dark:border-zinc-800/80 relative">
+                      <Search className="w-3.5 h-3.5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search city..."
+                        value={dropdownSearch}
+                        onChange={(e) => setDropdownSearch(e.target.value)}
+                        className="w-full bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg pl-7 pr-6 py-1 text-xs text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50"
+                        autoFocus
+                      />
+                      {dropdownSearch && (
+                        <button
+                          onClick={() => setDropdownSearch("")}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Options List */}
+                    <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
+                      {REGIONS.map((region) => {
+                        const regionCities = filteredDropdownCities.filter((c) => c.region === region);
+                        if (regionCities.length === 0) return null;
+
+                        return (
+                          <div key={region} className="pt-1">
+                            <div className="px-3 py-0.5 text-[9.5px] font-semibold text-orange-500/80 uppercase tracking-wider">
+                              {region}
+                            </div>
+                            {regionCities.map((c) => {
+                              const isSelected = selectedCity === c.name;
+
+                              return (
+                                <button
+                                  key={c.id}
+                                  onClick={() => handleSelectCity(c.name)}
+                                  className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-between text-left transition-all cursor-pointer ${
+                                    isSelected
+                                      ? "bg-orange-500/15 text-orange-400 font-semibold border-l-2 border-orange-500"
+                                      : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800/60 hover:text-white"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span className={`w-2 h-2 rounded-full ${c.dotClass}`} />
+                                    <span>{c.name}</span>
+                                  </div>
+                                  <span className="px-1.5 py-0.2 rounded text-[9.5px] bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 font-mono">
+                                    {c.tempF}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -481,54 +544,62 @@ export default function App() {
       {/* Main Dashboard Canvas */}
       <main className="w-full max-w-7xl mx-auto px-4 py-4 flex-1 flex flex-col space-y-4 relative z-10">
         {/* Segmented Navigation Control */}
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-xs font-mono w-fit">
-          <button
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-xs font-mono w-fit">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setActiveTab("operations")}
-            className={`px-3.5 py-1.5 rounded-md font-medium flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-lg font-medium flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === "operations"
-                ? "bg-orange-500 text-black font-semibold shadow-xs"
+                ? "bg-orange-500 text-black font-bold shadow-[0_0_12px_rgba(249,115,22,0.35)]"
                 : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
             }`}
           >
             <Activity className="w-3.5 h-3.5" />
             <span>Operations Console</span>
-          </button>
+          </motion.button>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setActiveTab("spatial_heatmap")}
-            className={`px-3.5 py-1.5 rounded-md font-medium flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-lg font-medium flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === "spatial_heatmap"
-                ? "bg-orange-500 text-black font-semibold shadow-xs"
+                ? "bg-orange-500 text-black font-bold shadow-[0_0_12px_rgba(249,115,22,0.35)]"
                 : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
             }`}
           >
             <Radio className="w-3.5 h-3.5" />
             <span>Spatial Heatmap</span>
-          </button>
+          </motion.button>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setActiveTab("diurnal_sim")}
-            className={`px-3.5 py-1.5 rounded-md font-medium flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-lg font-medium flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === "diurnal_sim"
-                ? "bg-orange-500 text-black font-semibold shadow-xs"
+                ? "bg-orange-500 text-black font-bold shadow-[0_0_12px_rgba(249,115,22,0.35)]"
                 : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
             <span>Diurnal Forecaster</span>
-          </button>
+          </motion.button>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setActiveTab("national_grid")}
-            className={`px-3.5 py-1.5 rounded-md font-medium flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-lg font-medium flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === "national_grid"
-                ? "bg-orange-500 text-black font-semibold shadow-xs"
+                ? "bg-orange-500 text-black font-bold shadow-[0_0_12px_rgba(249,115,22,0.35)]"
                 : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
             }`}
           >
             <Globe className="w-3.5 h-3.5" />
             <span>National Grid Matrix</span>
-          </button>
+          </motion.button>
         </div>
 
         {/* Dynamic Animated Tab View Routing */}

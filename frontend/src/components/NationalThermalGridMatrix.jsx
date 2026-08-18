@@ -1,8 +1,13 @@
+import { useState } from "react";
 import {
   Globe,
   MapPin,
   ChevronRight,
+  Search,
+  ArrowUpDown,
+  Filter,
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 const CITY_METRICS = [
   {
@@ -216,104 +221,145 @@ const CITY_METRICS = [
 ];
 
 export default function NationalThermalGridMatrix({ selectedCity, onSelectCity }) {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const filteredMetrics = CITY_METRICS.filter((row) => {
+    const matchesSearch = row.city.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === "all" || row.statusType === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   return (
-    <div className="bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col shadow-xs space-y-3.5 font-sans">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100 dark:border-zinc-800/80">
-        <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
+    <div className="bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800/90 rounded-2xl p-4 flex flex-col shadow-xs space-y-4 font-sans">
+      {/* Header & Filter Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b border-gray-100 dark:border-zinc-800/80">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.2)]">
             <Globe className="w-4 h-4" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h2 className="font-display text-sm font-semibold tracking-tight text-black dark:text-white">
+            <div className="flex items-center gap-2.5">
+              <h2 className="font-display text-sm font-bold tracking-tight text-black dark:text-white">
                 National Thermal Grid Matrix
               </h2>
-              <span className="px-2 py-0.5 rounded-md bg-orange-500/10 border border-orange-500/20 text-xs font-mono text-orange-500">
+              <span className="px-2.5 py-0.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-[11px] font-mono font-medium text-orange-400">
                 Cross-City Telemetry
               </span>
             </div>
-            <p className="text-xs text-gray-500 dark:text-zinc-400">
+            <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
               Synchronized microclimate metrics across major metropolitan thermal corridors
             </p>
+          </div>
+        </div>
+
+        {/* Search & Status Filter */}
+        <div className="flex items-center gap-2.5">
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Filter cities..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700/80 rounded-xl pl-8 pr-3 py-1.5 text-xs font-mono text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50 shadow-xs w-36 sm:w-48"
+            />
+          </div>
+
+          <div className="flex items-center gap-1 p-0.5 rounded-xl bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-xs font-mono">
+            {["all", "critical", "precool", "nominal"].map((st) => (
+              <button
+                key={st}
+                onClick={() => setStatusFilter(st)}
+                className={`px-2.5 py-1 rounded-lg font-medium capitalize transition-all cursor-pointer ${
+                  statusFilter === st
+                    ? "bg-orange-500 text-black font-bold shadow-[0_0_10px_rgba(249,115,22,0.3)]"
+                    : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                }`}
+              >
+                {st}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
       {/* Comparison Table */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-xl border border-gray-100 dark:border-zinc-800/80">
         <table className="w-full text-left font-mono text-xs border-collapse">
           <thead>
-            <tr className="border-b border-gray-200 dark:border-zinc-800 text-[11px] text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
-              <th className="py-2.5 px-3">City / Grid Zone</th>
-              <th className="py-2.5 px-2">Ambient Air</th>
-              <th className="py-2.5 px-2">Surface Temp</th>
-              <th className="py-2.5 px-2">Delta ΔT</th>
-              <th className="py-2.5 px-2">Solar GHI</th>
-              <th className="py-2.5 px-2">Humidity</th>
-              <th className="py-2.5 px-2">Wet-Bulb</th>
-              <th className="py-2.5 px-2">WBGT Index</th>
-              <th className="py-2.5 px-2">Building %</th>
-              <th className="py-2.5 px-3">Mitigation Status</th>
-              <th className="py-2.5 px-2 text-right">Action</th>
+            <tr className="bg-gray-50/75 dark:bg-zinc-900/60 border-b border-gray-200 dark:border-zinc-800 text-[10.5px] text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
+              <th className="py-3 px-3.5">City / Grid Zone</th>
+              <th className="py-3 px-2">Ambient Air</th>
+              <th className="py-3 px-2">Surface Temp</th>
+              <th className="py-3 px-2">Delta ΔT</th>
+              <th className="py-3 px-2">Solar GHI</th>
+              <th className="py-3 px-2">Humidity</th>
+              <th className="py-3 px-2">Wet-Bulb</th>
+              <th className="py-3 px-2">WBGT Index</th>
+              <th className="py-3 px-2">Building %</th>
+              <th className="py-3 px-3">Mitigation Status</th>
+              <th className="py-3 px-3 text-right">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-zinc-800/60">
-            {CITY_METRICS.map((row) => {
+            {filteredMetrics.map((row) => {
               const isSelected = selectedCity === row.city;
 
               return (
                 <tr
                   key={row.city}
                   onClick={() => onSelectCity && onSelectCity(row.city)}
-                  className={`cursor-pointer transition-colors ${
+                  className={`cursor-pointer transition-all ${
                     isSelected
-                      ? "bg-orange-500/10 dark:bg-orange-500/15 font-semibold text-black dark:text-white"
-                      : "hover:bg-gray-50 dark:hover:bg-zinc-900/40 text-gray-700 dark:text-zinc-300"
+                      ? "bg-orange-500/10 dark:bg-orange-500/15 font-semibold text-black dark:text-white border-l-2 border-orange-500"
+                      : "hover:bg-gray-50/80 dark:hover:bg-zinc-900/50 text-gray-700 dark:text-zinc-300"
                   }`}
                 >
-                  <td className="py-2.5 px-3 flex items-center gap-2">
+                  <td className="py-3 px-3.5 flex items-center gap-2">
                     <MapPin className={`w-3.5 h-3.5 ${isSelected ? "text-orange-500" : "text-gray-400 dark:text-zinc-500"}`} />
-                    <span>{row.city}</span>
+                    <span className="font-medium">{row.city}</span>
                   </td>
-                  <td className="py-2.5 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.ambient}°F</td>
-                  <td className="py-2.5 px-2 tabular-nums font-semibold text-orange-500">{row.surface}°F</td>
-                  <td className="py-2.5 px-2 tabular-nums text-gray-600 dark:text-zinc-400">+{row.delta}°F</td>
-                  <td className="py-2.5 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.ghi} W/m²</td>
-                  <td className="py-2.5 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.humidity}%</td>
-                  <td className="py-2.5 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.wetBulb}°F</td>
-                  <td className="py-2.5 px-2 tabular-nums font-semibold">
-                    <span className={row.wbgt >= 85 ? "text-rose-500" : "text-emerald-500"}>
+                  <td className="py-3 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.ambient}°F</td>
+                  <td className="py-3 px-2 tabular-nums font-bold text-orange-500">{row.surface}°F</td>
+                  <td className="py-3 px-2 tabular-nums text-gray-600 dark:text-zinc-400">+{row.delta}°F</td>
+                  <td className="py-3 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.ghi} W/m²</td>
+                  <td className="py-3 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.humidity}%</td>
+                  <td className="py-3 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.wetBulb}°F</td>
+                  <td className="py-3 px-2 tabular-nums font-bold">
+                    <span className={row.wbgt >= 85 ? "text-rose-500 font-semibold" : "text-emerald-500 font-medium"}>
                       {row.wbgt}°F
                     </span>
                   </td>
-                  <td className="py-2.5 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.buildingPct}%</td>
-                  <td className="py-2.5 px-3">
+                  <td className="py-3 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.buildingPct}%</td>
+                  <td className="py-3 px-3">
                     <span
-                      className={`inline-block px-2 py-0.5 rounded text-[10px] ${
+                      className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] ${
                         row.statusType === "critical"
-                          ? "bg-rose-500/15 text-rose-500 border border-rose-500/30 font-semibold"
+                          ? "bg-rose-500/15 text-rose-500 border border-rose-500/30 font-bold"
                           : row.statusType === "precool"
-                          ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 font-medium"
+                          ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 font-semibold"
                           : row.statusType === "elevated"
-                          ? "bg-amber-500/15 text-amber-400 border border-amber-500/30 font-medium"
-                          : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-normal"
+                          ? "bg-amber-500/15 text-amber-400 border border-amber-500/30 font-semibold"
+                          : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-medium"
                       }`}
                     >
                       {row.status}
                     </span>
                   </td>
-                  <td className="py-2.5 px-2 text-right">
-                    <button
+                  <td className="py-3 px-3 text-right">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (onSelectCity) onSelectCity(row.city);
                       }}
-                      className="text-xs text-orange-500 hover:text-orange-400 font-medium inline-flex items-center gap-0.5"
+                      className="px-2 py-1 rounded-md text-xs bg-orange-500/10 hover:bg-orange-500 hover:text-black text-orange-500 font-medium inline-flex items-center gap-0.5 transition-all"
                     >
                       <span>Focus</span>
                       <ChevronRight className="w-3 h-3" />
-                    </button>
+                    </motion.button>
                   </td>
                 </tr>
               );
