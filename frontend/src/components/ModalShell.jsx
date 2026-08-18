@@ -33,13 +33,13 @@ export default function ModalShell({ isOpen, onClose, icon, title, subtitle, chi
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 14 }}
           transition={{ type: "spring", stiffness: 420, damping: 28 }}
-          className="glass-panel rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh] text-black dark:text-white font-sans"
+          className="glass-popover rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh] text-black dark:text-white font-sans"
         >
           {/* Subtle top edge glow */}
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-orange-500/50 to-transparent" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-orange-500/70 to-transparent" />
 
           {/* Header */}
-          <div className="flex items-center justify-between pb-4 border-b border-gray-200/60 dark:border-white/[0.06]">
+          <div className="flex items-center justify-between pb-4 border-b border-gray-200/80 dark:border-white/[0.08]">
             <div className="flex items-center gap-3">
               {icon}
               <div>
@@ -55,7 +55,7 @@ export default function ModalShell({ isOpen, onClose, icon, title, subtitle, chi
               whileHover={{ scale: 1.1, rotate: 90 }}
               whileTap={{ scale: 0.9 }}
               onClick={onClose}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
               title="Close (Esc)"
             >
               <X className="w-4 h-4" />
@@ -68,12 +68,12 @@ export default function ModalShell({ isOpen, onClose, icon, title, subtitle, chi
           </div>
 
           {/* Footer */}
-          <div className="pt-3 border-t border-gray-100 dark:border-zinc-800 flex items-center justify-end gap-3 font-mono text-xs">
+          <div className="pt-3.5 border-t border-gray-200/80 dark:border-white/[0.08] flex items-center justify-end gap-3 font-mono text-xs">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={onClose}
-              className="px-4 py-2 rounded-lg font-semibold bg-orange-500 hover:bg-orange-600 text-black shadow-sm transition-all cursor-pointer"
+              className="px-4 py-2 rounded-xl font-bold bg-gradient-to-r from-[#FF6B2B] to-[#FF8533] hover:from-orange-500 hover:to-amber-500 text-black shadow-[0_0_15px_rgba(255,107,43,0.3)] transition-all cursor-pointer"
             >
               Dismiss
             </motion.button>
