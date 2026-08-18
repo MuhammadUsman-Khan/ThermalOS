@@ -295,6 +295,7 @@ export default function App() {
       setIsInfraLoading(false);
     }
   };
+  const handleRunInfra = handleRunInfrastructure;
 
   // Agent 3: Civic & Public Health Override Action
   const handleRunCivic = async () => {
@@ -931,7 +932,7 @@ export default function App() {
                 agentStates={agentStates}
                 darkMode={darkMode}
                 onRunAudit={handleRunAudit}
-                onRunInfra={handleRunInfra}
+                onRunInfra={handleRunInfrastructure}
                 onRunCivic={handleRunCivic}
                 isAuditLoading={isAuditLoading}
                 isInfraLoading={isInfraLoading}
