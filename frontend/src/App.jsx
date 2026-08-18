@@ -927,7 +927,16 @@ export default function App() {
               />
 
               {/* Autonomous Tri-Agent Tactical Simulation Workspace */}
-              <AgentVisualization agentStates={agentStates} darkMode={darkMode} />
+              <AgentVisualization
+                agentStates={agentStates}
+                darkMode={darkMode}
+                onRunAudit={handleRunAudit}
+                onRunInfra={handleRunInfra}
+                onRunCivic={handleRunCivic}
+                isAuditLoading={isAuditLoading}
+                isInfraLoading={isInfraLoading}
+                isCivicLoading={isCivicLoading}
+              />
             </motion.div>
           )}
 

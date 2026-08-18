@@ -1,8 +1,17 @@
 import { useEffect, useRef } from "react";
 import Phaser from "phaser";
-import { Building2, Laptop, DoorOpen, CheckCircle2, ShieldAlert, Sparkles, Activity, Cpu } from "lucide-react";
+import { Building2, Laptop, DoorOpen, CheckCircle2, ShieldAlert, Sparkles, Activity, Cpu, RefreshCw, Zap, AlertOctagon } from "lucide-react";
 
-export default function AgentVisualization({ agentStates, darkMode = true }) {
+export default function AgentVisualization({
+  agentStates = {},
+  darkMode = true,
+  onRunAudit,
+  onRunInfra,
+  onRunCivic,
+  isAuditLoading,
+  isInfraLoading,
+  isCivicLoading,
+}) {
   const containerRef = useRef(null);
   const gameRef = useRef(null);
   const sceneRef = useRef(null);
@@ -22,20 +31,14 @@ export default function AgentVisualization({ agentStates, darkMode = true }) {
         this.currentDarkMode = darkMode;
         this.steamParticles = [];
         this.ambientDust = [];
-        this.dataBursts = [];
       }
 
       create() {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
-        this.skyG = this.add.graphics();
-        this.cityG = this.add.graphics();
         this.wallG = this.add.graphics();
         this.floorG = this.add.graphics();
-        this.lightsG = this.add.graphics();
-        this.decorG = this.add.graphics();
-        this.particlesG = this.add.graphics();
 
         this.renderExecutiveOffice(this.currentDarkMode);
 
@@ -45,8 +48,7 @@ export default function AgentVisualization({ agentStates, darkMode = true }) {
             name: "AGENT 1 — ANALYST",
             role: "ASHRAE 55 & IECC RAG CORE",
             roomCode: "ROOM 101",
-            roomName: "THERMAL AUDIT VAULT",
-            themeColor: 0xf59e0b, // Amber Gold
+            themeColor: 0xf59e0b,
             themeHex: "#F59E0B",
             outfitColor: 0xf59e0b,
             outfitAccent: 0xffedd5,
@@ -63,8 +65,7 @@ export default function AgentVisualization({ agentStates, darkMode = true }) {
             name: "AGENT 2 — CONTROLLER",
             role: "HVAC PRE-COOL LOAD SHIFT",
             roomCode: "ROOM 102",
-            roomName: "CHILLER PLANT CORE",
-            themeColor: 0x06b6d4, // Electric Cyan
+            themeColor: 0x06b6d4,
             themeHex: "#06B6D4",
             outfitColor: 0x06b6d4,
             outfitAccent: 0xcffafe,
@@ -81,8 +82,7 @@ export default function AgentVisualization({ agentStates, darkMode = true }) {
             name: "AGENT 3 — DISPATCHER",
             role: "WBGT CIVIC HEAT DISPATCH",
             roomCode: "ROOM 103",
-            roomName: "CIVIC DISPATCH HUB",
-            themeColor: 0xf43f5e, // Radiant Rose
+            themeColor: 0xf43f5e,
             themeHex: "#F43F5E",
             outfitColor: 0xf43f5e,
             outfitAccent: 0xffe4e6,
@@ -97,9 +97,8 @@ export default function AgentVisualization({ agentStates, darkMode = true }) {
         ];
 
         agentConfigs.forEach((cfg) => {
-          // --- 1. Dedicated Wall Operations Door on Back Wall ---
+          // --- 1. Dedicated Wall Operations Door ---
           const doorContainer = this.add.container(cfg.doorX, cfg.doorY);
-
           const doorWallRecess = this.add.graphics();
           const doorFrame = this.add.graphics();
           const doorPanels = this.add.graphics();
@@ -107,38 +106,43 @@ export default function AgentVisualization({ agentStates, darkMode = true }) {
           const doorScanner = this.add.graphics();
           const doorFlash = this.add.graphics();
 
-          // Room Sign Header
-          const doorSign = this.add.text(0, -56, `[ ${cfg.roomCode} • ${cfg.roomName} ]`, {
+          const doorSign = this.add.text(0, -56, `[ ${cfg.roomCode} ]`, {
             fontFamily: "JetBrains Mono, monospace",
             fontSize: "9px",
             color: cfg.themeHex,
-            backgroundColor: this.currentDarkMode ? "#0F172A" : "#FFFFFF",
             padding: { x: 7, y: 3 },
             fontStyle: "bold",
             align: "center",
           }).setOrigin(0.5, 0.5);
 
-          doorContainer.add([doorLightBeam, doorWallRecess, doorFrame, doorPanels, doorScanner, doorFlash, doorSign]);
+          const dW = 54;
+          const dH = 80;
 
+          doorWallRecess.fillStyle(this.currentDarkMode ? 0x07090e : 0xd1d5db, 1);
+          doorWallRecess.fillRect(-dW / 2 - 3, -dH / 2 - 3, dW + 6, dH + 6);
+
+          doorFrame.lineStyle(2, cfg.themeColor, 0.85);
+          doorFrame.strokeRect(-dW / 2, -dH / 2, dW, dH);
+          doorFrame.fillStyle(this.currentDarkMode ? 0x111827 : 0xe2e8f0, 0.95);
+          doorFrame.fillRect(-dW / 2, -dH / 2, dW, dH);
+
+          doorPanels.lineStyle(1, cfg.themeColor, 0.4);
+          doorPanels.strokeRect(-dW / 2 + 5, -dH / 2 + 6, dW - 10, dH / 2 - 10);
+          doorPanels.strokeRect(-dW / 2 + 5, 2, dW - 10, dH / 2 - 8);
+
+          doorScanner.fillStyle(cfg.themeColor, 0.9);
+          doorScanner.fillCircle(dW / 2 - 8, 0, 2.5);
+
+          doorContainer.add([doorWallRecess, doorFrame, doorPanels, doorLightBeam, doorScanner, doorFlash, doorSign]);
           this.doors[cfg.id] = {
             container: doorContainer,
-            doorWallRecess,
-            doorFrame,
-            doorPanels,
-            doorLightBeam,
-            doorScanner,
-            doorFlash,
-            doorSign,
-            cfg,
+            lightBeam: doorLightBeam,
+            flash: doorFlash,
+            scanner: doorScanner,
+            config: cfg,
             isOpen: false,
           };
 
-          this.drawDoor(cfg.id, false, "idle");
-
-          // --- 2. Workstation Background Layer (Floor Rug & Chair Base) ---
-          const wsBackContainer = this.add.container(cfg.deskX, cfg.deskY);
-          const floorRugG = this.add.graphics();
-          const chairBaseG = this.add.graphics();
           wsBackContainer.add([floorRugG, chairBaseG]);
 
           // --- 3. Animated Agent Character Layer ---
@@ -1210,38 +1214,206 @@ export default function AgentVisualization({ agentStates, darkMode = true }) {
   }, [agentStates]);
 
   return (
-    <div className="w-full glass-panel rounded-2xl p-5 transition-all">
+    <div className="w-full glass-panel rounded-3xl p-6 transition-all space-y-5">
       {/* Section Header */}
-      <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-200/60 dark:border-white/[0.06]">
-        <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
-            <Building2 className="w-4 h-4" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-200/60 dark:border-white/[0.08]">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.25)]">
+            <Cpu className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-display text-sm font-semibold tracking-tight text-slate-900 dark:text-white">
-                Autonomous Agent Workspace
+              <h2 className="font-display text-base font-bold tracking-tight text-black dark:text-white">
+                Autonomous Tri-Agent Mission Control Workspace
               </h2>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-mono font-bold text-emerald-400">
+                LIVE TELEMETRY
+              </span>
             </div>
-            <p className="text-xs text-gray-500 dark:text-zinc-400">
-              Interactive multi-agent simulation for thermal audit, HVAC control, and civic dispatch
+            <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+              Multi-agent tactical execution for thermal compliance audit, chiller pre-cooling, and civic override
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-xs font-mono text-gray-500 dark:text-zinc-400">
-          <span className="px-2 py-0.5 rounded-lg glass-panel-subtle text-xs font-mono text-gray-600 dark:text-zinc-400">
-            Phaser Engine · 3 Active Cores
+        <div className="flex items-center gap-2 text-xs font-mono">
+          <span className="px-3 py-1.5 rounded-xl glass-panel-subtle border border-gray-200/60 dark:border-white/[0.08] text-xs font-mono text-gray-700 dark:text-zinc-300 flex items-center gap-2">
+            <Activity className="w-3.5 h-3.5 text-orange-500 animate-pulse" />
+            <span>Phaser 3 Engine · 3 Active Vector Cores</span>
           </span>
         </div>
       </div>
 
-      {/* Phaser Canvas Container */}
+      {/* Phaser Simulation Canvas */}
       <div
         ref={containerRef}
-        className="w-full h-[360px] rounded-xl overflow-hidden border border-gray-200/60 dark:border-white/[0.08] relative shadow-inner transition-colors duration-300"
+        className="w-full h-[360px] rounded-2xl overflow-hidden border border-gray-200/60 dark:border-white/[0.08] relative shadow-2xl transition-colors duration-300"
         style={{ minHeight: "360px" }}
       />
+
+      {/* 3 Executive Agent Real-Time Status Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+        {/* Agent 1 Card */}
+        <div className={`p-4 rounded-2xl glass-panel-subtle transition-all duration-300 flex flex-col justify-between space-y-3 ${
+          agentStates.agent1 === "working"
+            ? "border-amber-500/60 ring-2 ring-amber-500/20 bg-amber-500/5 shadow-[0_0_20px_rgba(245,158,11,0.15)]"
+            : "hover:border-amber-500/30"
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-[10px] font-mono font-bold text-amber-400">
+                ROOM 101
+              </span>
+              <span className="text-xs font-bold text-black dark:text-white font-mono">
+                Agent 1 · Thermal Audit
+              </span>
+            </div>
+            <span className={`w-2.5 h-2.5 rounded-full ${
+              agentStates.agent1 === "working"
+                ? "bg-amber-400 animate-ping"
+                : agentStates.agent1 === "done"
+                ? "bg-emerald-400"
+                : "bg-gray-400 dark:bg-zinc-600"
+            }`} />
+          </div>
+
+          <div className="text-xs text-gray-600 dark:text-zinc-300 font-mono space-y-1">
+            <div className="text-[11px] text-gray-400 dark:text-zinc-500">
+              Core: ASHRAE 55 & IECC RAG Vector Store
+            </div>
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[11px] text-gray-500">Status:</span>
+              <span className={`font-bold ${
+                agentStates.agent1 === "working"
+                  ? "text-amber-400 animate-pulse"
+                  : agentStates.agent1 === "done"
+                  ? "text-emerald-400"
+                  : "text-gray-400 dark:text-zinc-400"
+              }`}>
+                {agentStates.agent1 === "working" ? "Auditing Standards..." : agentStates.agent1 === "done" ? "Audit Dispatched ✓" : "Standby"}
+              </span>
+            </div>
+          </div>
+
+          {onRunAudit && (
+            <button
+              onClick={onRunAudit}
+              disabled={isAuditLoading}
+              className="w-full py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500 hover:text-black shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
+            >
+              {isAuditLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Building2 className="w-3.5 h-3.5" />}
+              <span>{isAuditLoading ? "Auditing..." : "Trigger Audit (A1)"}</span>
+            </button>
+          )}
+        </div>
+
+        {/* Agent 2 Card */}
+        <div className={`p-4 rounded-2xl glass-panel-subtle transition-all duration-300 flex flex-col justify-between space-y-3 ${
+          agentStates.agent2 === "working"
+            ? "border-cyan-500/60 ring-2 ring-cyan-500/20 bg-cyan-500/5 shadow-[0_0_20px_rgba(6,182,212,0.15)]"
+            : "hover:border-cyan-500/30"
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-[10px] font-mono font-bold text-cyan-400">
+                ROOM 102
+              </span>
+              <span className="text-xs font-bold text-black dark:text-white font-mono">
+                Agent 2 · Pre-Cool Shift
+              </span>
+            </div>
+            <span className={`w-2.5 h-2.5 rounded-full ${
+              agentStates.agent2 === "working"
+                ? "bg-cyan-400 animate-ping"
+                : agentStates.agent2 === "done"
+                ? "bg-emerald-400"
+                : "bg-gray-400 dark:bg-zinc-600"
+            }`} />
+          </div>
+
+          <div className="text-xs text-gray-600 dark:text-zinc-300 font-mono space-y-1">
+            <div className="text-[11px] text-gray-400 dark:text-zinc-500">
+              Core: HVAC Chiller Peak Shifter
+            </div>
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[11px] text-gray-500">Status:</span>
+              <span className={`font-bold ${
+                agentStates.agent2 === "working"
+                  ? "text-cyan-400 animate-pulse"
+                  : agentStates.agent2 === "done"
+                  ? "text-emerald-400"
+                  : "text-gray-400 dark:text-zinc-400"
+              }`}>
+                {agentStates.agent2 === "working" ? "Shifting Peak Load..." : agentStates.agent2 === "done" ? "Pre-Cool Active ✓" : "Standby"}
+              </span>
+            </div>
+          </div>
+
+          {onRunInfra && (
+            <button
+              onClick={onRunInfra}
+              disabled={isInfraLoading}
+              className="w-full py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500 hover:text-black shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
+            >
+              {isInfraLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+              <span>{isInfraLoading ? "Shifting..." : "Trigger Pre-Cool (A2)"}</span>
+            </button>
+          )}
+        </div>
+
+        {/* Agent 3 Card */}
+        <div className={`p-4 rounded-2xl glass-panel-subtle transition-all duration-300 flex flex-col justify-between space-y-3 ${
+          agentStates.agent3 === "working"
+            ? "border-rose-500/60 ring-2 ring-rose-500/20 bg-rose-500/5 shadow-[0_0_20px_rgba(244,63,94,0.15)]"
+            : "hover:border-rose-500/30"
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded-lg bg-rose-500/15 border border-rose-500/30 text-[10px] font-mono font-bold text-rose-400">
+                ROOM 103
+              </span>
+              <span className="text-xs font-bold text-black dark:text-white font-mono">
+                Agent 3 · Civic Dispatch
+              </span>
+            </div>
+            <span className={`w-2.5 h-2.5 rounded-full ${
+              agentStates.agent3 === "working"
+                ? "bg-rose-400 animate-ping"
+                : agentStates.agent3 === "done"
+                ? "bg-emerald-400"
+                : "bg-gray-400 dark:bg-zinc-600"
+            }`} />
+          </div>
+
+          <div className="text-xs text-gray-600 dark:text-zinc-300 font-mono space-y-1">
+            <div className="text-[11px] text-gray-400 dark:text-zinc-500">
+              Core: Liljegren WBGT Public Health Override
+            </div>
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[11px] text-gray-500">Status:</span>
+              <span className={`font-bold ${
+                agentStates.agent3 === "working"
+                  ? "text-rose-400 animate-pulse"
+                  : agentStates.agent3 === "done"
+                  ? "text-emerald-400"
+                  : "text-gray-400 dark:text-zinc-400"
+              }`}>
+                {agentStates.agent3 === "working" ? "Dispatching Alert..." : agentStates.agent3 === "done" ? "Alert Broadcasted ✓" : "Standby"}
+              </span>
+            </div>
+          </div>
+
+          {onRunCivic && (
+            <button
+              onClick={onRunCivic}
+              disabled={isCivicLoading}
+              className="w-full py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500 hover:text-white shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
+            >
+              {isCivicLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <AlertOctagon className="w-3.5 h-3.5" />}
+              <span>{isCivicLoading ? "Dispatching..." : "Trigger Civic Alert (A3)"}</span>
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
