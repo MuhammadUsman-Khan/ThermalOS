@@ -46,6 +46,13 @@ import Toast from "./components/Toast";
 
 const API_BASE = "http://localhost:8000";
 
+const NAV_TABS = [
+  { id: "operations", label: "Operations Console", icon: Activity },
+  { id: "spatial_heatmap", label: "Spatial Heatmap", icon: Radio },
+  { id: "diurnal_sim", label: "Diurnal Forecaster", icon: Clock },
+  { id: "national_grid", label: "National Grid Matrix", icon: Globe },
+];
+
 const REGIONS = [
   "Southwest & Desert",
   "Texas & South Central",
@@ -358,7 +365,7 @@ export default function App() {
       <AgentTwoModal
         isOpen={isInfraModalOpen}
         onClose={() => {
-          setIsAuditModalOpen(false);
+          setIsInfraModalOpen(false);
           setAgentStates((prev) => ({ ...prev, agent2: "idle" }));
         }}
         city={selectedCity}
@@ -582,75 +589,56 @@ export default function App() {
 
       {/* Main Dashboard Canvas */}
       <main className="w-full max-w-7xl mx-auto px-4 py-4 flex-1 flex flex-col space-y-4 relative z-10">
-        {/* Segmented Navigation Control */}
-        <div className="flex items-center gap-1 p-1 rounded-xl glass-panel-subtle text-xs font-mono w-fit">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setActiveTab("operations")}
-            className={`px-3.5 py-1.5 rounded-lg font-medium flex items-center gap-2 transition-all cursor-pointer ${
-              activeTab === "operations"
-                ? "bg-orange-500 text-black font-bold shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-                : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5" />
-            <span>Operations Console</span>
-          </motion.button>
+        {/* Next-Gen Continuous Sliding Segmented Navigation Control */}
+        <div className="flex items-center gap-1 p-1 rounded-2xl glass-panel-subtle text-xs font-mono w-fit relative">
+          {NAV_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
 
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setActiveTab("spatial_heatmap")}
-            className={`px-3.5 py-1.5 rounded-lg font-medium flex items-center gap-2 transition-all cursor-pointer ${
-              activeTab === "spatial_heatmap"
-                ? "bg-orange-500 text-black font-bold shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-                : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-            }`}
-          >
-            <Radio className="w-3.5 h-3.5" />
-            <span>Spatial Heatmap</span>
-          </motion.button>
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className="relative px-4 py-2 rounded-xl text-xs font-mono font-medium transition-colors cursor-pointer flex items-center gap-2 select-none group"
+              >
+                {/* Continuous Spring Sliding Pill Indicator */}
+                {isActive && (
+                  <motion.div
+                    layoutId="activeTabPill"
+                    className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] to-[#FF8533] shadow-[0_0_20px_rgba(255,107,43,0.45)]"
+                    transition={{
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 35,
+                    }}
+                  />
+                )}
 
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setActiveTab("diurnal_sim")}
-            className={`px-3.5 py-1.5 rounded-lg font-medium flex items-center gap-2 transition-all cursor-pointer ${
-              activeTab === "diurnal_sim"
-                ? "bg-orange-500 text-black font-bold shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-                : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-            }`}
-          >
-            <Clock className="w-3.5 h-3.5" />
-            <span>Diurnal Forecaster</span>
-          </motion.button>
-
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setActiveTab("national_grid")}
-            className={`px-3.5 py-1.5 rounded-lg font-medium flex items-center gap-2 transition-all cursor-pointer ${
-              activeTab === "national_grid"
-                ? "bg-orange-500 text-black font-bold shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-                : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-            }`}
-          >
-            <Globe className="w-3.5 h-3.5" />
-            <span>National Grid Matrix</span>
-          </motion.button>
+                <span
+                  className={`relative z-10 flex items-center gap-2 transition-colors duration-200 ${
+                    isActive
+                      ? "text-black font-bold"
+                      : "text-gray-600 dark:text-zinc-400 group-hover:text-black dark:group-hover:text-white"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{tab.label}</span>
+                </span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Dynamic Animated Tab View Routing */}
+        {/* Dynamic Animated Tab View Routing with AI-Grade Directional Blur-Slide Transitions */}
         <AnimatePresence mode="wait">
           {/* Tab 1: Operations Console */}
           {activeTab === "operations" && (
             <motion.div
               key="operations"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
+              initial={{ opacity: 0, y: 14, filter: "blur(6px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -10, filter: "blur(6px)" }}
+              transition={{ duration: 0.24, ease: [0.2, 0.9, 0.3, 1] }}
               className="space-y-4"
             >
               {/* 4-Card Mission Control Row */}
@@ -886,10 +874,10 @@ export default function App() {
           {activeTab === "spatial_heatmap" && (
             <motion.div
               key="spatial_heatmap"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
+              initial={{ opacity: 0, y: 14, filter: "blur(6px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -10, filter: "blur(6px)" }}
+              transition={{ duration: 0.24, ease: [0.2, 0.9, 0.3, 1] }}
             >
               <SpatialHeatmapView
                 selectedCity={selectedCity}
@@ -903,10 +891,10 @@ export default function App() {
           {activeTab === "diurnal_sim" && (
             <motion.div
               key="diurnal_sim"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
+              initial={{ opacity: 0, y: 14, filter: "blur(6px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -10, filter: "blur(6px)" }}
+              transition={{ duration: 0.24, ease: [0.2, 0.9, 0.3, 1] }}
             >
               <DiurnalTimelineScrubber
                 selectedCity={selectedCity}
@@ -919,10 +907,10 @@ export default function App() {
           {activeTab === "national_grid" && (
             <motion.div
               key="national_grid"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
+              initial={{ opacity: 0, y: 14, filter: "blur(6px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -10, filter: "blur(6px)" }}
+              transition={{ duration: 0.24, ease: [0.2, 0.9, 0.3, 1] }}
             >
               <NationalThermalGridMatrix
                 selectedCity={selectedCity}
