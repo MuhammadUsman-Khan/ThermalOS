@@ -715,107 +715,123 @@ export default function SpatialHeatmapView({
               />
             </motion.button>
 
-            <AnimatePresence>
-              {isCityDropdownOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                  transition={{ type: "spring", stiffness: 450, damping: 25 }}
-                  className="absolute top-full mt-2 right-0 w-80 glass-popover rounded-2xl overflow-hidden z-50 flex flex-col max-h-[380px] font-mono text-xs"
-                >
-                  {/* Subtle top edge glow */}
-                  <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
+              <AnimatePresence>
+                {isCityDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    transition={{ type: "spring", stiffness: 450, damping: 25 }}
+                    className="absolute top-full mt-2 right-0 w-80 glass-popover rounded-3xl overflow-hidden z-50 flex flex-col max-h-[380px] font-mono text-xs shadow-2xl"
+                  >
+                    {/* Subtle top edge glow */}
+                    <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
 
-                  {/* Search Input Bar */}
-                  <div className="p-2.5 border-b border-gray-200/80 dark:border-white/[0.08] bg-gray-50/70 dark:bg-white/[0.02] relative">
-                    <Search className="w-3.5 h-3.5 absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search 22+ cities..."
-                      value={citySearchQuery}
-                      onChange={(e) => setCitySearchQuery(e.target.value)}
-                      className="w-full bg-white dark:bg-black/60 border border-gray-200 dark:border-zinc-800 rounded-lg pl-8 pr-7 py-1.5 text-xs text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50"
-                      autoFocus
-                    />
-                    {citySearchQuery && (
-                      <button
-                        onClick={() => setCitySearchQuery("")}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    )}
-                  </div>
+                    {/* Spotlight Search Header */}
+                    <div className="p-3 border-b border-gray-200/80 dark:border-white/[0.08] bg-gray-50/70 dark:bg-white/[0.02] relative flex items-center">
+                      <Search className="w-4 h-4 absolute left-4.5 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search 22+ cities..."
+                        value={citySearchQuery}
+                        onChange={(e) => setCitySearchQuery(e.target.value)}
+                        className="w-full bg-white dark:bg-black/70 border border-gray-200 dark:border-zinc-800 rounded-xl pl-8 pr-12 py-2 text-xs text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/30 transition-all font-mono"
+                        autoFocus
+                      />
+                      {citySearchQuery ? (
+                        <button
+                          onClick={() => setCitySearchQuery("")}
+                          className="absolute right-4.5 p-1 rounded-md text-gray-400 hover:text-white transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      ) : (
+                        <span className="absolute right-4.5 text-[9px] font-mono px-1.5 py-0.5 rounded bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-500 border border-gray-200 dark:border-zinc-700">
+                          ESC
+                        </span>
+                      )}
+                    </div>
 
-                  {/* Options List */}
-                  <div className="flex-1 overflow-y-auto p-1.5 space-y-1.5">
-                    {/* National Overview Option */}
-                    {!citySearchQuery && (
-                      <button
-                        onClick={flyToNationalOverview}
-                        className={`w-full px-3 py-2 rounded-lg flex items-center justify-between text-left transition-colors cursor-pointer ${
-                          currentView === "national"
-                            ? "bg-orange-500/15 text-orange-400 font-semibold border-l-2 border-orange-500"
-                            : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-black dark:hover:text-white"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Globe2 className="w-3.5 h-3.5 text-orange-500" />
-                          <span>National Overview (All Cities)</span>
-                        </div>
-                        {currentView === "national" && (
-                          <Check className="w-3.5 h-3.5 text-orange-500" />
-                        )}
-                      </button>
-                    )}
-
-                    {/* Regional Groups */}
-                    {REGIONS.map((region) => {
-                      const regionCities = filteredCities.filter((c) => c.region === region);
-                      if (regionCities.length === 0) return null;
-
-                      return (
-                        <div key={region} className="pt-0.5">
-                          <div className="px-3 py-1 text-[9.5px] font-bold text-orange-500/90 uppercase tracking-wider bg-orange-500/5 rounded-md mb-1">
-                            {region}
+                    {/* Options List */}
+                    <div className="flex-1 overflow-y-auto p-2 space-y-2">
+                      {/* National Overview Option */}
+                      {!citySearchQuery && (
+                        <button
+                          onClick={flyToNationalOverview}
+                          className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition-colors cursor-pointer ${
+                            currentView === "national"
+                              ? "bg-gradient-to-r from-orange-500/25 via-orange-500/10 to-transparent border border-orange-500/40 text-black dark:text-white font-bold shadow-xs"
+                              : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-black dark:hover:text-white border border-transparent"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <Globe2 className="w-4 h-4 text-orange-500" />
+                            <span className="text-xs font-semibold">National Overview (All Cities)</span>
                           </div>
-                          {regionCities.map((c) => {
-                            const isSelected = currentView === "city" && focusedCityName === c.name;
+                          {currentView === "national" && (
+                            <Check className="w-3.5 h-3.5 text-orange-500" />
+                          )}
+                        </button>
+                      )}
 
-                            return (
-                              <button
-                                key={c.id}
-                                onClick={() => flyToCity(c.name)}
-                                className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-between text-left transition-all cursor-pointer ${
-                                  isSelected
-                                    ? "bg-orange-500/15 text-orange-400 font-semibold border-l-2 border-orange-500"
-                                    : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-black dark:hover:text-white"
-                                }`}
-                              >
-                                <div className="flex items-center gap-2">
-                                  <span className={`w-2 h-2 rounded-full ${c.dotClass}`} />
-                                  <span>{c.name}</span>
-                                </div>
-                                <span className="px-1.5 py-0.5 rounded text-[9.5px] bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 font-mono">
-                                  {c.tempF}
-                                </span>
-                              </button>
-                            );
-                          })}
+                      {/* Regional Groups */}
+                      {REGIONS.map((region) => {
+                        const regionCities = filteredCities.filter((c) => c.region === region);
+                        if (regionCities.length === 0) return null;
+
+                        return (
+                          <div key={region} className="space-y-1">
+                            <div className="px-3 py-1 text-[9.5px] font-bold text-orange-400 uppercase tracking-widest bg-orange-500/10 rounded-lg flex items-center justify-between">
+                              <span>{region}</span>
+                              <span className="text-[9px] text-orange-400/60 font-normal">{regionCities.length}</span>
+                            </div>
+                            <div className="space-y-0.5">
+                              {regionCities.map((c) => {
+                                const isSelected = currentView === "city" && focusedCityName === c.name;
+                                const tempNum = parseFloat(c.tempF);
+
+                                return (
+                                  <button
+                                    key={c.id}
+                                    onClick={() => flyToCity(c.name)}
+                                    className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer group ${
+                                      isSelected
+                                        ? "bg-gradient-to-r from-orange-500/25 via-orange-500/10 to-transparent border border-orange-500/40 text-black dark:text-white font-bold shadow-xs"
+                                        : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-black dark:hover:text-white border border-transparent"
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2.5">
+                                      <span className={`w-2 h-2 rounded-full ${c.dotClass} shadow-[0_0_6px_currentColor]`} />
+                                      <span className="text-xs font-medium">{c.name}</span>
+                                    </div>
+                                    <span
+                                      className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold ${
+                                        tempNum >= 105
+                                          ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+                                          : tempNum >= 95
+                                          ? "bg-orange-500/15 text-orange-400 border border-orange-500/30"
+                                          : "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                      }`}
+                                    >
+                                      {c.tempF}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {filteredCities.length === 0 && (
+                        <div className="p-6 text-center text-xs text-gray-500 dark:text-zinc-500 font-mono">
+                          No cities matching "{citySearchQuery}"
                         </div>
-                      );
-                    })}
-
-                    {filteredCities.length === 0 && (
-                      <div className="p-4 text-center text-xs text-gray-500 dark:text-zinc-500">
-                        No cities found matching "{citySearchQuery}"
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
           </div>
 
           {/* AOI Scope Segmented Toggle */}
