@@ -28,7 +28,6 @@ import {
   AlertOctagon,
   Search,
   X,
-  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -391,88 +390,85 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-            {/* Eye-Catching Autonomous Agent Dispatch Triggers */}
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+            {/* Unified Professional Agent Dispatch Toolbar */}
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100/90 dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 shadow-xs">
               {/* Agent 1: Audit */}
               <motion.button
-                whileHover={{ y: -1.5, scale: 1.02 }}
-                whileTap={{ scale: 0.96 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={handleRunAudit}
                 disabled={isAuditLoading}
-                className="group relative px-3 py-1.5 rounded-xl font-medium bg-gradient-to-b from-gray-50 to-white dark:from-[#131720] dark:to-[#0D1016] border border-amber-500/30 hover:border-amber-500/70 hover:shadow-[0_0_14px_rgba(245,158,11,0.25)] text-gray-800 dark:text-zinc-200 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                title="Agent 1: Energy & Thermal Compliance Audit"
+                className="px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 text-gray-700 dark:text-zinc-300 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-white dark:hover:bg-zinc-800/80 border border-transparent hover:border-amber-500/30 hover:shadow-xs"
               >
-                <div className="flex items-center justify-center w-5 h-5 rounded-md bg-amber-500/15 text-amber-400 group-hover:bg-amber-500 group-hover:text-black transition-colors">
-                  {isAuditLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <FileCheck className="w-3 h-3" />}
-                </div>
-                <div className="flex flex-col text-left leading-none">
-                  <span className="text-xs font-bold font-sans tracking-tight text-black dark:text-white group-hover:text-amber-400 transition-colors">
-                    Audit
-                  </span>
-                  <span className="text-[8.5px] font-mono text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                    Agent 1
-                  </span>
-                </div>
+                {isAuditLoading ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-500" />
+                ) : (
+                  <FileCheck className="w-3.5 h-3.5 text-amber-500" />
+                )}
+                <span className="font-semibold">Audit</span>
+                <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 font-bold">
+                  A1
+                </span>
               </motion.button>
 
               {/* Agent 2: Pre-Cool */}
               <motion.button
-                whileHover={{ y: -1.5, scale: 1.02 }}
-                whileTap={{ scale: 0.96 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={handleRunInfrastructure}
                 disabled={isInfraLoading}
-                className="group relative px-3 py-1.5 rounded-xl font-medium bg-gradient-to-b from-gray-50 to-white dark:from-[#131720] dark:to-[#0D1016] border border-cyan-500/30 hover:border-cyan-500/70 hover:shadow-[0_0_14px_rgba(6,182,212,0.25)] text-gray-800 dark:text-zinc-200 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                title="Agent 2: Infrastructure & Pre-Cooling Controller"
+                className="px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 text-gray-700 dark:text-zinc-300 hover:text-cyan-500 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-zinc-800/80 border border-transparent hover:border-cyan-500/30 hover:shadow-xs"
               >
-                <div className="flex items-center justify-center w-5 h-5 rounded-md bg-cyan-500/15 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-black transition-colors">
-                  {isInfraLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
-                </div>
-                <div className="flex flex-col text-left leading-none">
-                  <span className="text-xs font-bold font-sans tracking-tight text-black dark:text-white group-hover:text-cyan-400 transition-colors">
-                    Pre-Cool
-                  </span>
-                  <span className="text-[8.5px] font-mono text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                    Agent 2
-                  </span>
-                </div>
+                {isInfraLoading ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-cyan-500" />
+                ) : (
+                  <Zap className="w-3.5 h-3.5 text-cyan-500" />
+                )}
+                <span className="font-semibold">Pre-Cool</span>
+                <span className="text-[9px] px-1 py-0.2 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-bold">
+                  A2
+                </span>
               </motion.button>
 
               {/* Agent 3: Civic Alert */}
               <motion.button
-                whileHover={{ y: -1.5, scale: 1.02 }}
-                whileTap={{ scale: 0.96 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={handleRunCivic}
                 disabled={isCivicLoading}
-                className="group relative px-3 py-1.5 rounded-xl font-medium bg-gradient-to-b from-gray-50 to-white dark:from-[#131720] dark:to-[#0D1016] border border-rose-500/30 hover:border-rose-500/70 hover:shadow-[0_0_14px_rgba(244,63,94,0.3)] text-gray-800 dark:text-zinc-200 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                title="Agent 3: Civic & Public Health Override"
+                className="px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 text-gray-700 dark:text-zinc-300 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-white dark:hover:bg-zinc-800/80 border border-transparent hover:border-rose-500/30 hover:shadow-xs"
               >
-                <div className="flex items-center justify-center w-5 h-5 rounded-md bg-rose-500/15 text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-colors">
-                  {isCivicLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <AlertOctagon className="w-3 h-3" />}
-                </div>
-                <div className="flex flex-col text-left leading-none">
-                  <span className="text-xs font-bold font-sans tracking-tight text-black dark:text-white group-hover:text-rose-400 transition-colors">
-                    Civic Alert
-                  </span>
-                  <span className="text-[8.5px] font-mono text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                    Agent 3
-                  </span>
-                </div>
+                {isCivicLoading ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-rose-500" />
+                ) : (
+                  <AlertOctagon className="w-3.5 h-3.5 text-rose-500" />
+                )}
+                <span className="font-semibold">Civic Alert</span>
+                <span className="text-[9px] px-1 py-0.2 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 font-bold">
+                  A3
+                </span>
               </motion.button>
             </div>
 
             {/* Live Telemetry Radar Pulse */}
-            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-xs font-mono">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-xs font-mono h-9">
               <span className={`w-2 h-2 rounded-full ${isEmergencyMode ? "bg-rose-500 animate-ping" : "bg-emerald-500 animate-radar-ping"}`} />
               <span className={isEmergencyMode ? "text-rose-500 font-semibold" : "text-emerald-500 font-medium"}>
-                {isEmergencyMode ? "Advisory Active" : `Live · ${uptime}`}
+                {isEmergencyMode ? "Advisory" : `Live · ${uptime}`}
               </span>
             </div>
 
             {/* Theme Toggle */}
             <motion.button
-              whileHover={{ scale: 1.06 }}
-              whileTap={{ scale: 0.94 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setDarkMode(!darkMode)}
               title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              className="p-2 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-500/30 transition-colors shadow-xs cursor-pointer"
+              className="p-2 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-500/30 transition-colors shadow-xs cursor-pointer h-9 w-9 flex items-center justify-center"
             >
               {darkMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </motion.button>
@@ -484,7 +480,7 @@ export default function App() {
                 whileTap={{ scale: 0.98 }}
                 type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700/80 hover:border-orange-500/50 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer text-black dark:text-white shadow-xs font-mono group"
+                className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700/80 hover:border-orange-500/50 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer text-black dark:text-white shadow-xs font-mono group h-9"
               >
                 <MapPin className="w-3.5 h-3.5 text-orange-500 group-hover:scale-110 transition-transform" />
                 <span className="font-semibold">{selectedCity}</span>
