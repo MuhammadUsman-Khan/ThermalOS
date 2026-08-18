@@ -15,6 +15,7 @@ import {
   Compass,
   Scan,
   Globe2,
+  ChevronDown,
   Flame,
   AlertTriangle,
   CheckCircle,
@@ -36,11 +37,13 @@ const FORTYGUARD_12_CLASSES = [
   { minC: 26.33, maxC: 26.50, hex: "#2c72a5", label: "26.33 – 26.50 °C", tempF: "79.4 – 79.7 °F" },
 ];
 
-const MONITORED_CITIES = [
+export const MONITORED_CITIES = [
+  // Southwest & Desert Corridor
   {
     id: "phoenix",
     name: "Phoenix, AZ",
     shortName: "Phoenix",
+    region: "Southwest Desert",
     emoji: "🌵",
     lat: 33.4484,
     lng: -112.074,
@@ -55,6 +58,7 @@ const MONITORED_CITIES = [
     id: "las_vegas",
     name: "Las Vegas, NV",
     shortName: "Las Vegas",
+    region: "Mojave Basin",
     emoji: "🎰",
     lat: 36.1699,
     lng: -115.1398,
@@ -66,9 +70,26 @@ const MONITORED_CITIES = [
     dotClass: "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]",
   },
   {
+    id: "tucson",
+    name: "Tucson, AZ",
+    shortName: "Tucson",
+    region: "Sonoran Basin",
+    emoji: "🏜️",
+    lat: 32.2226,
+    lng: -110.9747,
+    zoom: 13,
+    baseTemp: 32.2,
+    tempF: "104.2°F",
+    status: "HIGH",
+    badgeClass: "bg-orange-500/20 text-orange-400 border-orange-500/40",
+    dotClass: "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]",
+  },
+  // Texas & South Central
+  {
     id: "houston",
     name: "Houston, TX",
     shortName: "Houston",
+    region: "Gulf Coast",
     emoji: "🚀",
     lat: 29.7604,
     lng: -95.3698,
@@ -83,6 +104,7 @@ const MONITORED_CITIES = [
     id: "dallas",
     name: "Dallas, TX",
     shortName: "Dallas",
+    region: "North Texas",
     emoji: "🏙️",
     lat: 32.7767,
     lng: -96.797,
@@ -94,9 +116,41 @@ const MONITORED_CITIES = [
     dotClass: "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]",
   },
   {
+    id: "austin",
+    name: "Austin, TX",
+    shortName: "Austin",
+    region: "Texas Hill Country",
+    emoji: "🎸",
+    lat: 30.2672,
+    lng: -97.7431,
+    zoom: 13,
+    baseTemp: 30.8,
+    tempF: "101.5°F",
+    status: "HIGH",
+    badgeClass: "bg-orange-500/20 text-orange-400 border-orange-500/40",
+    dotClass: "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]",
+  },
+  {
+    id: "san_antonio",
+    name: "San Antonio, TX",
+    shortName: "San Antonio",
+    region: "South Texas",
+    emoji: "🏰",
+    lat: 29.4241,
+    lng: -98.4936,
+    zoom: 13,
+    baseTemp: 30.5,
+    tempF: "100.2°F",
+    status: "HIGH",
+    badgeClass: "bg-orange-500/20 text-orange-400 border-orange-500/40",
+    dotClass: "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]",
+  },
+  // California & Pacific Northwest
+  {
     id: "san_jose",
     name: "San Jose, CA",
     shortName: "San Jose",
+    region: "Silicon Valley",
     emoji: "🌉",
     lat: 37.3305,
     lng: -121.8905,
@@ -108,51 +162,10 @@ const MONITORED_CITIES = [
     dotClass: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]",
   },
   {
-    id: "new_york",
-    name: "New York, NY",
-    shortName: "New York",
-    emoji: "🗽",
-    lat: 40.7128,
-    lng: -74.006,
-    zoom: 13,
-    baseTemp: 28.5,
-    tempF: "88.4°F",
-    status: "ELEVATED",
-    badgeClass: "bg-amber-500/20 text-amber-400 border-amber-500/40",
-    dotClass: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]",
-  },
-  {
-    id: "chicago",
-    name: "Chicago, IL",
-    shortName: "Chicago",
-    emoji: "🌬️",
-    lat: 41.8781,
-    lng: -87.6298,
-    zoom: 13,
-    baseTemp: 27.8,
-    tempF: "84.1°F",
-    status: "OPTIMAL",
-    badgeClass: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
-    dotClass: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]",
-  },
-  {
-    id: "miami",
-    name: "Miami, FL",
-    shortName: "Miami",
-    emoji: "🌴",
-    lat: 25.7617,
-    lng: -80.1918,
-    zoom: 13,
-    baseTemp: 30.2,
-    tempF: "92.6°F",
-    status: "HIGH",
-    badgeClass: "bg-orange-500/20 text-orange-400 border-orange-500/40",
-    dotClass: "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]",
-  },
-  {
     id: "los_angeles",
     name: "Los Angeles, CA",
     shortName: "Los Angeles",
+    region: "SoCal Basin",
     emoji: "☀️",
     lat: 34.0522,
     lng: -118.2437,
@@ -164,10 +177,210 @@ const MONITORED_CITIES = [
     dotClass: "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]",
   },
   {
+    id: "san_francisco",
+    name: "San Francisco, CA",
+    shortName: "San Francisco",
+    region: "Bay Area",
+    emoji: "🌁",
+    lat: 37.7749,
+    lng: -122.4194,
+    zoom: 13,
+    baseTemp: 22.0,
+    tempF: "72.4°F",
+    status: "OPTIMAL",
+    badgeClass: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
+    dotClass: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]",
+  },
+  {
+    id: "seattle",
+    name: "Seattle, WA",
+    shortName: "Seattle",
+    region: "Pacific Northwest",
+    emoji: "🌲",
+    lat: 47.6062,
+    lng: -122.3321,
+    zoom: 13,
+    baseTemp: 24.5,
+    tempF: "76.1°F",
+    status: "OPTIMAL",
+    badgeClass: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
+    dotClass: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]",
+  },
+  // Mountain & Central
+  {
+    id: "denver",
+    name: "Denver, CO",
+    shortName: "Denver",
+    region: "Rocky Mountains",
+    emoji: "🏔️",
+    lat: 39.7392,
+    lng: -104.9903,
+    zoom: 13,
+    baseTemp: 28.0,
+    tempF: "87.3°F",
+    status: "ELEVATED",
+    badgeClass: "bg-amber-500/20 text-amber-400 border-amber-500/40",
+    dotClass: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]",
+  },
+  {
+    id: "salt_lake_city",
+    name: "Salt Lake City, UT",
+    shortName: "Salt Lake City",
+    region: "Great Basin",
+    emoji: "⛰️",
+    lat: 40.7608,
+    lng: -111.891,
+    zoom: 13,
+    baseTemp: 29.8,
+    tempF: "92.1°F",
+    status: "HIGH",
+    badgeClass: "bg-orange-500/20 text-orange-400 border-orange-500/40",
+    dotClass: "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]",
+  },
+  // Midwest & Great Lakes
+  {
+    id: "chicago",
+    name: "Chicago, IL",
+    shortName: "Chicago",
+    region: "Great Lakes",
+    emoji: "🌬️",
+    lat: 41.8781,
+    lng: -87.6298,
+    zoom: 13,
+    baseTemp: 27.8,
+    tempF: "84.1°F",
+    status: "OPTIMAL",
+    badgeClass: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
+    dotClass: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]",
+  },
+  {
+    id: "minneapolis",
+    name: "Minneapolis, MN",
+    shortName: "Minneapolis",
+    region: "Upper Midwest",
+    emoji: "❄️",
+    lat: 44.9778,
+    lng: -93.265,
+    zoom: 13,
+    baseTemp: 26.5,
+    tempF: "81.0°F",
+    status: "OPTIMAL",
+    badgeClass: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
+    dotClass: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]",
+  },
+  {
+    id: "st_louis",
+    name: "St. Louis, MO",
+    shortName: "St. Louis",
+    region: "Midwest Corridor",
+    emoji: "⚜️",
+    lat: 38.627,
+    lng: -90.1994,
+    zoom: 13,
+    baseTemp: 29.4,
+    tempF: "90.5°F",
+    status: "ELEVATED",
+    badgeClass: "bg-amber-500/20 text-amber-400 border-amber-500/40",
+    dotClass: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]",
+  },
+  // East Coast & Mid-Atlantic
+  {
+    id: "new_york",
+    name: "New York, NY",
+    shortName: "New York",
+    region: "Northeast Megalopolis",
+    emoji: "🗽",
+    lat: 40.7128,
+    lng: -74.006,
+    zoom: 13,
+    baseTemp: 28.5,
+    tempF: "88.4°F",
+    status: "ELEVATED",
+    badgeClass: "bg-amber-500/20 text-amber-400 border-amber-500/40",
+    dotClass: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]",
+  },
+  {
+    id: "boston",
+    name: "Boston, MA",
+    shortName: "Boston",
+    region: "New England",
+    emoji: "🦞",
+    lat: 42.3601,
+    lng: -71.0589,
+    zoom: 13,
+    baseTemp: 26.8,
+    tempF: "82.1°F",
+    status: "OPTIMAL",
+    badgeClass: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
+    dotClass: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]",
+  },
+  {
+    id: "philadelphia",
+    name: "Philadelphia, PA",
+    shortName: "Philadelphia",
+    region: "Mid-Atlantic",
+    emoji: "🔔",
+    lat: 39.9526,
+    lng: -75.1652,
+    zoom: 13,
+    baseTemp: 28.6,
+    tempF: "88.8°F",
+    status: "ELEVATED",
+    badgeClass: "bg-amber-500/20 text-amber-400 border-amber-500/40",
+    dotClass: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]",
+  },
+  {
+    id: "washington_dc",
+    name: "Washington, DC",
+    shortName: "Washington DC",
+    region: "Capital Corridor",
+    emoji: "🏛️",
+    lat: 38.9072,
+    lng: -77.0369,
+    zoom: 13,
+    baseTemp: 29.0,
+    tempF: "89.5°F",
+    status: "ELEVATED",
+    badgeClass: "bg-amber-500/20 text-amber-400 border-amber-500/40",
+    dotClass: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]",
+  },
+  // Southeast & Florida
+  {
+    id: "miami",
+    name: "Miami, FL",
+    shortName: "Miami",
+    region: "South Florida",
+    emoji: "🌴",
+    lat: 25.7617,
+    lng: -80.1918,
+    zoom: 13,
+    baseTemp: 30.2,
+    tempF: "92.6°F",
+    status: "HIGH",
+    badgeClass: "bg-orange-500/20 text-orange-400 border-orange-500/40",
+    dotClass: "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]",
+  },
+  {
+    id: "orlando",
+    name: "Orlando, FL",
+    shortName: "Orlando",
+    region: "Central Florida",
+    emoji: "🎡",
+    lat: 28.5383,
+    lng: -81.3792,
+    zoom: 13,
+    baseTemp: 30.0,
+    tempF: "91.8°F",
+    status: "HIGH",
+    badgeClass: "bg-orange-500/20 text-orange-400 border-orange-500/40",
+    dotClass: "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]",
+  },
+  {
     id: "atlanta",
     name: "Atlanta, GA",
     shortName: "Atlanta",
-    emoji: "🏛️",
+    region: "Southeast Piedmont",
+    emoji: "🍑",
     lat: 33.749,
     lng: -84.388,
     zoom: 13,
@@ -177,11 +390,26 @@ const MONITORED_CITIES = [
     badgeClass: "bg-amber-500/20 text-amber-400 border-amber-500/40",
     dotClass: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]",
   },
+  {
+    id: "new_orleans",
+    name: "New Orleans, LA",
+    shortName: "New Orleans",
+    region: "Mississippi Delta",
+    emoji: "🎺",
+    lat: 29.9511,
+    lng: -90.0715,
+    zoom: 13,
+    baseTemp: 30.0,
+    tempF: "93.0°F",
+    status: "HIGH",
+    badgeClass: "bg-orange-500/20 text-orange-400 border-orange-500/40",
+    dotClass: "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]",
+  },
 ];
 
 const BASEMAP_PRESETS = {
   voyager: {
-    label: "Street Voyager (High Contrast)",
+    label: "Street Voyager",
     base: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
     labels: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png",
   },
@@ -191,7 +419,7 @@ const BASEMAP_PRESETS = {
     labels: "https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png",
   },
   dark: {
-    label: "Dark Matter Cyber",
+    label: "Dark Matter",
     base: "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png",
     labels: "https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png",
   },
@@ -201,10 +429,10 @@ const BASEMAP_PRESETS = {
 function generateCityThermalGrid(city, scope = "core") {
   const features = [];
   const isMetro = scope === "metro";
-  const rows = isMetro ? 34 : 26;
-  const cols = isMetro ? 38 : 30;
-  const stepLat = isMetro ? 0.0055 : 0.0024;
-  const stepLng = isMetro ? 0.0068 : 0.0030;
+  const rows = isMetro ? 30 : 22;
+  const cols = isMetro ? 34 : 26;
+  const stepLat = isMetro ? 0.0055 : 0.0026;
+  const stepLng = isMetro ? 0.0068 : 0.0032;
   const minLat = city.lat - (rows / 2) * stepLat;
   const minLng = city.lng - (cols / 2) * stepLng;
 
@@ -225,7 +453,7 @@ function generateCityThermalGrid(city, scope = "core") {
         Math.sin(r * 0.24 + c * 0.17) * 0.18 +
         Math.cos(r * 0.15 - c * 0.28) * 0.12;
 
-      let tempC = 28.35 - (r / rows) * 1.35 + (c > 18 ? 0.25 : -0.1) - coolIsland + noise + eastHeat * 0.3;
+      let tempC = 28.35 - (r / rows) * 1.35 + (c > 16 ? 0.25 : -0.1) - coolIsland + noise + eastHeat * 0.3;
       tempC = Math.max(26.33, Math.min(28.37, tempC));
       tempC = +tempC.toFixed(2);
       const tempF = +((tempC * 1.8) + 32).toFixed(1);
@@ -268,7 +496,7 @@ function generateCityThermalGrid(city, scope = "core") {
   return features;
 }
 
-// Generate unified national GeoJSON containing all 5 cities
+// Generate unified national GeoJSON containing all cities
 function generateAllCitiesThermalGrid(scope = "core") {
   const allFeatures = [];
   MONITORED_CITIES.forEach((city) => {
@@ -292,21 +520,14 @@ export default function SpatialHeatmapView({
 
   const [activeLayer, setActiveLayer] = useState("tcm"); // 'tcm' | 'exceedance' | 'persistence'
   const [scope, setScope] = useState("core"); // 'core' | 'metro'
-  const [currentView, setCurrentView] = useState("city"); // 'national' | 'city'
+  // DEFAULT: National Overview so user sees the entire USA with all cities on first load!
+  const [currentView, setCurrentView] = useState("national");
   const [focusedCityName, setFocusedCityName] = useState(selectedCity);
   const [baseMapStyle, setBaseMapStyle] = useState(darkMode ? "dark" : "voyager");
   const [opacity, setOpacity] = useState(0.68);
   const [selectedParcel, setSelectedParcel] = useState(null);
   const [selectedClassHex, setSelectedClassHex] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Sync state if external selectedCity changes
-  useEffect(() => {
-    if (selectedCity && selectedCity !== focusedCityName) {
-      setFocusedCityName(selectedCity);
-      flyToCity(selectedCity);
-    }
-  }, [selectedCity]);
 
   // Fly to specific city
   const flyToCity = (cityName) => {
@@ -322,18 +543,18 @@ export default function SpatialHeatmapView({
     }
   };
 
-  // Fly to national overview (shows entire USA with all 5 cities)
+  // Fly to national overview (shows entire USA with all cities)
   const flyToNationalOverview = () => {
     if (mapInstanceRef.current) {
       setCurrentView("national");
-      mapInstanceRef.current.flyTo([34.5, -104.0], 4.5, {
-        duration: 1.6,
+      mapInstanceRef.current.flyTo([38.0, -97.0], 4.2, {
+        duration: 1.5,
         easeLinearity: 0.25,
       });
     }
   };
 
-  // Initialize Leaflet Map with Sandwich Layer Architecture
+  // Initialize Leaflet Map with Sandwich Layer Architecture (Defaulting to National Overview)
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
@@ -342,16 +563,15 @@ export default function SpatialHeatmapView({
       mapInstanceRef.current = null;
     }
 
-    const currentCityObj = MONITORED_CITIES.find((c) => c.name === focusedCityName) || MONITORED_CITIES[0];
-
+    // By default, start with national overview ([38.0, -97.0], zoom 4.2)
     const map = L.map(mapContainerRef.current, {
-      center: currentView === "national" ? [34.5, -104.0] : [currentCityObj.lat, currentCityObj.lng],
-      zoom: currentView === "national" ? 4.5 : (scope === "metro" ? 11 : currentCityObj.zoom),
+      center: [38.0, -97.0],
+      zoom: 4.2,
       zoomControl: false,
       attributionControl: false,
     });
 
-    // Create a dedicated top pane for street names and labels (floats above polygons)
+    // Dedicated top pane for street names and labels (floats above polygons)
     map.createPane("topLabelsPane");
     map.getPane("topLabelsPane").style.zIndex = 650;
     map.getPane("topLabelsPane").style.pointerEvents = "none";
@@ -433,6 +653,7 @@ export default function SpatialHeatmapView({
             setSelectedParcel(feature.properties);
             if (feature.properties?.city_name) {
               setFocusedCityName(feature.properties.city_name);
+              setCurrentView("city");
               if (onSelectCity) onSelectCity(feature.properties.city_name);
             }
             mapInstanceRef.current.panTo(e.latlng);
@@ -444,11 +665,11 @@ export default function SpatialHeatmapView({
     layer.addTo(mapInstanceRef.current);
     geoJsonLayerRef.current = layer;
 
-    // 3. Add Custom City Hub Markers over all 5 cities
+    // 3. Add Custom City Hub Markers over all cities
     const markersGroup = L.layerGroup();
 
     MONITORED_CITIES.forEach((city) => {
-      const isCurrent = city.name === focusedCityName;
+      const isCurrent = city.name === focusedCityName && currentView === "city";
 
       const markerHtml = `
         <div class="cursor-pointer group flex flex-col items-center select-none" style="transform: translate(-50%, -100%);">
@@ -483,7 +704,7 @@ export default function SpatialHeatmapView({
     markersLayerGroupRef.current = markersGroup;
 
     setIsLoading(false);
-  }, [opacity, selectedClassHex, scope, focusedCityName]);
+  }, [opacity, selectedClassHex, scope, focusedCityName, currentView]);
 
   return (
     <div className="bg-white dark:bg-[#0D0D0D]/90 border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex flex-col shadow-sm dark:shadow-2xl backdrop-blur-xl space-y-4 font-sans">
@@ -496,20 +717,78 @@ export default function SpatialHeatmapView({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-display text-sm font-bold uppercase tracking-tight text-slate-900 dark:text-white">
-                NATIONAL THERMAL GRID • ALL MONITORED CITIES ON A SINGLE GIS MAP
+                NATIONAL THERMAL GRID • ALL MONITORED US METROS
               </h2>
               <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-mono text-emerald-500 font-bold uppercase">
-                CONTINENTAL MULTI-CITY
+                {currentView === "national" ? "NATIONAL OVERVIEW" : focusedCityName}
               </span>
             </div>
             <p className="text-xs text-gray-500 dark:text-zinc-400">
-              5 Major Metros Monitored Simultaneously • Click Any City Pin to Fly & Inspect Microclimate
+              FortyGuard TCM 100m² Radiometric Grid Overlaid on CartoDB / OpenStreetMap
             </p>
           </div>
         </div>
 
-        {/* Controls: Basemap & Layer Type */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Controls: City Dropdown, Scope, Basemap & Layer Type */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Professional City Dropdown Selector */}
+          <div className="relative flex items-center">
+            <div className="absolute left-2.5 pointer-events-none text-orange-500">
+              <MapPin className="w-3.5 h-3.5" />
+            </div>
+            <select
+              value={currentView === "national" ? "national" : focusedCityName}
+              onChange={(e) => {
+                if (e.target.value === "national") {
+                  flyToNationalOverview();
+                } else {
+                  flyToCity(e.target.value);
+                }
+              }}
+              className="bg-gray-100 dark:bg-black/80 hover:bg-gray-200 dark:hover:bg-zinc-900 border border-gray-200 dark:border-white/10 rounded-xl pl-8 pr-7 py-1.5 font-mono text-xs font-bold text-slate-900 dark:text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500/40 transition-all appearance-none shadow-xs"
+            >
+              <option value="national">🌐 National Overview (All US Cities)</option>
+              <optgroup label="🌵 Southwest & Desert (High Risk)">
+                {MONITORED_CITIES.filter((c) => ["Southwest Desert", "Mojave Basin", "Sonoran Basin"].includes(c.region)).map((c) => (
+                  <option key={c.id} value={c.name}>
+                    {c.emoji} {c.name} — {c.tempF} ({c.status})
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="🚀 Texas & Gulf Corridor">
+                {MONITORED_CITIES.filter((c) => ["Gulf Coast", "North Texas", "Texas Hill Country", "South Texas", "Mississippi Delta"].includes(c.region)).map((c) => (
+                  <option key={c.id} value={c.name}>
+                    {c.emoji} {c.name} — {c.tempF} ({c.status})
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="🌉 West Coast & Pacific">
+                {MONITORED_CITIES.filter((c) => ["Silicon Valley", "SoCal Basin", "Bay Area", "Pacific Northwest"].includes(c.region)).map((c) => (
+                  <option key={c.id} value={c.name}>
+                    {c.emoji} {c.name} — {c.tempF} ({c.status})
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="🏔️ Mountain & Midwest">
+                {MONITORED_CITIES.filter((c) => ["Rocky Mountains", "Great Basin", "Great Lakes", "Upper Midwest", "Midwest Corridor"].includes(c.region)).map((c) => (
+                  <option key={c.id} value={c.name}>
+                    {c.emoji} {c.name} — {c.tempF} ({c.status})
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="🗽 East Coast & Southeast">
+                {MONITORED_CITIES.filter((c) => ["Northeast Megalopolis", "New England", "Mid-Atlantic", "Capital Corridor", "South Florida", "Central Florida", "Southeast Piedmont"].includes(c.region)).map((c) => (
+                  <option key={c.id} value={c.name}>
+                    {c.emoji} {c.name} — {c.tempF} ({c.status})
+                  </option>
+                ))}
+              </optgroup>
+            </select>
+            <div className="absolute right-2 pointer-events-none text-gray-400">
+              <ChevronDown className="w-3.5 h-3.5" />
+            </div>
+          </div>
+
           {/* AOI Scope Toggle */}
           <div className="flex items-center gap-1 p-1 rounded-xl bg-orange-500/10 border border-orange-500/20 text-xs font-mono">
             <button
@@ -521,7 +800,7 @@ export default function SpatialHeatmapView({
               }`}
             >
               <Scan className="w-3.5 h-3.5" />
-              <span>Urban Core AOI</span>
+              <span>Urban Core</span>
             </button>
             <button
               onClick={() => setScope("metro")}
@@ -532,7 +811,7 @@ export default function SpatialHeatmapView({
               }`}
             >
               <Globe2 className="w-3.5 h-3.5" />
-              <span>Full Metro Expanse</span>
+              <span>Full Metro</span>
             </button>
           </div>
 
@@ -606,49 +885,8 @@ export default function SpatialHeatmapView({
         </div>
       </div>
 
-      {/* Quick City Fly-To Navigator Bar */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-mono custom-scrollbar">
-        <span className="text-gray-400 dark:text-zinc-500 text-[11px] uppercase font-bold whitespace-nowrap flex items-center gap-1">
-          <MapPin className="w-3.5 h-3.5 text-orange-500" />
-          QUICK FLY-TO:
-        </span>
-
-        <button
-          onClick={flyToNationalOverview}
-          className={`px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
-            currentView === "national"
-              ? "bg-slate-900 dark:bg-white text-white dark:text-black shadow-md ring-2 ring-orange-500"
-              : "bg-gray-100 dark:bg-zinc-900/80 text-gray-700 dark:text-zinc-300 hover:border-orange-500/40 border border-transparent"
-          }`}
-        >
-          <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
-          <span>NATIONAL OVERVIEW (ALL CITIES)</span>
-        </button>
-
-        {MONITORED_CITIES.map((city) => {
-          const isSelected = focusedCityName === city.name && currentView === "city";
-          return (
-            <button
-              key={city.id}
-              onClick={() => flyToCity(city.name)}
-              className={`px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
-                isSelected
-                  ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md shadow-orange-500/20"
-                  : "bg-gray-100 dark:bg-zinc-900/80 text-gray-700 dark:text-zinc-300 hover:border-orange-500/40 border border-transparent"
-              }`}
-            >
-              <span>{city.emoji}</span>
-              <span>{city.shortName}</span>
-              <span className={`text-[10px] px-1 py-0.2 rounded font-mono ${city.badgeClass}`}>
-                {city.tempF}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
       {/* Main Single GIS Map Canvas with Floating FortyGuard Legend */}
-      <div className="relative w-full h-[540px] rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 shadow-inner bg-slate-950">
+      <div className="relative w-full h-[560px] rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 shadow-inner bg-slate-950">
         {/* Leaflet Map Target */}
         <div ref={mapContainerRef} className="w-full h-full z-0" />
 
@@ -656,7 +894,7 @@ export default function SpatialHeatmapView({
         {isLoading && (
           <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-30 font-mono text-xs text-orange-400 gap-2">
             <RefreshCw className="w-5 h-5 animate-spin text-orange-500" />
-            <span>Rendering Multi-City FortyGuard Grid...</span>
+            <span>Rendering Continental FortyGuard Grid...</span>
           </div>
         )}
 
@@ -781,7 +1019,7 @@ export default function SpatialHeatmapView({
           </div>
         )}
 
-        {/* Map View Controls (Zoom in, Zoom out, Reset / Fly to National Overview) */}
+        {/* Map View Controls (Zoom in, Zoom out, Fly to National Overview) */}
         <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-1.5">
           <button
             onClick={() => mapInstanceRef.current && mapInstanceRef.current.zoomIn()}
