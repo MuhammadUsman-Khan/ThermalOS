@@ -28,10 +28,15 @@ import {
   AlertOctagon,
   Search,
   X,
+  ShieldAlert,
+  ArrowUpRight,
+  TrendingUp,
+  Cpu,
+  Layers,
+  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import KPICard from "./components/KPICard";
 import RadialGauge from "./components/RadialGauge";
 import AgentVisualization from "./components/AgentVisualization";
 import SurfaceSegmentationCard from "./components/SurfaceSegmentationCard";
@@ -47,10 +52,10 @@ import Toast from "./components/Toast";
 const API_BASE = "http://localhost:8000";
 
 const NAV_TABS = [
-  { id: "operations", label: "Operations Console", icon: Activity },
-  { id: "spatial_heatmap", label: "Spatial Heatmap", icon: Radio },
-  { id: "diurnal_sim", label: "Diurnal Forecaster", icon: Clock },
-  { id: "national_grid", label: "National Grid Matrix", icon: Globe },
+  { id: "operations", label: "Operations Console", icon: Activity, badge: "LIVE" },
+  { id: "spatial_heatmap", label: "Spatial GIS Heatmap", icon: Radio, badge: "22 CITIES" },
+  { id: "diurnal_sim", label: "Diurnal Forecaster", icon: Clock, badge: "24H" },
+  { id: "national_grid", label: "National Grid Matrix", icon: Globe, badge: "AOI" },
 ];
 
 const REGIONS = [
@@ -62,7 +67,7 @@ const REGIONS = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("operations"); // 'operations' | 'spatial_heatmap' | 'diurnal_sim' | 'national_grid'
+  const [activeTab, setActiveTab] = useState("operations");
   const [selectedCity, setSelectedCity] = useState("Phoenix, AZ");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [dropdownSearch, setDropdownSearch] = useState("");
@@ -327,17 +332,12 @@ export default function App() {
   );
 
   return (
-    <div className={`min-h-[100dvh] flex flex-col font-sans transition-colors relative ${darkMode ? "bg-[#090A0E] text-zinc-100" : "bg-[#F3F5F9] text-black"}`}>
+    <div className={`min-h-[100dvh] flex flex-col font-sans transition-colors relative ${darkMode ? "bg-[#07080C] text-zinc-100" : "bg-[#F4F6FB] text-black"}`}>
       {/* Apple iOS-Style Ambient Luminous Mesh Backdrop */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        {/* Top-Left Warm Thermal Aurora Glow */}
-        <div className="absolute -top-32 -left-32 w-[550px] h-[550px] rounded-full bg-gradient-to-br from-orange-500/20 via-amber-500/12 to-transparent blur-[95px] animate-ambient-1" />
-
-        {/* Center-Right Cyan Off-Peak Aurora Glow */}
-        <div className="absolute top-[28%] -right-32 w-[600px] h-[600px] rounded-full bg-gradient-to-bl from-cyan-500/15 via-sky-500/10 to-transparent blur-[115px] animate-ambient-2" />
-
-        {/* Bottom-Left Radiant Rose Advisory Glow */}
-        <div className="absolute -bottom-40 left-[15%] w-[650px] h-[650px] rounded-full bg-gradient-to-tr from-rose-500/12 via-orange-500/8 to-transparent blur-[125px] animate-ambient-1" />
+        <div className="absolute -top-36 -left-36 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-orange-500/20 via-amber-500/10 to-transparent blur-[110px] animate-ambient-1" />
+        <div className="absolute top-[28%] -right-36 w-[650px] h-[650px] rounded-full bg-gradient-to-bl from-cyan-500/15 via-sky-500/8 to-transparent blur-[125px] animate-ambient-2" />
+        <div className="absolute -bottom-48 left-[15%] w-[700px] h-[700px] rounded-full bg-gradient-to-tr from-rose-500/12 via-orange-500/6 to-transparent blur-[140px] animate-ambient-1" />
       </div>
 
       {/* Toast Notification */}
@@ -365,7 +365,7 @@ export default function App() {
       <AgentTwoModal
         isOpen={isInfraModalOpen}
         onClose={() => {
-          setIsAuditModalOpen(false);
+          setIsInfraModalOpen(false);
           setAgentStates((prev) => ({ ...prev, agent2: "idle" }));
         }}
         city={selectedCity}
@@ -386,40 +386,45 @@ export default function App() {
         data={civicData}
       />
 
-      {/* Executive Apple-Style Frosted Glass Topbar */}
-      <header className="border-b border-white/[0.12] dark:border-white/[0.08] bg-white/70 dark:bg-[#0B0D13]/70 backdrop-blur-2xl sticky top-0 z-40 px-6 py-2.5 transition-colors shadow-xs">
+      {/* Executive Command Header Bar */}
+      <header className="border-b border-white/[0.12] dark:border-white/[0.08] bg-white/80 dark:bg-[#090B10]/80 backdrop-blur-2xl sticky top-0 z-40 px-5 sm:px-8 py-3 transition-colors shadow-xs">
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4">
-          {/* Brand Logo & Tag */}
-          <div className="flex items-center gap-3">
+          {/* Brand Logo & Telemetry Indicator */}
+          <div className="flex items-center gap-3.5">
             <motion.div
-              whileHover={{ rotate: 12, scale: 1.05 }}
+              whileHover={{ rotate: 15, scale: 1.08 }}
               transition={{ type: "spring", stiffness: 400, damping: 15 }}
-              className="flex items-center justify-center w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.25)] cursor-pointer"
+              className="flex items-center justify-center w-9 h-9 rounded-2xl bg-gradient-to-br from-[#FF6B2B] to-[#FF8533] text-black shadow-[0_0_20px_rgba(255,107,43,0.4)] cursor-pointer"
             >
-              <Flame className="w-4 h-4" />
+              <Flame className="w-5 h-5" />
             </motion.div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold tracking-tight text-black dark:text-white font-display">
-                ThermalOS
-              </h1>
-              <span className="text-xs text-gray-300 dark:text-zinc-700 font-mono">/</span>
-              <span className="text-xs font-mono text-orange-500 font-medium tracking-tight">
-                FortyGuard Radiometric Intelligence
-              </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-base font-extrabold tracking-tight text-black dark:text-white font-display">
+                  ThermalOS
+                </h1>
+                <span className="px-2 py-0.5 rounded-md bg-orange-500/15 border border-orange-500/30 text-[10px] font-mono font-bold text-orange-400">
+                  v1.2 PRO
+                </span>
+              </div>
+              <p className="text-[11px] font-mono text-gray-500 dark:text-zinc-400 tracking-tight hidden sm:block">
+                Autonomous Radiometric Microclimate Grid Intelligence
+              </p>
             </div>
           </div>
 
+          {/* Right Toolbar: Agent Actions + City Spotlight + Theme Toggle */}
           <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-            {/* Unified Professional Agent Dispatch Toolbar */}
-            <div className="flex items-center gap-1 p-1 rounded-xl glass-panel-subtle shadow-xs">
+            {/* Unified 3-Agent Quick Trigger Bar */}
+            <div className="flex items-center gap-1 p-1 rounded-2xl glass-panel-subtle shadow-xs">
               {/* Agent 1: Audit */}
               <motion.button
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.02, y: -1 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={handleRunAudit}
                 disabled={isAuditLoading}
                 title="Agent 1: Energy & Thermal Compliance Audit"
-                className="px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 text-gray-700 dark:text-zinc-300 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-white/80 dark:hover:bg-white/10 border border-transparent hover:border-amber-500/30 hover:shadow-xs"
+                className="px-3 py-1.5 rounded-xl text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 text-gray-700 dark:text-zinc-300 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-white/80 dark:hover:bg-white/10 border border-transparent hover:border-amber-500/30"
               >
                 {isAuditLoading ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-500" />
@@ -427,19 +432,19 @@ export default function App() {
                   <FileCheck className="w-3.5 h-3.5 text-amber-500" />
                 )}
                 <span className="font-semibold">Audit</span>
-                <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 font-bold">
+                <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-amber-500/10 text-amber-500 border border-amber-500/20 font-bold">
                   A1
                 </span>
               </motion.button>
 
               {/* Agent 2: Pre-Cool */}
               <motion.button
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.02, y: -1 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={handleRunInfrastructure}
                 disabled={isInfraLoading}
                 title="Agent 2: Infrastructure & Pre-Cooling Controller"
-                className="px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 text-gray-700 dark:text-zinc-300 hover:text-cyan-500 dark:hover:text-cyan-400 hover:bg-white/80 dark:hover:bg-white/10 border border-transparent hover:border-cyan-500/30 hover:shadow-xs"
+                className="px-3 py-1.5 rounded-xl text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 text-gray-700 dark:text-zinc-300 hover:text-cyan-500 dark:hover:text-cyan-400 hover:bg-white/80 dark:hover:bg-white/10 border border-transparent hover:border-cyan-500/30"
               >
                 {isInfraLoading ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin text-cyan-500" />
@@ -447,19 +452,19 @@ export default function App() {
                   <Zap className="w-3.5 h-3.5 text-cyan-500" />
                 )}
                 <span className="font-semibold">Pre-Cool</span>
-                <span className="text-[9px] px-1 py-0.2 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-bold">
+                <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-bold">
                   A2
                 </span>
               </motion.button>
 
               {/* Agent 3: Civic Alert */}
               <motion.button
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.02, y: -1 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={handleRunCivic}
                 disabled={isCivicLoading}
                 title="Agent 3: Civic & Public Health Override"
-                className="px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 text-gray-700 dark:text-zinc-300 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-white/80 dark:hover:bg-white/10 border border-transparent hover:border-rose-500/30 hover:shadow-xs"
+                className="px-3 py-1.5 rounded-xl text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 text-gray-700 dark:text-zinc-300 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-white/80 dark:hover:bg-white/10 border border-transparent hover:border-rose-500/30"
               >
                 {isCivicLoading ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin text-rose-500" />
@@ -467,17 +472,17 @@ export default function App() {
                   <AlertOctagon className="w-3.5 h-3.5 text-rose-500" />
                 )}
                 <span className="font-semibold">Civic Alert</span>
-                <span className="text-[9px] px-1 py-0.2 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 font-bold">
+                <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-rose-500/10 text-rose-400 border border-rose-500/20 font-bold">
                   A3
                 </span>
               </motion.button>
             </div>
 
-            {/* Live Telemetry Radar Pulse */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-xs font-mono h-9">
+            {/* Live Telemetry Heartbeat */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 text-xs font-mono h-9">
               <span className={`w-2 h-2 rounded-full ${isEmergencyMode ? "bg-rose-500 animate-ping" : "bg-emerald-500 animate-radar-ping"}`} />
               <span className={isEmergencyMode ? "text-rose-500 font-semibold" : "text-emerald-500 font-medium"}>
-                {isEmergencyMode ? "Advisory" : `Live · ${uptime}`}
+                {isEmergencyMode ? "Advisory" : `Sync · ${uptime}`}
               </span>
             </div>
 
@@ -487,22 +492,22 @@ export default function App() {
               whileTap={{ scale: 0.95 }}
               onClick={() => setDarkMode(!darkMode)}
               title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              className="p-2 rounded-xl glass-panel-subtle text-gray-600 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-500/30 transition-colors shadow-xs cursor-pointer h-9 w-9 flex items-center justify-center"
+              className="p-2 rounded-2xl glass-panel-subtle text-gray-600 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-500/30 transition-colors shadow-xs cursor-pointer h-9 w-9 flex items-center justify-center"
             >
-              {darkMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </motion.button>
 
-            {/* High-End Searchable City Dropdown */}
+            {/* High-Contrast Searchable City Dropdown */}
             <div ref={dropdownRef} className="relative">
               <motion.button
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.02, y: -1 }}
                 whileTap={{ scale: 0.98 }}
                 type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 glass-panel-subtle hover:border-orange-500/50 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer text-black dark:text-white shadow-xs font-mono group h-9"
+                className="flex items-center gap-2 glass-panel-subtle hover:border-orange-500/50 px-3.5 py-1.5 rounded-2xl text-xs font-medium transition-all cursor-pointer text-black dark:text-white shadow-xs font-mono group h-9"
               >
                 <MapPin className="w-3.5 h-3.5 text-orange-500 group-hover:scale-110 transition-transform" />
-                <span className="font-semibold">{selectedCity}</span>
+                <span className="font-bold">{selectedCity}</span>
                 <ChevronDown
                   className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? "rotate-180 text-orange-500" : ""}`}
                 />
@@ -515,26 +520,26 @@ export default function App() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.96 }}
                     transition={{ type: "spring", stiffness: 450, damping: 25 }}
-                    className="absolute top-full mt-2 right-0 w-72 glass-popover rounded-2xl overflow-hidden z-50 flex flex-col max-h-80 font-mono text-xs"
+                    className="absolute top-full mt-2 right-0 w-72 glass-popover rounded-3xl overflow-hidden z-50 flex flex-col max-h-80 font-mono text-xs"
                   >
                     {/* Top edge gradient glow */}
                     <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
 
                     {/* Search Input */}
-                    <div className="p-2 border-b border-gray-200/80 dark:border-white/[0.08] bg-gray-50/70 dark:bg-white/[0.02] relative">
-                      <Search className="w-3.5 h-3.5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <div className="p-2.5 border-b border-gray-200/80 dark:border-white/[0.08] bg-gray-50/70 dark:bg-white/[0.02] relative">
+                      <Search className="w-3.5 h-3.5 absolute left-4.5 top-1/2 -translate-y-1/2 text-gray-400" />
                       <input
                         type="text"
                         placeholder="Search city..."
                         value={dropdownSearch}
                         onChange={(e) => setDropdownSearch(e.target.value)}
-                        className="w-full bg-white dark:bg-black/60 border border-gray-200 dark:border-zinc-800 rounded-lg pl-7 pr-6 py-1.5 text-xs text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50"
+                        className="w-full bg-white dark:bg-black/60 border border-gray-200 dark:border-zinc-800 rounded-xl pl-8 pr-6 py-1.5 text-xs text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50"
                         autoFocus
                       />
                       {dropdownSearch && (
                         <button
                           onClick={() => setDropdownSearch("")}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -559,7 +564,7 @@ export default function App() {
                                 <button
                                   key={c.id}
                                   onClick={() => handleSelectCity(c.name)}
-                                  className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-between text-left transition-all cursor-pointer ${
+                                  className={`w-full px-3 py-1.5 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer ${
                                     isSelected
                                       ? "bg-orange-500/15 text-orange-400 font-semibold border-l-2 border-orange-500"
                                       : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-black dark:hover:text-white"
@@ -587,10 +592,10 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Dashboard Canvas */}
-      <main className="w-full max-w-7xl mx-auto px-4 py-4 flex-1 flex flex-col space-y-4 relative z-10">
-        {/* Buttery-Smooth Fluid Continuous Sliding Segmented Navigation Control */}
-        <div className="flex items-center gap-1.5 p-1 rounded-2xl glass-panel-subtle text-xs font-mono w-fit relative">
+      {/* Main Mission Control Canvas */}
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-5 flex-1 flex flex-col space-y-5 relative z-10">
+        {/* Next-Gen Continuous Sliding Segmented Navigation Control */}
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl glass-panel-subtle text-xs font-mono w-fit relative shadow-sm">
           {NAV_TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -603,11 +608,11 @@ export default function App() {
                 whileTap={{ scale: 0.97 }}
                 className="relative px-4 py-2 rounded-xl text-xs font-mono font-medium transition-colors cursor-pointer flex items-center gap-2 select-none group"
               >
-                {/* Continuous Fluid Spring Sliding Pill Indicator */}
+                {/* Continuous Spring Gliding Indicator Pill */}
                 {isActive && (
                   <motion.div
                     layoutId="activeTabPill"
-                    className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7832] to-[#FF8A3D] shadow-[0_0_22px_rgba(255,107,43,0.45),inset_0_1px_1px_rgba(255,255,255,0.4)]"
+                    className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7832] to-[#FF8A3D] shadow-[0_0_24px_rgba(255,107,43,0.45),inset_0_1px_1px_rgba(255,255,255,0.4)]"
                     transition={{
                       type: "spring",
                       stiffness: 380,
@@ -620,19 +625,30 @@ export default function App() {
                 <span
                   className={`relative z-10 flex items-center gap-2 transition-colors duration-200 ${
                     isActive
-                      ? "text-black font-bold"
+                      ? "text-black font-extrabold"
                       : "text-gray-600 dark:text-zinc-400 group-hover:text-black dark:group-hover:text-white"
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
                   <span>{tab.label}</span>
+                  {tab.badge && (
+                    <span
+                      className={`text-[9px] px-1.5 py-0.2 rounded-md font-bold ${
+                        isActive
+                          ? "bg-black/20 text-black border border-black/10"
+                          : "bg-gray-200 dark:bg-white/[0.08] text-gray-500 dark:text-zinc-400"
+                      }`}
+                    >
+                      {tab.badge}
+                    </span>
+                  )}
                 </span>
               </motion.button>
             );
           })}
         </div>
 
-        {/* Dynamic Animated Tab View Routing with Silky-Smooth Organic Scale & Fade Transitions */}
+        {/* Dynamic Animated Tab View Routing */}
         <AnimatePresence mode="wait">
           {/* Tab 1: Operations Console */}
           {activeTab === "operations" && (
@@ -642,93 +658,115 @@ export default function App() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.992 }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-4"
+              className="space-y-5"
             >
-              {/* 4-Card Mission Control Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                {/* 1. Surface vs Ambient Temp */}
-                <KPICard
-                  label="Surface Temperature"
-                  icon={<Thermometer className="w-4 h-4" />}
-                  accentColor="text-orange-500"
-                  borderHover="hover:border-orange-500/40"
-                  value={surfaceTemp.toFixed(1)}
-                  unit="°F"
-                  valueSuffix={
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-1.5 mb-1 bg-orange-500/15 text-orange-500 border border-orange-500/30">
-                      +{surfaceDelta.toFixed(1)}°F ΔT
+              {/* Mission Control 4-Card Hero Telemetry Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* 1. Surface Radiometric vs Ambient Delta */}
+                <motion.div
+                  whileHover={{ y: -2.5, transition: { duration: 0.15 } }}
+                  className="glass-panel rounded-3xl p-5 flex flex-col justify-between transition-all hover:border-orange-500/40 relative overflow-hidden group"
+                >
+                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-transparent group-hover:bg-gradient-to-r group-hover:from-transparent group-hover:via-orange-500/60 group-hover:to-transparent transition-all duration-300" />
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-mono uppercase tracking-wider text-gray-500 dark:text-zinc-400 font-semibold">
+                      Surface Temperature
                     </span>
-                  }
-                  darkMode={darkMode}
-                  sparkStroke="#FF6B2B"
-                  sparkGradientId="sparkOrangeGrad"
-                  sparkPath="M0,24 Q15,6 32,18 T65,10 T95,14 L110,8"
-                  delay={0}
-                  footer={
-                    <span>
-                      Ambient Air: <strong className="text-black dark:text-white font-medium">{currentTemp}°F</strong>
-                    </span>
-                  }
-                />
+                    <div className="p-2 rounded-xl bg-orange-500/10 text-orange-500 border border-orange-500/20 group-hover:scale-110 transition-transform">
+                      <Thermometer className="w-4 h-4" />
+                    </div>
+                  </div>
+
+                  <div className="my-3">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-3xl lg:text-[34px] font-extrabold font-mono tracking-tight tabular-nums text-black dark:text-white leading-none">
+                        {surfaceTemp.toFixed(1)}
+                      </span>
+                      <span className="text-xs font-mono font-bold text-gray-500 dark:text-zinc-400">°F</span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold ml-1.5 bg-orange-500/15 text-orange-500 border border-orange-500/30 shadow-xs">
+                        +{surfaceDelta.toFixed(1)}°F ΔT
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-gray-200/60 dark:border-white/[0.06] flex items-center justify-between text-[11px] font-mono text-gray-500 dark:text-zinc-400">
+                    <span>Canopy Air: <strong className="text-black dark:text-white font-medium">{currentTemp}°F</strong></span>
+                    <span className="text-orange-500 font-semibold">Urban Heat Peak</span>
+                  </div>
+                </motion.div>
 
                 {/* 2. Solar Irradiance GHI */}
-                <KPICard
-                  label="Solar Irradiance (GHI)"
-                  icon={<Sun className="w-4 h-4" />}
-                  accentColor="text-amber-500"
-                  borderHover="hover:border-amber-500/40"
-                  value={solarGhi.toFixed(0)}
-                  unit="W/m²"
-                  valueSuffix={
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-1.5 mb-1 bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                      {solarGhi >= 600 ? "Peak Flux" : "Nominal"}
-                    </span>
-                  }
-                  darkMode={darkMode}
-                  sparkStroke="#F59E0B"
-                  sparkGradientId="sparkAmberGrad"
-                  sparkPath="M0,28 Q20,12 45,20 T80,8 T100,16 L110,10"
-                  delay={0.06}
-                  footer={
-                    <span>
-                      Clear Sky DNI: <strong className="text-black dark:text-white font-medium">{(solarGhi * 1.3).toFixed(0)} W/m²</strong>
-                    </span>
-                  }
-                />
-
-                {/* 3. Relative Humidity */}
-                <KPICard
-                  label="Relative Humidity"
-                  icon={<Droplets className="w-4 h-4" />}
-                  accentColor="text-cyan-500"
-                  borderHover="hover:border-cyan-500/40"
-                  value={humidity.toFixed(1)}
-                  unit="%"
-                  valueSuffix={
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-1.5 mb-1 bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
-                      {humidity > 50 ? "Elevated" : "Nominal"}
-                    </span>
-                  }
-                  darkMode={darkMode}
-                  sparkStroke="#06B6D4"
-                  sparkGradientId="sparkCyanGrad"
-                  sparkPath="M0,16 Q25,24 50,14 T85,20 T105,10 L110,14"
-                  delay={0.12}
-                  footer={
-                    <span>
-                      Wet-Bulb: <strong className="text-cyan-400 font-medium">{currentReading?.wet_bulb_f ? `${currentReading.wet_bulb_f.toFixed(1)}°F` : "74.1°F"}</strong>
-                    </span>
-                  }
-                />
-
-                {/* 4. Real-Time WBGT with Radial Gauge */}
                 <motion.div
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.18, ease: [0.25, 1, 0.5, 1] }}
                   whileHover={{ y: -2.5, transition: { duration: 0.15 } }}
-                  className="glass-panel rounded-2xl p-4 flex flex-col items-center justify-between transition-all hover:border-orange-500/40"
+                  className="glass-panel rounded-3xl p-5 flex flex-col justify-between transition-all hover:border-amber-500/40 relative overflow-hidden group"
                 >
+                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-transparent group-hover:bg-gradient-to-r group-hover:from-transparent group-hover:via-amber-500/60 group-hover:to-transparent transition-all duration-300" />
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-mono uppercase tracking-wider text-gray-500 dark:text-zinc-400 font-semibold">
+                      Solar Irradiance (GHI)
+                    </span>
+                    <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20 group-hover:scale-110 transition-transform">
+                      <Sun className="w-4 h-4" />
+                    </div>
+                  </div>
+
+                  <div className="my-3">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-3xl lg:text-[34px] font-extrabold font-mono tracking-tight tabular-nums text-black dark:text-white leading-none">
+                        {solarGhi.toFixed(0)}
+                      </span>
+                      <span className="text-xs font-mono font-bold text-gray-500 dark:text-zinc-400">W/m²</span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold ml-1.5 bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                        {solarGhi >= 600 ? "Peak Flux" : "Nominal"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-gray-200/60 dark:border-white/[0.06] flex items-center justify-between text-[11px] font-mono text-gray-500 dark:text-zinc-400">
+                    <span>Direct DNI: <strong className="text-black dark:text-white font-medium">{(solarGhi * 1.3).toFixed(0)} W/m²</strong></span>
+                    <span className="text-amber-400 font-semibold">Solar Zenith</span>
+                  </div>
+                </motion.div>
+
+                {/* 3. Relative Humidity & Wet-Bulb */}
+                <motion.div
+                  whileHover={{ y: -2.5, transition: { duration: 0.15 } }}
+                  className="glass-panel rounded-3xl p-5 flex flex-col justify-between transition-all hover:border-cyan-500/40 relative overflow-hidden group"
+                >
+                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-transparent group-hover:bg-gradient-to-r group-hover:from-transparent group-hover:via-cyan-500/60 group-hover:to-transparent transition-all duration-300" />
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-mono uppercase tracking-wider text-gray-500 dark:text-zinc-400 font-semibold">
+                      Relative Humidity
+                    </span>
+                    <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 group-hover:scale-110 transition-transform">
+                      <Droplets className="w-4 h-4" />
+                    </div>
+                  </div>
+
+                  <div className="my-3">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-3xl lg:text-[34px] font-extrabold font-mono tracking-tight tabular-nums text-black dark:text-white leading-none">
+                        {humidity.toFixed(1)}
+                      </span>
+                      <span className="text-xs font-mono font-bold text-gray-500 dark:text-zinc-400">%</span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold ml-1.5 bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+                        {humidity > 50 ? "Elevated" : "Nominal"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-gray-200/60 dark:border-white/[0.06] flex items-center justify-between text-[11px] font-mono text-gray-500 dark:text-zinc-400">
+                    <span>Wet-Bulb: <strong className="text-cyan-400 font-medium">{currentReading?.wet_bulb_f ? `${currentReading.wet_bulb_f.toFixed(1)}°F` : "74.1°F"}</strong></span>
+                    <span className="text-cyan-400 font-semibold">Chiller Shifting</span>
+                  </div>
+                </motion.div>
+
+                {/* 4. Real-Time WBGT Radial Dial Gauge */}
+                <motion.div
+                  whileHover={{ y: -2.5, transition: { duration: 0.15 } }}
+                  className="glass-panel rounded-3xl p-5 flex flex-col items-center justify-between transition-all hover:border-orange-500/40 relative overflow-hidden group"
+                >
+                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-transparent group-hover:bg-gradient-to-r group-hover:from-transparent group-hover:via-orange-500/60 group-hover:to-transparent transition-all duration-300" />
                   <RadialGauge
                     value={wbgt}
                     min={60}
@@ -738,7 +776,7 @@ export default function App() {
                     label="Liljegren WBGT Index"
                     size={120}
                   />
-                  <div className="w-full flex items-center justify-between pt-2 border-t border-gray-200/60 dark:border-white/[0.06] font-mono text-[10px] text-gray-500 dark:text-zinc-400">
+                  <div className="w-full flex items-center justify-between pt-2.5 border-t border-gray-200/60 dark:border-white/[0.06] font-mono text-[10.5px] text-gray-500 dark:text-zinc-400">
                     <span>Advisory Limit: <strong className="text-rose-500 font-semibold">85.0°F</strong></span>
                     <span className={wbgt >= 85 ? "text-rose-500 font-semibold" : "text-emerald-500 font-medium"}>
                       {wbgt >= 85 ? "Triggered" : "Nominal"}
@@ -747,11 +785,11 @@ export default function App() {
                 </motion.div>
               </div>
 
-              {/* Workspace Row: Telemetry Chart + Dispatch Log */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5">
-                {/* Telemetry chart */}
-                <div className="lg:col-span-8 glass-panel rounded-2xl p-4 flex flex-col justify-between">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 pb-3 border-b border-gray-200/60 dark:border-white/[0.06]">
+              {/* Workspace Row: Telemetry Stream Chart + Dispatch Event Feed */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                {/* Telemetry Stream Chart Canvas */}
+                <div className="lg:col-span-8 glass-panel rounded-3xl p-5 flex flex-col justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 pb-3.5 border-b border-gray-200/60 dark:border-white/[0.06]">
                     <div>
                       <div className="flex items-center gap-2">
                         <Activity className="w-4 h-4 text-orange-500" />
@@ -765,12 +803,12 @@ export default function App() {
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1.5 text-xs font-mono">
-                        <span className="w-2 h-2 rounded-full bg-orange-500" />
-                        <span className="text-gray-600 dark:text-zinc-400">Surface (°F)</span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]" />
+                        <span className="text-gray-700 dark:text-zinc-300 font-medium">Surface (°F)</span>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs font-mono">
-                        <span className="w-2 h-2 rounded-full bg-cyan-400" />
-                        <span className="text-gray-600 dark:text-zinc-400">Ambient (°F)</span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
+                        <span className="text-gray-700 dark:text-zinc-300 font-medium">Ambient (°F)</span>
                       </div>
                     </div>
                   </div>
@@ -780,7 +818,7 @@ export default function App() {
                       <ComposedChart data={telemetryData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
                         <defs>
                           <linearGradient id="surfaceFill" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#FF6B2B" stopOpacity={0.22} />
+                            <stop offset="5%" stopColor="#FF6B2B" stopOpacity={0.25} />
                             <stop offset="95%" stopColor="#FF6B2B" stopOpacity={0} />
                           </linearGradient>
                         </defs>
@@ -810,10 +848,11 @@ export default function App() {
                           contentStyle={{
                             backgroundColor: darkMode ? "#0E1015" : "#ffffff",
                             borderColor: "#FF6B2B",
-                            borderRadius: "8px",
+                            borderRadius: "12px",
                             color: darkMode ? "#ffffff" : "#000000",
                             fontFamily: "JetBrains Mono, monospace",
                             fontSize: "11px",
+                            boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
                           }}
                         />
 
@@ -821,7 +860,7 @@ export default function App() {
                           y={110}
                           stroke="#F43F5E"
                           strokeDasharray="4 4"
-                          strokeWidth={1.25}
+                          strokeWidth={1.5}
                           label={{
                             value: "Critical Limit (110°F)",
                             fill: "#F43F5E",
@@ -836,7 +875,7 @@ export default function App() {
                           dataKey="surface"
                           name="Surface (°F)"
                           stroke="#FF6B2B"
-                          strokeWidth={2.25}
+                          strokeWidth={2.5}
                           fill="url(#surfaceFill)"
                         />
 
@@ -845,7 +884,7 @@ export default function App() {
                           dataKey="ambient"
                           name="Ambient (°F)"
                           stroke="#38BDF8"
-                          strokeWidth={1.5}
+                          strokeWidth={1.75}
                           strokeDasharray="3 3"
                           dot={false}
                         />
@@ -854,21 +893,21 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Event Log */}
+                {/* Event Dispatch Log */}
                 <AgentEventLog
                   logs={logs}
                   onClear={() => setLogs([])}
                 />
               </div>
 
-              {/* Dedicated Surface Segmentation Card */}
+              {/* Dedicated Land-Cover Albedo & Composition Card */}
               <SurfaceSegmentationCard
                 segmentation={currentReading?.surface_segmentation}
                 city={selectedCity}
                 darkMode={darkMode}
               />
 
-              {/* Autonomous Agents Simulation */}
+              {/* Autonomous Tri-Agent Tactical Simulation Workspace */}
               <AgentVisualization agentStates={agentStates} darkMode={darkMode} />
             </motion.div>
           )}
@@ -924,15 +963,18 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* Executive Footer */}
-      <footer className="w-full max-w-7xl mx-auto px-6 py-3 border-t border-white/[0.12] dark:border-white/[0.08] flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 dark:text-zinc-500 font-mono gap-2 relative z-10">
+      {/* Executive Mission Control Footer */}
+      <footer className="w-full max-w-7xl mx-auto px-6 py-4 border-t border-white/[0.12] dark:border-white/[0.08] flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 dark:text-zinc-400 font-mono gap-2 relative z-10">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-orange-500" />
-          <span>ThermalOS v1.2 · Autonomous Microclimate Grid Operations</span>
+          <span className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]" />
+          <span className="font-semibold text-black dark:text-white">ThermalOS Executive Grid Intelligence</span>
+          <span className="text-gray-400 dark:text-zinc-600">·</span>
+          <span>FortyGuard Real-Time Microclimate Engine</span>
         </div>
         <div className="flex items-center gap-4">
-          <span>FortyGuard Radiometric API (v1)</span>
           <span>ASHRAE Standard 55</span>
+          <span>IECC 2021 Envelope Protocol</span>
+          <span className="text-orange-500 font-bold">Liljegren WBGT</span>
         </div>
       </footer>
     </div>
