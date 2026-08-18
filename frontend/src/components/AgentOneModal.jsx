@@ -16,7 +16,7 @@ export default function AgentOneModal({ isOpen, onClose, city, loading, error, r
       isOpen={isOpen}
       onClose={onClose}
       icon={
-        <div className="h-8 w-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+        <div className="h-8 w-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
           <FileCheck className="w-4 h-4" />
         </div>
       }
@@ -29,7 +29,7 @@ export default function AgentOneModal({ isOpen, onClose, city, loading, error, r
           <span>Retrieving ASHRAE 55 and IECC building codes from ChromaDB...</span>
         </div>
       ) : error ? (
-        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 font-mono text-xs space-y-2">
+        <div className="p-4 rounded-2xl glass-panel-subtle border-rose-500/30 text-rose-400 font-mono text-xs space-y-2">
           <div className="flex items-center gap-2 font-bold">
             <AlertTriangle className="w-4 h-4 text-rose-500" />
             <span>Audit Execution Error</span>
@@ -38,7 +38,7 @@ export default function AgentOneModal({ isOpen, onClose, city, loading, error, r
         </div>
       ) : auditReport ? (
         <div className="space-y-3 font-sans text-xs">
-          <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/40 font-mono">
+          <div className="flex items-center justify-between p-3 rounded-xl glass-panel-subtle font-mono">
             <span className="text-gray-500 dark:text-zinc-400">
               Target AOI: <strong className="text-black dark:text-white">{auditReport.city || city}</strong>
             </span>
@@ -47,10 +47,10 @@ export default function AgentOneModal({ isOpen, onClose, city, loading, error, r
             </span>
           </div>
 
-          <div className="p-3.5 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-1">
+          <div className="p-3.5 rounded-2xl glass-panel-subtle border-amber-500/25 space-y-1">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-              <span className="font-mono text-xs font-semibold text-amber-500 uppercase">
+              <span className="font-mono text-xs font-semibold text-amber-500 uppercase tracking-tight">
                 1. ASHRAE 55 Thermal Comfort Standard
               </span>
             </div>
@@ -62,10 +62,10 @@ export default function AgentOneModal({ isOpen, onClose, city, loading, error, r
             </p>
           </div>
 
-          <div className="p-3.5 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-1">
+          <div className="p-3.5 rounded-2xl glass-panel-subtle border-amber-500/25 space-y-1">
             <div className="flex items-center gap-2">
               <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-              <span className="font-mono text-xs font-semibold text-amber-400 uppercase">
+              <span className="font-mono text-xs font-semibold text-amber-400 uppercase tracking-tight">
                 2. IECC Building Envelope & Insulation Warning
               </span>
             </div>
@@ -77,10 +77,10 @@ export default function AgentOneModal({ isOpen, onClose, city, loading, error, r
             </p>
           </div>
 
-          <div className="p-3.5 rounded-xl border border-orange-500/30 bg-orange-500/10 space-y-2">
+          <div className="p-3.5 rounded-2xl glass-panel-subtle border-orange-500/35 space-y-2">
             <div className="flex items-center gap-2">
               <Flame className="w-3.5 h-3.5 text-orange-500" />
-              <span className="font-mono text-xs font-semibold text-orange-500 uppercase">
+              <span className="font-mono text-xs font-semibold text-orange-500 uppercase tracking-tight">
                 3. Recommended HVAC Mitigation Plan
               </span>
             </div>
@@ -89,7 +89,7 @@ export default function AgentOneModal({ isOpen, onClose, city, loading, error, r
             </p>
 
             <div className="pt-1 pl-5 flex items-center gap-3">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-xs">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-xs">
                 <Check className="w-3 h-3 text-emerald-500" />
                 <span>n8n Webhook Dispatch: Sent ✓</span>
               </div>
