@@ -355,7 +355,7 @@ export default function App() {
       <header className="border-b border-gray-200 dark:border-zinc-800/90 bg-white/95 dark:bg-[#090A0D]/95 backdrop-blur-md sticky top-0 z-40 px-6 py-2.5 transition-colors">
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.15)]">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.2)]">
               <Flame className="w-4 h-4" />
             </div>
             <div className="flex items-center gap-2">
@@ -364,46 +364,46 @@ export default function App() {
               </h1>
               <span className="text-xs text-gray-300 dark:text-zinc-700">/</span>
               <span className="text-xs font-mono text-orange-500">
-                FortyGuard Radiometric OS
+                FortyGuard Radiometric Intelligence
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-            {/* Quick Action Triggers */}
+            {/* Action Triggers with Calibrated Secondary Tones */}
             <div className="flex items-center gap-1 p-0.5 rounded-lg bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-xs font-mono">
               <button
                 onClick={handleRunAudit}
                 disabled={isAuditLoading}
-                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-orange-500 hover:border-orange-500/30 border border-transparent shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-amber-500 hover:border-amber-500/30 border border-transparent shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
-                {isAuditLoading ? <RefreshCw className="w-3 h-3 animate-spin text-orange-500" /> : <FileCheck className="w-3 h-3 text-orange-500" />}
+                {isAuditLoading ? <RefreshCw className="w-3 h-3 animate-spin text-amber-500" /> : <FileCheck className="w-3 h-3 text-amber-500" />}
                 <span>Audit</span>
               </button>
 
               <button
                 onClick={handleRunInfrastructure}
                 disabled={isInfraLoading}
-                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-orange-500 hover:border-orange-500/30 border border-transparent shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-cyan-500 hover:border-cyan-500/30 border border-transparent shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
-                {isInfraLoading ? <RefreshCw className="w-3 h-3 animate-spin text-orange-500" /> : <Zap className="w-3 h-3 text-orange-500" />}
+                {isInfraLoading ? <RefreshCw className="w-3 h-3 animate-spin text-cyan-500" /> : <Zap className="w-3 h-3 text-cyan-500" />}
                 <span>Pre-Cool</span>
               </button>
 
               <button
                 onClick={handleRunCivic}
                 disabled={isCivicLoading}
-                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-orange-500 hover:border-orange-500/30 border border-transparent shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-rose-500 hover:border-rose-500/30 border border-transparent shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
-                {isCivicLoading ? <RefreshCw className="w-3 h-3 animate-spin text-orange-500" /> : <AlertOctagon className="w-3 h-3 text-orange-500" />}
+                {isCivicLoading ? <RefreshCw className="w-3 h-3 animate-spin text-rose-500" /> : <AlertOctagon className="w-3 h-3 text-rose-500" />}
                 <span>Civic Alert</span>
               </button>
             </div>
 
-            {/* Telemetry Status */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-orange-500/20 bg-orange-500/5 text-xs font-mono">
-              <span className={`w-1.5 h-1.5 rounded-full ${isEmergencyMode ? "bg-orange-500 animate-pulse" : "bg-orange-500"}`} />
-              <span className="text-orange-500 font-medium">
+            {/* Live Telemetry Status */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-emerald-500/20 bg-emerald-500/5 text-xs font-mono">
+              <span className={`w-1.5 h-1.5 rounded-full ${isEmergencyMode ? "bg-rose-500 animate-pulse" : "bg-emerald-500 animate-pulse"}`} />
+              <span className={isEmergencyMode ? "text-rose-500 font-medium" : "text-emerald-500 font-medium"}>
                 {isEmergencyMode ? "Advisory Active" : `Live · ${uptime}`}
               </span>
             </div>
@@ -523,7 +523,9 @@ export default function App() {
               {/* 1. Surface vs Ambient Temp */}
               <KPICard
                 label="Surface Temperature"
-                icon={<Thermometer className="w-4 h-4 text-orange-500" />}
+                icon={<Thermometer className="w-4 h-4" />}
+                accentColor="text-orange-500"
+                borderHover="hover:border-orange-500/40"
                 value={surfaceTemp.toFixed(1)}
                 unit="°F"
                 valueSuffix={
@@ -545,16 +547,18 @@ export default function App() {
               {/* 2. Solar Irradiance GHI */}
               <KPICard
                 label="Solar Irradiance (GHI)"
-                icon={<Sun className="w-4 h-4 text-orange-400" />}
+                icon={<Sun className="w-4 h-4" />}
+                accentColor="text-amber-500"
+                borderHover="hover:border-amber-500/40"
                 value={solarGhi.toFixed(0)}
                 unit="W/m²"
                 valueSuffix={
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-1.5 mb-1 bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-1.5 mb-1 bg-amber-500/15 text-amber-400 border border-amber-500/30">
                     {solarGhi >= 600 ? "Peak Flux" : "Nominal"}
                   </span>
                 }
                 darkMode={darkMode}
-                sparkStroke="#FF6B2B"
+                sparkStroke="#F59E0B"
                 sparkGradientId="sparkAmberGrad"
                 sparkPath="M0,28 Q20,12 45,20 T80,8 T100,16 L110,10"
                 footer={
@@ -567,21 +571,23 @@ export default function App() {
               {/* 3. Relative Humidity */}
               <KPICard
                 label="Relative Humidity"
-                icon={<Droplets className="w-4 h-4 text-orange-400" />}
+                icon={<Droplets className="w-4 h-4" />}
+                accentColor="text-cyan-500"
+                borderHover="hover:border-cyan-500/40"
                 value={humidity.toFixed(1)}
                 unit="%"
                 valueSuffix={
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-1.5 mb-1 bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ml-1.5 mb-1 bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
                     {humidity > 50 ? "Elevated" : "Nominal"}
                   </span>
                 }
                 darkMode={darkMode}
-                sparkStroke="#FF6B2B"
+                sparkStroke="#06B6D4"
                 sparkGradientId="sparkCyanGrad"
                 sparkPath="M0,16 Q25,24 50,14 T85,20 T105,10 L110,14"
                 footer={
                   <span>
-                    Wet-Bulb: <strong className="text-black dark:text-white font-medium">{currentReading?.wet_bulb_f ? `${currentReading.wet_bulb_f.toFixed(1)}°F` : "74.1°F"}</strong>
+                    Wet-Bulb: <strong className="text-cyan-400 font-medium">{currentReading?.wet_bulb_f ? `${currentReading.wet_bulb_f.toFixed(1)}°F` : "74.1°F"}</strong>
                   </span>
                 }
               />
@@ -596,11 +602,10 @@ export default function App() {
                   unit="°F"
                   label="Liljegren WBGT Index"
                   size={120}
-                  color="#FF6B2B"
                 />
                 <div className="w-full flex items-center justify-between pt-2 border-t border-gray-100 dark:border-zinc-800/80 font-mono text-[10px] text-gray-500 dark:text-zinc-400">
-                  <span>Advisory Limit: <strong className="text-orange-500">85.0°F</strong></span>
-                  <span className={wbgt >= 85 ? "text-orange-500 font-medium" : "text-gray-600 dark:text-zinc-400"}>
+                  <span>Advisory Limit: <strong className="text-rose-500">85.0°F</strong></span>
+                  <span className={wbgt >= 85 ? "text-rose-500 font-medium" : "text-emerald-500 font-medium"}>
                     {wbgt >= 85 ? "Triggered" : "Nominal"}
                   </span>
                 </div>
@@ -629,7 +634,7 @@ export default function App() {
                       <span className="text-gray-600 dark:text-zinc-400">Surface (°F)</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-xs font-mono">
-                      <span className="w-2 h-2 rounded-full bg-zinc-400" />
+                      <span className="w-2 h-2 rounded-full bg-cyan-400" />
                       <span className="text-gray-600 dark:text-zinc-400">Ambient (°F)</span>
                     </div>
                   </div>
@@ -640,7 +645,7 @@ export default function App() {
                     <ComposedChart data={telemetryData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="surfaceFill" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#FF6B2B" stopOpacity={0.15} />
+                          <stop offset="5%" stopColor="#FF6B2B" stopOpacity={0.2} />
                           <stop offset="95%" stopColor="#FF6B2B" stopOpacity={0} />
                         </linearGradient>
                       </defs>
@@ -679,12 +684,12 @@ export default function App() {
 
                       <ReferenceLine
                         y={110}
-                        stroke="#FF5500"
+                        stroke="#F43F5E"
                         strokeDasharray="4 4"
-                        strokeWidth={1}
+                        strokeWidth={1.25}
                         label={{
-                          value: "Threshold (110°F)",
-                          fill: "#FF5500",
+                          value: "Critical Limit (110°F)",
+                          fill: "#F43F5E",
                           fontSize: 10,
                           fontFamily: "JetBrains Mono, monospace",
                           position: "insideTopRight",
@@ -704,7 +709,7 @@ export default function App() {
                         type="monotone"
                         dataKey="ambient"
                         name="Ambient (°F)"
-                        stroke={darkMode ? "#a1a1aa" : "#71717a"}
+                        stroke="#38BDF8"
                         strokeWidth={1.5}
                         strokeDasharray="3 3"
                         dot={false}

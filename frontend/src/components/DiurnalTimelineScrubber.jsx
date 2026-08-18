@@ -1,97 +1,75 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
   XAxis,
   YAxis,
   Tooltip,
+  ResponsiveContainer,
+  ComposedChart,
+  Area,
+  Line,
   ReferenceArea,
+  ReferenceLine,
 } from "recharts";
-import {
-  Play,
-  Pause,
-  Clock,
-  RotateCcw,
-} from "lucide-react";
+import { Clock, Play, Pause, RotateCcw, Zap, Sun, ShieldAlert } from "lucide-react";
 
-// Generate realistic 24-hour diurnal profile based on FortyGuard Notebook 02 curves
-function generateDiurnalProfile(city) {
-  const isDesert = city.includes("Phoenix") || city.includes("Las Vegas");
-  const baseNightTemp = isDesert ? 82 : 74;
-  const peakDayTemp = isDesert ? 106 : 94;
+// Generate 24-hour diurnal thermal cycle data for a city
+function generateDiurnalCurve(cityName) {
+  const data = [];
+  const isDesert = cityName.includes("Phoenix") || cityName.includes("Las Vegas") || cityName.includes("Tucson");
+  const baseAmbient = isDesert ? 88 : 74;
+  const peakAmbientDelta = isDesert ? 24 : 16;
+  const baseSurface = isDesert ? 82 : 70;
+  const peakSurfaceDelta = isDesert ? 38 : 25;
 
-  const hours = [];
-  for (let h = 0; h < 24; h++) {
-    const timeLabel = `${h.toString().padStart(2, "0")}:00`;
-    let ghi = 0;
-    if (h >= 6 && h <= 19) {
-      const solarAngle = Math.sin(((h - 6) / 13) * Math.PI);
-      ghi = Math.round(solarAngle * (isDesert ? 940 : 820));
-    }
+  for (let hour = 0; hour < 24; hour++) {
+    const timeLabel = `${hour.toString().padStart(2, "0")}:00`;
+    // Solar curve peaks at 14:00 (hour 14)
+    const solarFactor = Math.max(0, Math.sin(((hour - 6) / 14) * Math.PI));
+    // Thermal lag: Surface peaks at 14:00, Ambient peaks at 16:00
+    const surfaceFactor = Math.max(0, Math.sin(((hour - 6.5) / 13.5) * Math.PI));
+    const ambientFactor = Math.max(0, Math.sin(((hour - 8) / 13) * Math.PI));
 
-    const tempProgress = Math.sin(((h - 8) / 16) * Math.PI);
-    const ambientTemp =
-      h >= 6 && h <= 22
-        ? Math.round(baseNightTemp + (peakDayTemp - baseNightTemp) * Math.max(0, tempProgress))
-        : baseNightTemp + Math.round(Math.sin((h / 6) * Math.PI) * 2);
+    const ambient = +(baseAmbient + ambientFactor * peakAmbientDelta).toFixed(1);
+    const surface = +(baseSurface + Math.pow(surfaceFactor, 1.2) * peakSurfaceDelta).toFixed(1);
+    const ghi = Math.round(solarFactor * (isDesert ? 980 : 780));
+    const isPrecoolWindow = hour >= 3 && hour <= 6;
+    const isPeakWindow = hour >= 13 && hour <= 17;
 
-    const surfaceTemp =
-      ghi > 0
-        ? Math.round(ambientTemp + (ghi / 940) * 16)
-        : Math.round(ambientTemp - 1.5);
-
-    const humidity =
-      ghi > 0
-        ? Math.max(11, Math.round(35 - (ghi / 940) * 22))
-        : Math.round(32 + Math.cos((h / 24) * Math.PI * 2) * 5);
-
-    const wbgt = +(0.567 * ((ambientTemp - 32) * (5 / 9)) + 0.393 * (humidity / 5) + 3.94) * 1.8 + 32;
-
-    hours.push({
-      hour: h,
+    data.push({
+      hour,
       time: timeLabel,
+      ambient,
+      surface,
       ghi,
-      ambientTemp,
-      surfaceTemp,
-      humidity,
-      wbgt: +wbgt.toFixed(1),
+      delta: +(surface - ambient).toFixed(1),
+      isPrecoolWindow,
+      isPeakWindow,
     });
   }
-  return hours;
+  return data;
 }
 
-export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, darkMode = true }) {
-  const [currentHour, setCurrentHour] = useState(14); // default 2:00 PM
+export default function DiurnalTimelineScrubber({ selectedCity = "Phoenix, AZ", darkMode = true }) {
+  const [currentHour, setCurrentHour] = useState(14);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const diurnalData = generateDiurnalProfile(selectedCity);
-  const activeDataPoint = diurnalData[currentHour] || diurnalData[14];
+  const curveData = generateDiurnalCurve(selectedCity);
+  const activePoint = curveData[currentHour] || curveData[14];
 
-  // Playback timer
-  useEffect(() => {
-    let interval;
+  // Play animation through 24h
+  useState(() => {
+    let timer;
     if (isPlaying) {
-      interval = setInterval(() => {
-        setCurrentHour((prev) => {
-          const next = (prev + 1) % 24;
-          if (onHourChange) onHourChange(diurnalData[next]);
-          return next;
-        });
-      }, 1000);
+      timer = setInterval(() => {
+        setCurrentHour((h) => (h + 1) % 24);
+      }, 750);
     }
-    return () => clearInterval(interval);
-  }, [isPlaying, diurnalData, onHourChange]);
-
-  const handleSliderChange = (e) => {
-    const newHour = parseInt(e.target.value, 10);
-    setCurrentHour(newHour);
-    if (onHourChange) onHourChange(diurnalData[newHour]);
-  };
+    return () => clearInterval(timer);
+  }, [isPlaying]);
 
   return (
-    <div className="bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col shadow-xs space-y-3.5 font-sans">
-      {/* Header & Controls */}
+    <div className="bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col shadow-xs space-y-4 font-sans">
+      {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100 dark:border-zinc-800/80">
         <div className="flex items-center gap-2.5">
           <div className="h-8 w-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
@@ -100,55 +78,132 @@ export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, da
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-display text-sm font-semibold tracking-tight text-black dark:text-white">
-                24-Hour Diurnal Forecaster · {selectedCity}
+                24-Hour Diurnal Thermal Forecaster
               </h2>
               <span className="px-2 py-0.5 rounded-md bg-orange-500/10 border border-orange-500/20 text-xs font-mono text-orange-500">
-                Thermodynamic Curve
+                {selectedCity}
               </span>
             </div>
             <p className="text-xs text-gray-500 dark:text-zinc-400">
-              Simulate diurnal heat island lag, solar flux windows, and HVAC pre-cooling opportunities
+              Thermodynamic lag simulation: Surface irradiance vs. Canopy air lag & HVAC shifting windows
             </p>
           </div>
         </div>
 
-        {/* Play / Pause / Reset Controls */}
-        <div className="flex items-center gap-1.5 font-mono text-xs">
+        {/* Legend */}
+        <div className="flex items-center gap-3 font-mono text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-500/30 border border-cyan-500" />
+            <span className="text-gray-600 dark:text-zinc-400 text-[11px]">03:00–07:00 Pre-Cool</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500/30 border border-rose-500" />
+            <span className="text-gray-600 dark:text-zinc-400 text-[11px]">13:00–17:00 Peak Stress</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Scrubber Controls Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-lg border border-gray-200 dark:border-zinc-800 bg-gray-50/70 dark:bg-zinc-900/40">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setIsPlaying(!isPlaying)}
-            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors cursor-pointer ${
-              isPlaying
-                ? "bg-orange-500 text-black font-semibold"
-                : "bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-zinc-700 hover:text-orange-500 shadow-xs"
-            }`}
+            className="p-1.5 rounded-md bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-black dark:text-white hover:text-orange-500 hover:border-orange-500/30 transition-colors shadow-xs cursor-pointer flex items-center gap-1 font-mono text-xs"
           >
-            {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 text-orange-500" />}
-            <span>{isPlaying ? "Pause" : "Play 24H"}</span>
+            {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+            <span>{isPlaying ? "Pause" : "Simulate"}</span>
           </button>
           <button
             onClick={() => {
-              setCurrentHour(14);
               setIsPlaying(false);
-              if (onHourChange) onHourChange(diurnalData[14]);
+              setCurrentHour(14);
             }}
-            className="p-1.5 rounded-lg bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-400 hover:text-orange-500 transition-colors cursor-pointer"
-            title="Reset to 14:00 Solar Peak"
+            className="p-1.5 rounded-md bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-500/30 transition-colors shadow-xs cursor-pointer"
+            title="Reset to 14:00 Peak"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
         </div>
+
+        {/* Hour Slider */}
+        <div className="flex-1 max-w-md w-full flex items-center gap-3">
+          <span className="font-mono text-xs text-gray-500 dark:text-zinc-400">00:00</span>
+          <input
+            type="range"
+            min="0"
+            max="23"
+            step="1"
+            value={currentHour}
+            onChange={(e) => {
+              setIsPlaying(false);
+              setCurrentHour(parseInt(e.target.value, 10));
+            }}
+            className="w-full h-1.5 bg-gray-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#FF6B2B]"
+          />
+          <span className="font-mono text-xs text-gray-500 dark:text-zinc-400">23:00</span>
+        </div>
+
+        {/* Current Scrubber Point Stats */}
+        <div className="flex items-center gap-3 font-mono text-xs">
+          <div className="px-2.5 py-1 rounded-md bg-orange-500/10 border border-orange-500/20 text-orange-500 font-semibold">
+            T = {activePoint.time}
+          </div>
+          <div className="text-gray-600 dark:text-zinc-400">
+            Surface: <strong className="text-orange-500">{activePoint.surface}°F</strong>
+          </div>
+          <div className="text-gray-600 dark:text-zinc-400">
+            Air: <strong className="text-cyan-400">{activePoint.ambient}°F</strong>
+          </div>
+        </div>
       </div>
 
-      {/* 24-Hour Diurnal Chart */}
-      <div className="w-full h-52 relative">
+      {/* Diurnal Chart */}
+      <div className="w-full h-72 relative">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={diurnalData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <ComposedChart data={curveData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
             <defs>
-              <linearGradient id="surfaceDiurnalFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#FF6B2B" stopOpacity={darkMode ? 0.3 : 0.15} />
+              <linearGradient id="diurnalSurfaceFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#FF6B2B" stopOpacity={0.25} />
                 <stop offset="95%" stopColor="#FF6B2B" stopOpacity={0} />
               </linearGradient>
             </defs>
+
+            {/* Reference Pre-Cool Charging Window */}
+            <ReferenceArea
+              x1="03:00"
+              x2="07:00"
+              fill="#06B6D4"
+              fillOpacity={0.08}
+              stroke="#06B6D4"
+              strokeDasharray="3 3"
+              strokeWidth={0.75}
+            />
+
+            {/* Reference Peak Stress Window */}
+            <ReferenceArea
+              x1="13:00"
+              x2="17:00"
+              fill="#F43F5E"
+              fillOpacity={0.08}
+              stroke="#F43F5E"
+              strokeDasharray="3 3"
+              strokeWidth={0.75}
+            />
+
+            {/* Current Selected Scrubber Time Line */}
+            <ReferenceLine
+              x={activePoint.time}
+              stroke="#FF5500"
+              strokeWidth={2}
+              strokeDasharray="2 2"
+              label={{
+                value: `Current: ${activePoint.time}`,
+                fill: "#FF5500",
+                fontSize: 10,
+                fontFamily: "JetBrains Mono, monospace",
+                position: "insideTopRight",
+              }}
+            />
 
             <XAxis
               dataKey="time"
@@ -158,15 +213,17 @@ export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, da
               axisLine={{ stroke: darkMode ? "#27272a" : "#e2e8f0" }}
               interval={2}
             />
+
             <YAxis
               domain={[60, 130]}
-              ticks={[60, 80, 100, 120]}
+              ticks={[60, 75, 90, 105, 120]}
               stroke={darkMode ? "#27272a" : "#e2e8f0"}
               tick={{ fill: darkMode ? "#71717a" : "#64748b", fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
               tickLine={false}
               axisLine={{ stroke: darkMode ? "#27272a" : "#e2e8f0" }}
-              tickFormatter={(val) => `${val}°`}
+              tickFormatter={(v) => `${v}°`}
             />
+
             <Tooltip
               contentStyle={{
                 backgroundColor: darkMode ? "#0E1015" : "#ffffff",
@@ -178,91 +235,58 @@ export default function DiurnalTimelineScrubber({ selectedCity, onHourChange, da
               }}
             />
 
-            {/* Pre-Cool Window Highlight (03:00 - 07:00) */}
-            <ReferenceArea
-              x1="03:00"
-              x2="07:00"
-              fill="rgba(255, 107, 43, 0.06)"
-              stroke="rgba(255, 107, 43, 0.3)"
-              strokeDasharray="3 3"
-              label={{
-                value: "Pre-Cool Window",
-                fill: "#FF6B2B",
-                fontSize: 10,
-                fontFamily: "JetBrains Mono, monospace",
-                position: "insideTopLeft",
-              }}
-            />
-
-            {/* Peak Grid Load Window (13:00 - 17:00) */}
-            <ReferenceArea
-              x1="13:00"
-              x2="17:00"
-              fill="rgba(255, 85, 0, 0.08)"
-              stroke="rgba(255, 85, 0, 0.4)"
-              strokeDasharray="3 3"
-              label={{
-                value: "Peak Solar & Grid Load",
-                fill: "#FF5500",
-                fontSize: 10,
-                fontFamily: "JetBrains Mono, monospace",
-                position: "insideTopLeft",
-              }}
-            />
-
             <Area
               type="monotone"
-              dataKey="surfaceTemp"
+              dataKey="surface"
               name="Surface Temp (°F)"
               stroke="#FF6B2B"
-              strokeWidth={2}
-              fill="url(#surfaceDiurnalFill)"
+              strokeWidth={2.5}
+              fill="url(#diurnalSurfaceFill)"
             />
-            <Area
+
+            <Line
               type="monotone"
-              dataKey="ambientTemp"
-              name="Ambient Temp (°F)"
-              stroke={darkMode ? "#a1a1aa" : "#71717a"}
+              dataKey="ambient"
+              name="Ambient Air (°F)"
+              stroke="#38BDF8"
               strokeWidth={1.5}
-              fill="none"
               strokeDasharray="3 3"
+              dot={false}
             />
-          </AreaChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Interactive Timeline Scrubber Bar */}
-      <div className="pt-2 border-t border-gray-100 dark:border-zinc-800/80 space-y-2">
-        <div className="flex justify-between items-center text-xs font-mono">
-          <div className="flex items-center gap-2">
-            <span className="text-gray-500 dark:text-zinc-400">Position:</span>
-            <span className="px-2 py-0.5 rounded-md bg-orange-500/10 border border-orange-500/20 text-orange-500 font-semibold">
-              {activeDataPoint.time}
-            </span>
-          </div>
-          <div className="flex items-center gap-3 text-xs font-mono text-gray-500 dark:text-zinc-400">
-            <span>Surface: <strong className="text-orange-500 font-semibold">{activeDataPoint.surfaceTemp}°F</strong></span>
-            <span>Ambient: <strong className="text-black dark:text-white">{activeDataPoint.ambientTemp}°F</strong></span>
-            <span>Solar: <strong className="text-orange-400">{activeDataPoint.ghi} W/m²</strong></span>
-            <span>WBGT: <strong className="text-orange-500">{activeDataPoint.wbgt}°F</strong></span>
+      {/* Bottom Insights Tiles */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
+        <div className="p-3 rounded-lg border border-cyan-500/20 bg-cyan-500/5 flex items-center gap-2.5">
+          <Zap className="w-4 h-4 text-cyan-400 shrink-0" />
+          <div>
+            <div className="font-semibold text-cyan-400">03:00 - 07:00 · Pre-Cool Window</div>
+            <div className="text-[11px] text-gray-500 dark:text-zinc-400">
+              Low tariff off-peak chiller charging shifts 420 kW load.
+            </div>
           </div>
         </div>
 
-        <input
-          type="range"
-          min="0"
-          max="23"
-          step="1"
-          value={currentHour}
-          onChange={handleSliderChange}
-          className="w-full h-2 bg-gray-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#FF6B2B]"
-        />
-        <div className="flex justify-between text-[10px] font-mono text-gray-400 dark:text-zinc-500">
-          <span>00:00 (Night)</span>
-          <span>06:00 (Dawn)</span>
-          <span>12:00 (Noon)</span>
-          <span>16:00 (Peak)</span>
-          <span>23:00 (Night)</span>
+        <div className="p-3 rounded-lg border border-orange-500/20 bg-orange-500/5 flex items-center gap-2.5">
+          <Sun className="w-4 h-4 text-orange-500 shrink-0" />
+          <div>
+            <div className="font-semibold text-orange-500">14:00 · Peak Surface Flux</div>
+            <div className="text-[11px] text-gray-500 dark:text-zinc-400">
+              Max solar irradiance ({curveData[14].ghi} W/m²) precedes ambient peak by ~2 hrs.
+            </div>
+          </div>
+        </div>
+
+        <div className="p-3 rounded-lg border border-rose-500/20 bg-rose-500/5 flex items-center gap-2.5">
+          <ShieldAlert className="w-4 h-4 text-rose-500 shrink-0" />
+          <div>
+            <div className="font-semibold text-rose-500">13:00 - 17:00 · Thermal Stress Peak</div>
+            <div className="text-[11px] text-gray-500 dark:text-zinc-400">
+              Active municipal heat advisory & grid peak shaving sequence.
+            </div>
+          </div>
         </div>
       </div>
     </div>

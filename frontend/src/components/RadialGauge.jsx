@@ -9,7 +9,6 @@ export default function RadialGauge({
   label = "Liljegren WBGT",
   size = 120,
   strokeWidth = 7,
-  color = "#FF6B2B",
 }) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -18,6 +17,7 @@ export default function RadialGauge({
   const percentage = (normalizedValue - min) / (max - min);
   const strokeDashoffset = arcLength - percentage * arcLength;
   const isCritical = value >= threshold;
+  const activeColor = isCritical ? "#F43F5E" : "#10B981";
 
   return (
     <div className="flex flex-col items-center justify-center relative">
@@ -46,13 +46,14 @@ export default function RadialGauge({
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke={color}
+            stroke={activeColor}
             strokeWidth={strokeWidth}
             strokeDasharray={`${arcLength} ${circumference}`}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
             style={{
-              transition: "stroke-dashoffset 0.4s ease-out",
+              transition: "stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+              filter: isCritical ? "drop-shadow(0 0 6px rgba(244, 63, 94, 0.4))" : "none",
             }}
           />
         </svg>
@@ -68,10 +69,10 @@ export default function RadialGauge({
             </span>
           </div>
           <span
-            className={`text-[9px] font-mono px-1.5 py-0.5 rounded mt-0.5 ${
+            className={`text-[9px] font-mono px-1.5 py-0.5 rounded mt-0.5 font-medium ${
               isCritical
-                ? "bg-orange-500/15 text-orange-500 border border-orange-500/30 font-medium"
-                : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 font-normal"
+                ? "bg-rose-500/15 text-rose-500 border border-rose-500/30"
+                : "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30"
             }`}
           >
             {isCritical ? "Advisory" : "Nominal"}

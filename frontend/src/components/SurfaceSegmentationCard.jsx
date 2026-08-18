@@ -37,7 +37,7 @@ export default function SurfaceSegmentationCard({ segmentation, city }) {
         </div>
       </div>
 
-      {/* Segmented orange tonal progress bar */}
+      {/* Segmented rich progress bar */}
       <div className="my-3.5">
         <div className="flex justify-between items-center text-xs font-mono text-gray-500 dark:text-zinc-400 mb-1.5">
           <span>Land-Cover Distribution</span>
@@ -46,22 +46,22 @@ export default function SurfaceSegmentationCard({ segmentation, city }) {
         <div className="w-full h-2.5 rounded-full overflow-hidden flex bg-gray-100 dark:bg-zinc-800 gap-0.5 p-0.5">
           <div
             style={{ width: `${buildingPct}%` }}
-            className="h-full bg-orange-600 rounded-l-full transition-all duration-300"
+            className="h-full bg-slate-500 rounded-l-full transition-all duration-500"
             title={`Building Impervious: ${buildingPct}%`}
           />
           <div
             style={{ width: `${treePct}%` }}
-            className="h-full bg-orange-500 transition-all duration-300"
+            className="h-full bg-emerald-500 transition-all duration-500"
             title={`Tree Canopy: ${treePct}%`}
           />
           <div
             style={{ width: `${plantPct}%` }}
-            className="h-full bg-orange-400 transition-all duration-300"
+            className="h-full bg-cyan-500 transition-all duration-500"
             title={`Plant Cover: ${plantPct}%`}
           />
           <div
             style={{ width: `${soilPct}%` }}
-            className="h-full bg-zinc-600 rounded-r-full transition-all duration-300"
+            className="h-full bg-amber-500 rounded-r-full transition-all duration-500"
             title={`Ground / Soil: ${soilPct}%`}
           />
         </div>
@@ -70,9 +70,9 @@ export default function SurfaceSegmentationCard({ segmentation, city }) {
       {/* 4 Metric breakdown tiles */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         {/* Buildings */}
-        <div className="p-3 rounded-lg border border-gray-200 dark:border-zinc-800/80 bg-gray-50/50 dark:bg-zinc-900/40 flex flex-col justify-between hover:border-orange-500/30 transition-colors">
+        <div className="p-3 rounded-lg border border-gray-200 dark:border-zinc-800/80 bg-gray-50/50 dark:bg-zinc-900/40 flex flex-col justify-between hover:border-slate-400/40 transition-colors">
           <div className="flex items-center gap-1.5 mb-1">
-            <Building2 className="w-3.5 h-3.5 text-orange-500" />
+            <Building2 className="w-3.5 h-3.5 text-slate-400" />
             <span className="text-[11px] font-mono text-gray-600 dark:text-zinc-400">
               Buildings
             </span>
@@ -86,9 +86,9 @@ export default function SurfaceSegmentationCard({ segmentation, city }) {
         </div>
 
         {/* Tree Canopy */}
-        <div className="p-3 rounded-lg border border-gray-200 dark:border-zinc-800/80 bg-gray-50/50 dark:bg-zinc-900/40 flex flex-col justify-between hover:border-orange-500/30 transition-colors">
+        <div className="p-3 rounded-lg border border-gray-200 dark:border-zinc-800/80 bg-gray-50/50 dark:bg-zinc-900/40 flex flex-col justify-between hover:border-emerald-500/40 transition-colors">
           <div className="flex items-center gap-1.5 mb-1">
-            <Trees className="w-3.5 h-3.5 text-orange-400" />
+            <Trees className="w-3.5 h-3.5 text-emerald-500" />
             <span className="text-[11px] font-mono text-gray-600 dark:text-zinc-400">
               Tree Canopy
             </span>
@@ -97,14 +97,14 @@ export default function SurfaceSegmentationCard({ segmentation, city }) {
             <span className="text-base font-semibold font-mono text-black dark:text-white">
               {treePct}%
             </span>
-            <span className="text-[10px] font-mono text-gray-400 dark:text-zinc-500">Shade</span>
+            <span className="text-[10px] font-mono text-emerald-500/80">Cooling Shade</span>
           </div>
         </div>
 
         {/* Plant Cover */}
-        <div className="p-3 rounded-lg border border-gray-200 dark:border-zinc-800/80 bg-gray-50/50 dark:bg-zinc-900/40 flex flex-col justify-between hover:border-orange-500/30 transition-colors">
+        <div className="p-3 rounded-lg border border-gray-200 dark:border-zinc-800/80 bg-gray-50/50 dark:bg-zinc-900/40 flex flex-col justify-between hover:border-cyan-500/40 transition-colors">
           <div className="flex items-center gap-1.5 mb-1">
-            <Sprout className="w-3.5 h-3.5 text-orange-300" />
+            <Sprout className="w-3.5 h-3.5 text-cyan-500" />
             <span className="text-[11px] font-mono text-gray-600 dark:text-zinc-400">
               Plant Cover
             </span>
@@ -113,23 +113,23 @@ export default function SurfaceSegmentationCard({ segmentation, city }) {
             <span className="text-base font-semibold font-mono text-black dark:text-white">
               {plantPct}%
             </span>
-            <span className="text-[10px] font-mono text-gray-400 dark:text-zinc-500">Permeable</span>
+            <span className="text-[10px] font-mono text-cyan-500/80">Permeable</span>
           </div>
         </div>
 
         {/* Ground Soil */}
-        <div className="p-3 rounded-lg border border-gray-200 dark:border-zinc-800/80 bg-gray-50/50 dark:bg-zinc-900/40 flex flex-col justify-between hover:border-orange-500/30 transition-colors">
+        <div className="p-3 rounded-lg border border-gray-200 dark:border-zinc-800/80 bg-gray-50/50 dark:bg-zinc-900/40 flex flex-col justify-between hover:border-amber-500/40 transition-colors">
           <div className="flex items-center gap-1.5 mb-1">
-            <Layers className="w-3.5 h-3.5 text-zinc-400" />
+            <Layers className="w-3.5 h-3.5 text-amber-500" />
             <span className="text-[11px] font-mono text-gray-600 dark:text-zinc-400">
-              Bare Ground
+              Bare Soil / Ground
             </span>
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-base font-semibold font-mono text-black dark:text-white">
               {soilPct}%
             </span>
-            <span className="text-[10px] font-mono text-gray-400 dark:text-zinc-500">Substrate</span>
+            <span className="text-[10px] font-mono text-amber-500/80">Substrate</span>
           </div>
         </div>
       </div>

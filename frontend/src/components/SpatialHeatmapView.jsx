@@ -12,20 +12,20 @@ import {
   Radio,
 } from "lucide-react";
 
-// FortyGuard 12 equal-interval classes
+// Exact 12 FortyGuard equal-interval classes from official Quickstart Notebook
 const FORTYGUARD_12_CLASSES = [
-  { minC: 28.20, maxC: 28.37, hex: "#ff3700", label: "28.20 – 28.37 °C", tempF: "82.8 – 83.1 °F" },
-  { minC: 28.03, maxC: 28.20, hex: "#ff5500", label: "28.03 – 28.20 °C", tempF: "82.5 – 82.8 °F" },
-  { minC: 27.86, maxC: 28.03, hex: "#ff6b2b", label: "27.86 – 28.03 °C", tempF: "82.1 – 82.5 °F" },
-  { minC: 27.69, maxC: 27.86, hex: "#f97316", label: "27.69 – 27.86 °C", tempF: "81.8 – 82.1 °F" },
-  { minC: 27.52, maxC: 27.69, hex: "#fb923c", label: "27.52 – 27.69 °C", tempF: "81.5 – 81.8 °F" },
-  { minC: 27.35, maxC: 27.52, hex: "#fdba74", label: "27.35 – 27.52 °C", tempF: "81.2 – 81.5 °F" },
-  { minC: 27.18, maxC: 27.35, hex: "#fed7aa", label: "27.18 – 27.35 °C", tempF: "80.9 – 81.2 °F" },
-  { minC: 27.01, maxC: 27.18, hex: "#ffedd5", label: "27.01 – 27.18 °C", tempF: "80.6 – 80.9 °F" },
-  { minC: 26.84, maxC: 27.01, hex: "#d4d4d8", label: "26.84 – 27.01 °C", tempF: "80.3 – 80.6 °F" },
-  { minC: 26.67, maxC: 26.84, hex: "#a1a1aa", label: "26.67 – 26.84 °C", tempF: "80.0 – 80.3 °F" },
-  { minC: 26.50, maxC: 26.67, hex: "#71717a", label: "26.50 – 26.67 °C", tempF: "79.7 – 80.0 °F" },
-  { minC: 26.33, maxC: 26.50, hex: "#3f3f46", label: "26.33 – 26.50 °C", tempF: "79.4 – 79.7 °F" },
+  { minC: 28.20, maxC: 28.37, hex: "#cd1719", label: "28.20 – 28.37 °C", tempF: "82.8 – 83.1 °F" },
+  { minC: 28.03, maxC: 28.20, hex: "#e4402b", label: "28.03 – 28.20 °C", tempF: "82.5 – 82.8 °F" },
+  { minC: 27.86, maxC: 28.03, hex: "#f36e39", label: "27.86 – 28.03 °C", tempF: "82.1 – 82.5 °F" },
+  { minC: 27.69, maxC: 27.86, hex: "#fd9a4b", label: "27.69 – 27.86 °C", tempF: "81.8 – 82.1 °F" },
+  { minC: 27.52, maxC: 27.69, hex: "#febe6c", label: "27.52 – 27.69 °C", tempF: "81.5 – 81.8 °F" },
+  { minC: 27.35, maxC: 27.52, hex: "#fee090", label: "27.35 – 27.52 °C", tempF: "81.2 – 81.5 °F" },
+  { minC: 27.18, maxC: 27.35, hex: "#f5f7b4", label: "27.18 – 27.35 °C", tempF: "80.9 – 81.2 °F" },
+  { minC: 27.01, maxC: 27.18, hex: "#d9efa3", label: "27.01 – 27.18 °C", tempF: "80.6 – 80.9 °F" },
+  { minC: 26.84, maxC: 27.01, hex: "#afdd91", label: "26.84 – 27.01 °C", tempF: "80.3 – 80.6 °F" },
+  { minC: 26.67, maxC: 26.84, hex: "#80bf9b", label: "26.67 – 26.84 °C", tempF: "80.0 – 80.3 °F" },
+  { minC: 26.50, maxC: 26.67, hex: "#529bb2", label: "26.50 – 26.67 °C", tempF: "79.7 – 80.0 °F" },
+  { minC: 26.33, maxC: 26.50, hex: "#2c72a5", label: "26.33 – 26.50 °C", tempF: "79.4 – 79.7 °F" },
 ];
 
 export const MONITORED_CITIES = [
@@ -41,7 +41,7 @@ export const MONITORED_CITIES = [
     baseTemp: 33.5,
     tempF: "112.4°F",
     status: "Critical",
-    dotClass: "bg-orange-500",
+    dotClass: "bg-rose-500",
   },
   {
     id: "las_vegas",
@@ -54,7 +54,7 @@ export const MONITORED_CITIES = [
     baseTemp: 31.8,
     tempF: "106.8°F",
     status: "High",
-    dotClass: "bg-orange-400",
+    dotClass: "bg-orange-500",
   },
   {
     id: "tucson",
@@ -67,7 +67,7 @@ export const MONITORED_CITIES = [
     baseTemp: 32.2,
     tempF: "104.2°F",
     status: "High",
-    dotClass: "bg-orange-400",
+    dotClass: "bg-orange-500",
   },
   // Texas & South Central
   {
@@ -81,7 +81,7 @@ export const MONITORED_CITIES = [
     baseTemp: 29.2,
     tempF: "94.2°F",
     status: "Elevated",
-    dotClass: "bg-orange-400",
+    dotClass: "bg-amber-500",
   },
   {
     id: "dallas",
@@ -94,7 +94,7 @@ export const MONITORED_CITIES = [
     baseTemp: 30.1,
     tempF: "98.6°F",
     status: "High",
-    dotClass: "bg-orange-400",
+    dotClass: "bg-orange-500",
   },
   {
     id: "austin",
@@ -107,7 +107,7 @@ export const MONITORED_CITIES = [
     baseTemp: 30.8,
     tempF: "101.5°F",
     status: "High",
-    dotClass: "bg-orange-400",
+    dotClass: "bg-orange-500",
   },
   {
     id: "san_antonio",
@@ -120,7 +120,7 @@ export const MONITORED_CITIES = [
     baseTemp: 30.5,
     tempF: "100.2°F",
     status: "High",
-    dotClass: "bg-orange-400",
+    dotClass: "bg-orange-500",
   },
   // California & Pacific Northwest
   {
@@ -134,7 +134,7 @@ export const MONITORED_CITIES = [
     baseTemp: 27.4,
     tempF: "82.5°F",
     status: "Nominal",
-    dotClass: "bg-zinc-400",
+    dotClass: "bg-emerald-500",
   },
   {
     id: "los_angeles",
@@ -147,7 +147,7 @@ export const MONITORED_CITIES = [
     baseTemp: 31.0,
     tempF: "95.8°F",
     status: "High",
-    dotClass: "bg-orange-400",
+    dotClass: "bg-orange-500",
   },
   {
     id: "san_francisco",
@@ -160,7 +160,7 @@ export const MONITORED_CITIES = [
     baseTemp: 22.0,
     tempF: "72.4°F",
     status: "Nominal",
-    dotClass: "bg-zinc-400",
+    dotClass: "bg-emerald-500",
   },
   {
     id: "seattle",
@@ -173,7 +173,7 @@ export const MONITORED_CITIES = [
     baseTemp: 24.5,
     tempF: "76.1°F",
     status: "Nominal",
-    dotClass: "bg-zinc-400",
+    dotClass: "bg-emerald-500",
   },
   // Mountain & Central
   {
@@ -187,7 +187,7 @@ export const MONITORED_CITIES = [
     baseTemp: 28.0,
     tempF: "87.3°F",
     status: "Elevated",
-    dotClass: "bg-zinc-400",
+    dotClass: "bg-amber-500",
   },
   {
     id: "salt_lake_city",
@@ -200,7 +200,7 @@ export const MONITORED_CITIES = [
     baseTemp: 29.8,
     tempF: "92.1°F",
     status: "High",
-    dotClass: "bg-orange-400",
+    dotClass: "bg-orange-500",
   },
   // Midwest & Great Lakes
   {
@@ -214,7 +214,7 @@ export const MONITORED_CITIES = [
     baseTemp: 27.8,
     tempF: "84.1°F",
     status: "Nominal",
-    dotClass: "bg-zinc-400",
+    dotClass: "bg-emerald-500",
   },
   {
     id: "minneapolis",
@@ -227,7 +227,7 @@ export const MONITORED_CITIES = [
     baseTemp: 26.5,
     tempF: "81.0°F",
     status: "Nominal",
-    dotClass: "bg-zinc-400",
+    dotClass: "bg-emerald-500",
   },
   {
     id: "st_louis",
@@ -240,7 +240,7 @@ export const MONITORED_CITIES = [
     baseTemp: 29.4,
     tempF: "90.5°F",
     status: "Elevated",
-    dotClass: "bg-zinc-400",
+    dotClass: "bg-amber-500",
   },
   // East Coast & Mid-Atlantic
   {
@@ -254,7 +254,7 @@ export const MONITORED_CITIES = [
     baseTemp: 28.5,
     tempF: "88.4°F",
     status: "Elevated",
-    dotClass: "bg-zinc-400",
+    dotClass: "bg-amber-500",
   },
   {
     id: "boston",
@@ -267,7 +267,7 @@ export const MONITORED_CITIES = [
     baseTemp: 26.8,
     tempF: "82.1°F",
     status: "Nominal",
-    dotClass: "bg-zinc-400",
+    dotClass: "bg-emerald-500",
   },
   {
     id: "philadelphia",
@@ -280,7 +280,7 @@ export const MONITORED_CITIES = [
     baseTemp: 28.6,
     tempF: "88.8°F",
     status: "Elevated",
-    dotClass: "bg-zinc-400",
+    dotClass: "bg-amber-500",
   },
   {
     id: "washington_dc",
@@ -293,7 +293,7 @@ export const MONITORED_CITIES = [
     baseTemp: 29.0,
     tempF: "89.5°F",
     status: "Elevated",
-    dotClass: "bg-zinc-400",
+    dotClass: "bg-amber-500",
   },
   // Southeast & Florida
   {
@@ -307,7 +307,7 @@ export const MONITORED_CITIES = [
     baseTemp: 30.2,
     tempF: "92.6°F",
     status: "High",
-    dotClass: "bg-orange-500",
+    dotClass: "bg-rose-500",
   },
   {
     id: "orlando",
@@ -320,7 +320,7 @@ export const MONITORED_CITIES = [
     baseTemp: 30.0,
     tempF: "91.8°F",
     status: "High",
-    dotClass: "bg-orange-400",
+    dotClass: "bg-orange-500",
   },
   {
     id: "atlanta",
@@ -333,7 +333,7 @@ export const MONITORED_CITIES = [
     baseTemp: 29.5,
     tempF: "91.3°F",
     status: "Elevated",
-    dotClass: "bg-zinc-400",
+    dotClass: "bg-amber-500",
   },
   {
     id: "new_orleans",
@@ -346,7 +346,7 @@ export const MONITORED_CITIES = [
     baseTemp: 30.0,
     tempF: "93.0°F",
     status: "High",
-    dotClass: "bg-orange-400",
+    dotClass: "bg-orange-500",
   },
 ];
 
@@ -883,7 +883,7 @@ export default function SpatialHeatmapView({
 
               <div className="flex justify-between">
                 <span className="text-gray-500 dark:text-zinc-400">Exceedance Hours:</span>
-                <span className="text-orange-500 font-medium">
+                <span className="text-rose-500 font-medium">
                   {selectedParcel.exceedance_hours}h / week
                 </span>
               </div>

@@ -7,23 +7,27 @@ export default function KPICard({
   footer,
   sparkStroke = "#FF6B2B",
   sparkPath,
-  sparkGradientId = "orangeSpark",
+  sparkGradientId = "cardSparkGrad",
+  accentColor = "text-orange-500",
+  borderHover = "hover:border-orange-500/40",
   darkMode = true,
 }) {
   return (
-    <div className="bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col justify-between shadow-xs transition-all hover:border-orange-500/40 group">
+    <div
+      className={`bg-white dark:bg-[#0E1015] border border-gray-200 dark:border-zinc-800/90 rounded-xl p-4 flex flex-col justify-between shadow-xs transition-all ${borderHover} group`}
+    >
       {/* Header */}
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-mono uppercase tracking-wider text-gray-500 dark:text-zinc-400 group-hover:text-orange-500 transition-colors">
+        <span className="text-[11px] font-mono uppercase tracking-wider text-gray-500 dark:text-zinc-400">
           {label}
         </span>
-        <div className="text-gray-400 dark:text-zinc-500 group-hover:text-orange-500 transition-colors">
+        <div className={`${accentColor} transition-transform group-hover:scale-110 duration-200`}>
           {icon}
         </div>
       </div>
 
       {/* Main Metric Value */}
-      <div className="my-2.5 flex items-baseline gap-1">
+      <div className="my-2 flex items-baseline gap-1">
         <span className="text-3xl font-semibold font-mono tracking-tight tabular-nums text-black dark:text-white">
           {value}
         </span>
@@ -45,8 +49,8 @@ export default function KPICard({
           <svg className="w-20 h-5 overflow-visible" viewBox="0 0 110 32">
             <defs>
               <linearGradient id={sparkGradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#FF6B2B" stopOpacity={darkMode ? 0.25 : 0.15} />
-                <stop offset="100%" stopColor="#FF6B2B" stopOpacity={0} />
+                <stop offset="0%" stopColor={sparkStroke} stopOpacity={darkMode ? 0.25 : 0.15} />
+                <stop offset="100%" stopColor={sparkStroke} stopOpacity={0} />
               </linearGradient>
             </defs>
             <path d={`${sparkPath} L110,32 L0,32 Z`} fill={`url(#${sparkGradientId})`} />

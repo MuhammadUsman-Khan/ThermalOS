@@ -15,52 +15,52 @@ const getLogConfig = (type) => {
   switch (type) {
     case "extreme":
       return {
-        badgeClass: "bg-orange-500 text-black font-semibold",
-        textClass: "text-orange-400 font-medium",
+        badgeClass: "bg-rose-500/15 text-rose-500 border border-rose-500/30",
+        textClass: "text-rose-400 font-medium",
         tag: "Critical",
-        icon: <AlertOctagon className="w-3.5 h-3.5 text-orange-500 shrink-0" />,
+        icon: <AlertOctagon className="w-3.5 h-3.5 text-rose-500 shrink-0" />,
       };
     case "high":
       return {
-        badgeClass: "bg-orange-500/20 text-orange-400 border border-orange-500/30",
+        badgeClass: "bg-amber-500/15 text-amber-500 border border-amber-500/30",
         textClass: "text-zinc-200",
         tag: "Elevated",
-        icon: <AlertTriangle className="w-3.5 h-3.5 text-orange-400 shrink-0" />,
+        icon: <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />,
       };
     case "elevated":
       return {
-        badgeClass: "bg-orange-500/10 text-orange-400 border border-orange-500/20",
+        badgeClass: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
         textClass: "text-zinc-300",
         tag: "Advisory",
-        icon: <Activity className="w-3.5 h-3.5 text-orange-400 shrink-0" />,
+        icon: <Activity className="w-3.5 h-3.5 text-amber-400 shrink-0" />,
       };
     case "city_change":
       return {
-        badgeClass: "bg-zinc-800 text-zinc-300 border border-zinc-700",
-        textClass: "text-zinc-300",
+        badgeClass: "bg-orange-500/15 text-orange-400 border border-orange-500/30",
+        textClass: "text-zinc-200",
         tag: "Focus",
-        icon: <Radio className="w-3.5 h-3.5 text-zinc-400 shrink-0" />,
+        icon: <Radio className="w-3.5 h-3.5 text-orange-500 shrink-0" />,
       };
     case "audit":
       return {
-        badgeClass: "bg-orange-500/15 text-orange-400 border border-orange-500/30",
+        badgeClass: "bg-amber-500/15 text-amber-400 border border-amber-500/30",
         textClass: "text-zinc-200",
         tag: "Audit",
-        icon: <FileCheck className="w-3.5 h-3.5 text-orange-500 shrink-0" />,
+        icon: <FileCheck className="w-3.5 h-3.5 text-amber-500 shrink-0" />,
       };
     case "dispatch":
       return {
-        badgeClass: "bg-orange-500/15 text-orange-400 border border-orange-500/30",
+        badgeClass: "bg-cyan-500/15 text-cyan-400 border border-cyan-500/30",
         textClass: "text-zinc-200",
         tag: "Pre-Cool",
-        icon: <Zap className="w-3.5 h-3.5 text-orange-500 shrink-0" />,
+        icon: <Zap className="w-3.5 h-3.5 text-cyan-400 shrink-0" />,
       };
     default:
       return {
-        badgeClass: "bg-zinc-800 text-zinc-400 border border-zinc-700",
+        badgeClass: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",
         textClass: "text-zinc-300",
         tag: "Telemetry",
-        icon: <Check className="w-3.5 h-3.5 text-zinc-400 shrink-0" />,
+        icon: <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />,
       };
   }
 };
@@ -100,8 +100,8 @@ export default function AgentEventLog({ logs, onClear }) {
             <Trash2 className="w-3 h-3" />
             <span>Clear</span>
           </button>
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-orange-500/10 border border-orange-500/20 text-[10px] font-mono text-orange-500">
-            <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono text-emerald-500">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>Live Sync</span>
           </div>
         </div>

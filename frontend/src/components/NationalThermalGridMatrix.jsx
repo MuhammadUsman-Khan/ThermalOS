@@ -282,20 +282,22 @@ export default function NationalThermalGridMatrix({ selectedCity, onSelectCity }
                   <td className="py-2.5 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.ghi} W/m²</td>
                   <td className="py-2.5 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.humidity}%</td>
                   <td className="py-2.5 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.wetBulb}°F</td>
-                  <td className="py-2.5 px-2 tabular-nums font-semibold text-orange-500">
-                    {row.wbgt}°F
+                  <td className="py-2.5 px-2 tabular-nums font-semibold">
+                    <span className={row.wbgt >= 85 ? "text-rose-500" : "text-emerald-500"}>
+                      {row.wbgt}°F
+                    </span>
                   </td>
                   <td className="py-2.5 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.buildingPct}%</td>
                   <td className="py-2.5 px-3">
                     <span
                       className={`inline-block px-2 py-0.5 rounded text-[10px] ${
                         row.statusType === "critical"
-                          ? "bg-orange-500 text-black font-semibold"
+                          ? "bg-rose-500/15 text-rose-500 border border-rose-500/30 font-semibold"
                           : row.statusType === "precool"
-                          ? "bg-orange-500/20 text-orange-400 border border-orange-500/30 font-medium"
+                          ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 font-medium"
                           : row.statusType === "elevated"
-                          ? "bg-orange-500/10 text-orange-400 border border-orange-500/20 font-medium"
-                          : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 font-normal"
+                          ? "bg-amber-500/15 text-amber-400 border border-amber-500/30 font-medium"
+                          : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-normal"
                       }`}
                     >
                       {row.status}
