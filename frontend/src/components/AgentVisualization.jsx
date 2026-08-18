@@ -31,14 +31,20 @@ export default function AgentVisualization({
         this.currentDarkMode = darkMode;
         this.steamParticles = [];
         this.ambientDust = [];
+        this.dataBursts = [];
       }
 
       create() {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
+        this.skyG = this.add.graphics();
+        this.cityG = this.add.graphics();
         this.wallG = this.add.graphics();
         this.floorG = this.add.graphics();
+        this.lightsG = this.add.graphics();
+        this.decorG = this.add.graphics();
+        this.particlesG = this.add.graphics();
 
         this.renderExecutiveOffice(this.currentDarkMode);
 
@@ -48,7 +54,8 @@ export default function AgentVisualization({
             name: "AGENT 1 — ANALYST",
             role: "ASHRAE 55 & IECC RAG CORE",
             roomCode: "ROOM 101",
-            themeColor: 0xf59e0b,
+            roomName: "THERMAL AUDIT VAULT",
+            themeColor: 0xf59e0b, // Amber Gold
             themeHex: "#F59E0B",
             outfitColor: 0xf59e0b,
             outfitAccent: 0xffedd5,
@@ -65,7 +72,8 @@ export default function AgentVisualization({
             name: "AGENT 2 — CONTROLLER",
             role: "HVAC PRE-COOL LOAD SHIFT",
             roomCode: "ROOM 102",
-            themeColor: 0x06b6d4,
+            roomName: "CHILLER PLANT CORE",
+            themeColor: 0x06b6d4, // Electric Cyan
             themeHex: "#06B6D4",
             outfitColor: 0x06b6d4,
             outfitAccent: 0xcffafe,
@@ -82,7 +90,8 @@ export default function AgentVisualization({
             name: "AGENT 3 — DISPATCHER",
             role: "WBGT CIVIC HEAT DISPATCH",
             roomCode: "ROOM 103",
-            themeColor: 0xf43f5e,
+            roomName: "CIVIC DISPATCH HUB",
+            themeColor: 0xf43f5e, // Radiant Rose
             themeHex: "#F43F5E",
             outfitColor: 0xf43f5e,
             outfitAccent: 0xffe4e6,
@@ -97,8 +106,9 @@ export default function AgentVisualization({
         ];
 
         agentConfigs.forEach((cfg) => {
-          // --- 1. Dedicated Wall Operations Door ---
+          // --- 1. Dedicated Wall Operations Door on Back Wall ---
           const doorContainer = this.add.container(cfg.doorX, cfg.doorY);
+
           const doorWallRecess = this.add.graphics();
           const doorFrame = this.add.graphics();
           const doorPanels = this.add.graphics();
@@ -106,43 +116,38 @@ export default function AgentVisualization({
           const doorScanner = this.add.graphics();
           const doorFlash = this.add.graphics();
 
-          const doorSign = this.add.text(0, -56, `[ ${cfg.roomCode} ]`, {
+          // Room Sign Header
+          const doorSign = this.add.text(0, -56, `[ ${cfg.roomCode} • ${cfg.roomName} ]`, {
             fontFamily: "JetBrains Mono, monospace",
             fontSize: "9px",
             color: cfg.themeHex,
+            backgroundColor: this.currentDarkMode ? "#0F172A" : "#FFFFFF",
             padding: { x: 7, y: 3 },
             fontStyle: "bold",
             align: "center",
           }).setOrigin(0.5, 0.5);
 
-          const dW = 54;
-          const dH = 80;
+          doorContainer.add([doorLightBeam, doorWallRecess, doorFrame, doorPanels, doorScanner, doorFlash, doorSign]);
 
-          doorWallRecess.fillStyle(this.currentDarkMode ? 0x07090e : 0xd1d5db, 1);
-          doorWallRecess.fillRect(-dW / 2 - 3, -dH / 2 - 3, dW + 6, dH + 6);
-
-          doorFrame.lineStyle(2, cfg.themeColor, 0.85);
-          doorFrame.strokeRect(-dW / 2, -dH / 2, dW, dH);
-          doorFrame.fillStyle(this.currentDarkMode ? 0x111827 : 0xe2e8f0, 0.95);
-          doorFrame.fillRect(-dW / 2, -dH / 2, dW, dH);
-
-          doorPanels.lineStyle(1, cfg.themeColor, 0.4);
-          doorPanels.strokeRect(-dW / 2 + 5, -dH / 2 + 6, dW - 10, dH / 2 - 10);
-          doorPanels.strokeRect(-dW / 2 + 5, 2, dW - 10, dH / 2 - 8);
-
-          doorScanner.fillStyle(cfg.themeColor, 0.9);
-          doorScanner.fillCircle(dW / 2 - 8, 0, 2.5);
-
-          doorContainer.add([doorWallRecess, doorFrame, doorPanels, doorLightBeam, doorScanner, doorFlash, doorSign]);
           this.doors[cfg.id] = {
             container: doorContainer,
-            lightBeam: doorLightBeam,
-            flash: doorFlash,
-            scanner: doorScanner,
-            config: cfg,
+            doorWallRecess,
+            doorFrame,
+            doorPanels,
+            doorLightBeam,
+            doorScanner,
+            doorFlash,
+            doorSign,
+            cfg,
             isOpen: false,
           };
 
+          this.drawDoor(cfg.id, false, "idle");
+
+          // --- 2. Workstation Background Layer (Floor Rug & Chair Base) ---
+          const wsBackContainer = this.add.container(cfg.deskX, cfg.deskY);
+          const floorRugG = this.add.graphics();
+          const chairBaseG = this.add.graphics();
           wsBackContainer.add([floorRugG, chairBaseG]);
 
           // --- 3. Animated Agent Character Layer ---
