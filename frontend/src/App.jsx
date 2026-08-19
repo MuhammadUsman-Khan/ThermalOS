@@ -111,24 +111,6 @@ export default function App() {
     agent3: "idle",
   });
 
-  // FortyGuard Quota & Credit Protection State
-  const [quotaData, setQuotaData] = useState({
-    is_live_ready: false,
-    credit_allowance: 2000000,
-    credits_used: 0,
-    credits_remaining: 2000000,
-    days_remaining: 34,
-    valid_days_total: 34,
-    heatmap_daily_limit: 30,
-    heatmap_calls_today: 0,
-    heatmap_remaining_today: 30,
-    cache_hits: 0,
-    credits_saved_by_cache: 0,
-    quota_status: "OK",
-  });
-  const [isQuotaPopoverOpen, setIsQuotaPopoverOpen] = useState(false);
-  const quotaRef = useRef(null);
-
   const dropdownRef = useRef(null);
 
   // Sync dark mode class on html tag
@@ -140,37 +122,15 @@ export default function App() {
     }
   }, [darkMode]);
 
-  // Click outside to close dropdowns
+  // Click outside to close dropdown
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
       }
-      if (quotaRef.current && !quotaRef.current.contains(event.target)) {
-        setIsQuotaPopoverOpen(false);
-      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Periodic Quota Poller (Every 10 seconds)
-  const fetchQuota = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/v1/fortyguard/quota`);
-      if (res.ok) {
-        const data = await res.json();
-        setQuotaData(data);
-      }
-    } catch (e) {
-      // safe fallback keeps current state
-    }
-  };
-
-  useEffect(() => {
-    fetchQuota();
-    const qInterval = setInterval(fetchQuota, 10000);
-    return () => clearInterval(qInterval);
   }, []);
 
   // System uptime counter
@@ -526,143 +486,6 @@ export default function App() {
               <span className={isEmergencyMode ? "text-rose-500 font-semibold" : "text-emerald-500 font-medium"}>
                 {isEmergencyMode ? "Advisory" : `Sync · ${uptime}`}
               </span>
-            </div>
-
-            {/* FortyGuard Live Quota & Credit Protection Capsule */}
-            <div ref={quotaRef} className="relative">
-              <motion.button
-                whileHover={{ scale: 1.03, y: -1 }}
-                whileTap={{ scale: 0.97 }}
-                type="button"
-                onClick={() => setIsQuotaPopoverOpen(!isQuotaPopoverOpen)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl text-xs font-mono font-medium transition-all cursor-pointer shadow-xs h-9 border ${
-                  quotaData.heatmap_remaining_today <= 5
-                    ? "bg-amber-500/10 border-amber-500/30 text-amber-500 hover:border-amber-500/50"
-                    : "glass-panel-subtle hover:border-orange-500/40 text-gray-800 dark:text-zinc-200"
-                }`}
-                title="FortyGuard API Quota & Credit Allowance Status"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-orange-500" />
-                <span className="font-semibold hidden sm:inline">FortyGuard</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-orange-500/15 text-orange-600 dark:text-orange-400 font-bold border border-orange-500/20">
-                  {quotaData.heatmap_remaining_today}/30
-                </span>
-                <span className="text-[10px] font-mono text-gray-500 dark:text-zinc-400 hidden md:inline">
-                  {(quotaData.credits_remaining / 1000000).toFixed(1)}M cr
-                </span>
-              </motion.button>
-
-              <AnimatePresence>
-                {isQuotaPopoverOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                    transition={{ type: "spring", stiffness: 450, damping: 25 }}
-                    className="absolute top-full mt-2 right-0 w-84 glass-popover rounded-3xl overflow-hidden z-50 flex flex-col p-4 font-mono text-xs shadow-2xl space-y-3"
-                  >
-                    {/* Top edge gradient glow */}
-                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
-
-                    {/* Popover Header */}
-                    <div className="flex items-center justify-between pb-2.5 border-b border-gray-200/80 dark:border-white/[0.08]">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-lg bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-500">
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-black dark:text-white text-xs">
-                            FortyGuard Quota Guard
-                          </h3>
-                          <p className="text-[10px] text-gray-500 dark:text-zinc-400">
-                            tOS Enterprise API Allowance
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                        {quotaData.is_live_ready ? "Live API Active" : "Cache Safe"}
-                      </span>
-                    </div>
-
-                    {/* Quota Metrics Grid */}
-                    <div className="space-y-2.5">
-                      {/* Daily Heatmap Limit */}
-                      <div className="p-2.5 rounded-xl glass-panel-subtle space-y-1.5">
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="text-gray-500 dark:text-zinc-400">Daily Heatmap Limit</span>
-                          <strong className="text-orange-500 font-bold">
-                            {quotaData.heatmap_remaining_today} / {quotaData.heatmap_daily_limit} calls left
-                          </strong>
-                        </div>
-                        {/* Progress Bar */}
-                        <div className="w-full h-1.5 bg-gray-200 dark:bg-zinc-800 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full transition-all"
-                            style={{
-                              width: `${Math.max(
-                                5,
-                                (quotaData.heatmap_remaining_today / quotaData.heatmap_daily_limit) * 100
-                              )}%`,
-                            }}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between text-[9.5px] text-gray-400 dark:text-zinc-500">
-                          <span>Hard cap: 30 requests/day</span>
-                          <span>Auto-resets 00:00 UTC</span>
-                        </div>
-                      </div>
-
-                      {/* Credit Allowance & Validity */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="p-2.5 rounded-xl glass-panel-subtle">
-                          <div className="text-[10px] text-gray-500 dark:text-zinc-400">Remaining Credits</div>
-                          <div className="text-sm font-bold text-black dark:text-white mt-0.5">
-                            {(quotaData.credits_remaining / 1000000).toFixed(2)}M
-                          </div>
-                          <div className="text-[9px] text-gray-400 dark:text-zinc-500">
-                            of {quotaData.credit_allowance.toLocaleString()} total
-                          </div>
-                        </div>
-
-                        <div className="p-2.5 rounded-xl glass-panel-subtle">
-                          <div className="text-[10px] text-gray-500 dark:text-zinc-400">Validity Window</div>
-                          <div className="text-sm font-bold text-orange-500 mt-0.5">
-                            {quotaData.days_remaining} Days
-                          </div>
-                          <div className="text-[9px] text-gray-400 dark:text-zinc-500">
-                            of {quotaData.valid_days_total} days total
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Cache Protection Stats */}
-                      <div className="p-2.5 rounded-xl glass-panel-subtle flex items-center justify-between text-[10.5px]">
-                        <div className="flex items-center gap-1.5 text-gray-600 dark:text-zinc-300">
-                          <Database className="w-3.5 h-3.5 text-cyan-500" />
-                          <span>Persistent Cache</span>
-                        </div>
-                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                          {quotaData.cache_hits} Queries Protected
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Docs Footer Link */}
-                    <div className="pt-2 border-t border-gray-200/80 dark:border-white/[0.08] flex items-center justify-between">
-                      <a
-                        href="https://docs-api.fortyguard.com/docs/introduction"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-[10px] text-orange-500 hover:text-orange-400 transition-colors font-semibold cursor-pointer"
-                      >
-                        <span>FortyGuard API Docs</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                      <span className="text-[9px] text-gray-400 dark:text-zinc-500">Zero-Waste Shield ✓</span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
 
             {/* Theme Toggle */}
