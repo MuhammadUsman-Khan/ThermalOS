@@ -1,14 +1,32 @@
+# Environment and Secrets
 .env
+.env.*
+*.env
+*.env.*
+**/.env
+**/.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python
 __pycache__/
-node_modules/
-.DS_Store
-dist/
+*.pyc
+*.pyo
 venv/
 .venv/
-progress.md
-PROGRESS.md
-.claude
 chroma_db/
 backend/data/chroma_db/
 backend/cache/
 *.cache
+
+# Node
+node_modules/
+dist/
+.DS_Store
+
+# Agent / Scratch
+progress.md
+PROGRESS.md
+.claude
