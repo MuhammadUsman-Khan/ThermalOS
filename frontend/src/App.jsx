@@ -57,7 +57,7 @@ const API_BASE = "http://localhost:8000";
 
 const NAV_TABS = [
   { id: "operations", label: "Operations Console", icon: Activity, badge: "LIVE" },
-  { id: "spatial_heatmap", label: "Spatial GIS Heatmap", icon: Radio, badge: "22 CITIES" },
+  { id: "spatial_heatmap", label: "Spatial GIS Heatmap", icon: Radio, badge: "24 CITIES" },
   { id: "diurnal_sim", label: "Diurnal Forecaster", icon: Clock, badge: "24H" },
   { id: "national_grid", label: "National Grid Matrix", icon: Globe, badge: "AOI" },
 ];
@@ -532,7 +532,7 @@ export default function App() {
                       <Search className="w-3.5 h-3.5 absolute left-6 text-gray-400 pointer-events-none" />
                       <input
                         type="text"
-                        placeholder="Search 22+ cities..."
+                        placeholder="Search 24+ cities..."
                         value={dropdownSearch}
                         onChange={(e) => setDropdownSearch(e.target.value)}
                         className="w-full bg-white dark:bg-black/70 border border-gray-200 dark:border-zinc-800 rounded-xl pl-9 pr-12 py-2 text-xs text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/30 transition-all font-mono"

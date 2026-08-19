@@ -33,32 +33,65 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# City temperature configuration: normal active range and rare spike ceiling
+# City temperature configuration: normal active range and rare spike ceiling across 24 monitored cities
 CITY_CONFIGS = {
-    "Phoenix, AZ": {"min": 91, "max": 104, "spike_chance": 0.04, "spike_val": 108},
-    "Las Vegas, NV": {"min": 88, "max": 102, "spike_chance": 0.03, "spike_val": 106},
-    "Houston, TX": {"min": 84, "max": 96, "spike_chance": 0.02, "spike_val": 101},
-    "Dallas, TX": {"min": 82, "max": 95, "spike_chance": 0.02, "spike_val": 100},
+    # Southwest & Desert
+    "Phoenix, AZ": {"min": 95, "max": 114, "spike_chance": 0.04, "spike_val": 118},
+    "Las Vegas, NV": {"min": 90, "max": 108, "spike_chance": 0.03, "spike_val": 112},
+    "Tucson, AZ": {"min": 89, "max": 106, "spike_chance": 0.03, "spike_val": 110},
+    # Texas & South Central
+    "Houston, TX": {"min": 84, "max": 97, "spike_chance": 0.02, "spike_val": 102},
+    "Dallas, TX": {"min": 85, "max": 102, "spike_chance": 0.02, "spike_val": 105},
+    "Austin, TX": {"min": 86, "max": 103, "spike_chance": 0.02, "spike_val": 106},
+    "San Antonio, TX": {"min": 85, "max": 102, "spike_chance": 0.02, "spike_val": 105},
+    "New Orleans, LA": {"min": 82, "max": 94, "spike_chance": 0.02, "spike_val": 98},
+    # West Coast & Pacific
     "San Jose, CA": {"min": 74, "max": 88, "spike_chance": 0.02, "spike_val": 94},
-    "New York, NY": {"min": 76, "max": 90, "spike_chance": 0.02, "spike_val": 96},
-    "Chicago, IL": {"min": 72, "max": 86, "spike_chance": 0.02, "spike_val": 92},
-    "Miami, FL": {"min": 83, "max": 93, "spike_chance": 0.03, "spike_val": 98},
-    "Los Angeles, CA": {"min": 78, "max": 95, "spike_chance": 0.03, "spike_val": 101},
+    "Los Angeles, CA": {"min": 78, "max": 96, "spike_chance": 0.03, "spike_val": 102},
+    "San Francisco, CA": {"min": 64, "max": 76, "spike_chance": 0.02, "spike_val": 82},
+    "Seattle, WA": {"min": 68, "max": 80, "spike_chance": 0.02, "spike_val": 86},
+    # Mountain & Midwest
+    "Denver, CO": {"min": 76, "max": 92, "spike_chance": 0.02, "spike_val": 96},
+    "Salt Lake City, UT": {"min": 80, "max": 96, "spike_chance": 0.02, "spike_val": 100},
+    "Chicago, IL": {"min": 72, "max": 88, "spike_chance": 0.02, "spike_val": 94},
+    "Minneapolis, MN": {"min": 70, "max": 85, "spike_chance": 0.02, "spike_val": 90},
+    "St. Louis, MO": {"min": 78, "max": 94, "spike_chance": 0.02, "spike_val": 98},
+    # East Coast & Southeast
+    "New York, NY": {"min": 76, "max": 91, "spike_chance": 0.02, "spike_val": 96},
+    "Boston, MA": {"min": 72, "max": 86, "spike_chance": 0.02, "spike_val": 92},
+    "Philadelphia, PA": {"min": 76, "max": 92, "spike_chance": 0.02, "spike_val": 96},
+    "Washington, DC": {"min": 78, "max": 94, "spike_chance": 0.02, "spike_val": 98},
+    "Miami, FL": {"min": 84, "max": 94, "spike_chance": 0.03, "spike_val": 98},
+    "Orlando, FL": {"min": 83, "max": 94, "spike_chance": 0.02, "spike_val": 97},
     "Atlanta, GA": {"min": 79, "max": 93, "spike_chance": 0.02, "spike_val": 97},
 }
 
 # In-memory last temperature tracking per city
 LAST_CITY_TEMPS = {
-    "Phoenix, AZ": 95,
-    "Las Vegas, NV": 92,
+    "Phoenix, AZ": 104,
+    "Las Vegas, NV": 98,
+    "Tucson, AZ": 97,
     "Houston, TX": 88,
-    "Dallas, TX": 86,
-    "San Jose, CA": 78,
-    "New York, NY": 82,
-    "Chicago, IL": 79,
+    "Dallas, TX": 92,
+    "Austin, TX": 94,
+    "San Antonio, TX": 93,
+    "New Orleans, LA": 86,
+    "San Jose, CA": 82,
+    "Los Angeles, CA": 88,
+    "San Francisco, CA": 70,
+    "Seattle, WA": 74,
+    "Denver, CO": 84,
+    "Salt Lake City, UT": 88,
+    "Chicago, IL": 80,
+    "Minneapolis, MN": 78,
+    "St. Louis, MO": 86,
+    "New York, NY": 84,
+    "Boston, MA": 78,
+    "Philadelphia, PA": 84,
+    "Washington, DC": 86,
     "Miami, FL": 89,
-    "Los Angeles, CA": 86,
-    "Atlanta, GA": 84,
+    "Orlando, FL": 88,
+    "Atlanta, GA": 85,
 }
 
 

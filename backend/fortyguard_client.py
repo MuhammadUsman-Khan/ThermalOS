@@ -33,17 +33,36 @@ load_dotenv()
 
 logger = logging.getLogger("thermalos.fortyguard")
 
-# Coordinate lookups for supported ThermalOS cities
+# Coordinate lookups for all FortyGuard-supported US metropolitan areas
 CITY_COORDINATES: Dict[str, Dict[str, float]] = {
+    # Southwest & Desert
     "Phoenix, AZ": {"lat": 33.4484, "lon": -112.0740, "elevation": 331.0},
     "Las Vegas, NV": {"lat": 36.1699, "lon": -115.1398, "elevation": 610.0},
+    "Tucson, AZ": {"lat": 32.2226, "lon": -110.9747, "elevation": 728.0},
+    # Texas & South Central
     "Houston, TX": {"lat": 29.7604, "lon": -95.3698, "elevation": 15.0},
     "Dallas, TX": {"lat": 32.7767, "lon": -96.7970, "elevation": 131.0},
+    "Austin, TX": {"lat": 30.2672, "lon": -97.7431, "elevation": 149.0},
+    "San Antonio, TX": {"lat": 29.4241, "lon": -98.4936, "elevation": 198.0},
+    "New Orleans, LA": {"lat": 29.9511, "lon": -90.0715, "elevation": 2.0},
+    # West Coast & Pacific
     "San Jose, CA": {"lat": 37.3382, "lon": -121.8863, "elevation": 28.0},
-    "New York, NY": {"lat": 40.7128, "lon": -74.0060, "elevation": 10.0},
-    "Chicago, IL": {"lat": 41.8781, "lon": -87.6298, "elevation": 181.0},
-    "Miami, FL": {"lat": 25.7617, "lon": -80.1918, "elevation": 2.0},
     "Los Angeles, CA": {"lat": 34.0522, "lon": -118.2437, "elevation": 87.0},
+    "San Francisco, CA": {"lat": 37.7749, "lon": -122.4194, "elevation": 16.0},
+    "Seattle, WA": {"lat": 47.6062, "lon": -122.3321, "elevation": 53.0},
+    # Mountain & Midwest
+    "Denver, CO": {"lat": 39.7392, "lon": -104.9903, "elevation": 1609.0},
+    "Salt Lake City, UT": {"lat": 40.7608, "lon": -111.8910, "elevation": 1288.0},
+    "Chicago, IL": {"lat": 41.8781, "lon": -87.6298, "elevation": 181.0},
+    "Minneapolis, MN": {"lat": 44.9778, "lon": -93.2650, "elevation": 253.0},
+    "St. Louis, MO": {"lat": 38.6270, "lon": -90.1994, "elevation": 142.0},
+    # East Coast & Southeast
+    "New York, NY": {"lat": 40.7128, "lon": -74.0060, "elevation": 10.0},
+    "Boston, MA": {"lat": 42.3601, "lon": -71.0589, "elevation": 43.0},
+    "Philadelphia, PA": {"lat": 39.9526, "lon": -75.1652, "elevation": 12.0},
+    "Washington, DC": {"lat": 38.9072, "lon": -77.0369, "elevation": 7.0},
+    "Miami, FL": {"lat": 25.7617, "lon": -80.1918, "elevation": 2.0},
+    "Orlando, FL": {"lat": 28.5383, "lon": -81.3792, "elevation": 25.0},
     "Atlanta, GA": {"lat": 33.7490, "lon": -84.3880, "elevation": 320.0},
 }
 
