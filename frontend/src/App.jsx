@@ -48,6 +48,7 @@ import SpatialHeatmapView, { MONITORED_CITIES } from "./components/SpatialHeatma
 import DiurnalTimelineScrubber from "./components/DiurnalTimelineScrubber";
 import NationalThermalGridMatrix from "./components/NationalThermalGridMatrix";
 import AgentEventLog from "./components/AgentEventLog";
+import FortyGuardQuotaBar from "./components/FortyGuardQuotaBar";
 import AgentOneModal from "./components/AgentOneModal";
 import AgentTwoModal from "./components/AgentTwoModal";
 import AgentThreeModal from "./components/AgentThreeModal";
@@ -994,6 +995,11 @@ export default function App() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Dedicated FortyGuard API Quota, Credits & Allowance Bar */}
+        <div className="pt-2">
+          <FortyGuardQuotaBar darkMode={darkMode} />
+        </div>
       </main>
 
       {/* Executive Mission Control Footer */}
