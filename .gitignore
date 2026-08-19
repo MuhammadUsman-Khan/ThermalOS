@@ -10,3 +10,5 @@ PROGRESS.md
 .claude
 chroma_db/
 backend/data/chroma_db/
+backend/cache/
+*.cache

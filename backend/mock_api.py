@@ -225,6 +225,15 @@ def intelligence_endpoint(city: str = "Phoenix, AZ", temp_f: Optional[float] = N
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/v1/fortyguard/quota")
+def quota_endpoint():
+    """Fetch FortyGuard credit balance, daily heatmap quota, and caching metrics."""
+    try:
+        return fortyguard_client.quota_tracker.get_summary()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 if __name__ == "__main__":
     import uvicorn
 

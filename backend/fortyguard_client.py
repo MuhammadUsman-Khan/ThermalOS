@@ -1,14 +1,16 @@
-"""ThermalOS — FortyGuard Dual-Mode Client Adapter.
+"""ThermalOS — FortyGuard Enterprise API Client & Smart Quota Guard.
 
 Seamlessly bridges FortyGuard's tOS Enterprise API (Temperature, Environmental
 Parameters, Heatmaps, Satellite Segmentation, and Heat Intelligence) with
 ThermalOS autonomous agents and telemetry services.
 
-Dual-Mode Architecture:
-1. Live Production Mode: Activated automatically when `FORTYGUARD_API_KEY` is set in .env.
-2. Cached / Offline Mode: Activated when no API key is present, loading authentic
-   cached responses from `temperature-api-quickstart/data/` with high-fidelity
-   multi-city parameter modeling.
+Smart Quota & Credit Protection System:
+- Total Allowance: 2,000,000 Credits (Valid for 34 days from receipt)
+- Daily Heatmap Guard: Hard-capped at 30 requests / day (auto-resets daily)
+- Persistent Multi-Tier Caching: All query results are cached to disk so duplicate
+  calls for the same city/date never burn credits.
+- Graceful Fallback: Seamlessly switches to high-fidelity microclimate models when
+  quota is reached or API key is not present.
 """
 
 from __future__ import annotations
@@ -21,6 +23,7 @@ import time
 import math
 import random
 import logging
+from datetime import datetime, date, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -40,10 +43,16 @@ CITY_COORDINATES: Dict[str, Dict[str, float]] = {
     "Atlanta, GA": {"lat": 33.7490, "lon": -84.3880, "elevation": 320.0},
 }
 
-# Resolve quickstart cached data directory
+# Resolve directories
 BACKEND_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = BACKEND_DIR.parent
 QUICKSTART_DATA_DIR = PROJECT_ROOT / "temperature-api-quickstart" / "data"
+CACHE_DIR = BACKEND_DIR / "cache" / "fortyguard"
+QUOTA_FILE = BACKEND_DIR / "cache" / "quota_tracker.json"
+
+# Ensure cache directories exist
+for sub in ["env_params", "heatmaps", "satellite", "intelligence"]:
+    (CACHE_DIR / sub).mkdir(parents=True, exist_ok=True)
 
 # Add quickstart directory to sys.path to access the official fortyguard SDK
 QUICKSTART_PKG_DIR = PROJECT_ROOT / "temperature-api-quickstart"
@@ -70,24 +79,181 @@ def c_to_f(temp_c: float) -> float:
     return round((temp_c * 9.0 / 5.0) + 32.0, 2)
 
 
+class FortyGuardQuotaTracker:
+    """Tracks FortyGuard credit allowance and daily rate limits."""
+
+    INITIAL_CREDIT_ALLOWANCE = 2_000_000
+    DAILY_HEATMAP_LIMIT = 30
+    VALIDITY_DAYS = 34
+
+    def __init__(self, filepath: Path = QUOTA_FILE):
+        self.filepath = filepath
+        self.data = self._load_or_init()
+
+    def _load_or_init(self) -> Dict[str, Any]:
+        today_str = date.today().isoformat()
+        if self.filepath.exists():
+            try:
+                with open(self.filepath, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    self._check_and_reset_daily(data)
+                    return data
+            except Exception as e:
+                logger.warning(f"Failed to read quota file: {e}. Reinitializing tracker.")
+
+        # Fresh initialization
+        init_data = {
+            "account": {
+                "credit_allowance": self.INITIAL_CREDIT_ALLOWANCE,
+                "credits_used": 0,
+                "credits_remaining": self.INITIAL_CREDIT_ALLOWANCE,
+                "valid_days_total": self.VALIDITY_DAYS,
+                "start_date": today_str,
+                "days_remaining": self.VALIDITY_DAYS,
+            },
+            "daily_limits": {
+                "heatmap": {
+                    "max_per_day": self.DAILY_HEATMAP_LIMIT,
+                    "calls_today": 0,
+                    "remaining_today": self.DAILY_HEATMAP_LIMIT,
+                    "last_reset_date": today_str,
+                },
+                "env_params": {
+                    "calls_today": 0,
+                    "last_reset_date": today_str,
+                },
+                "satellite": {
+                    "calls_today": 0,
+                    "last_reset_date": today_str,
+                },
+            },
+            "cache_stats": {
+                "hits": 0,
+                "saved_credits": 0,
+            },
+            "last_updated": datetime.now(timezone.utc).isoformat(),
+        }
+        self._save(init_data)
+        return init_data
+
+    def _check_and_reset_daily(self, data: Dict[str, Any]) -> None:
+        """Reset daily counters if date has changed."""
+        today_str = date.today().isoformat()
+        daily = data.setdefault("daily_limits", {})
+        
+        # Check start date and compute days remaining
+        try:
+            start_d = date.fromisoformat(data["account"]["start_date"])
+            elapsed_days = (date.today() - start_d).days
+            data["account"]["days_remaining"] = max(0, self.VALIDITY_DAYS - elapsed_days)
+        except Exception:
+            data["account"]["days_remaining"] = self.VALIDITY_DAYS
+
+        # Heatmap daily reset
+        hm = daily.setdefault("heatmap", {})
+        if hm.get("last_reset_date") != today_str:
+            hm["calls_today"] = 0
+            hm["remaining_today"] = self.DAILY_HEATMAP_LIMIT
+            hm["last_reset_date"] = today_str
+
+        # Env params reset
+        ep = daily.setdefault("env_params", {})
+        if ep.get("last_reset_date") != today_str:
+            ep["calls_today"] = 0
+            ep["last_reset_date"] = today_str
+
+        # Satellite reset
+        sat = daily.setdefault("satellite", {})
+        if sat.get("last_reset_date") != today_str:
+            sat["calls_today"] = 0
+            sat["last_reset_date"] = today_str
+
+    def _save(self, data: Optional[Dict[str, Any]] = None) -> None:
+        to_save = data or self.data
+        to_save["last_updated"] = datetime.now(timezone.utc).isoformat()
+        try:
+            self.filepath.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.filepath, "w", encoding="utf-8") as f:
+                json.dump(to_save, f, indent=2)
+        except Exception as e:
+            logger.error(f"Error saving quota tracker: {e}")
+
+    def can_call_heatmap(self) -> bool:
+        """Check if daily heatmap quota allows another live request."""
+        self._check_and_reset_daily(self.data)
+        hm = self.data["daily_limits"]["heatmap"]
+        return hm["calls_today"] < hm["max_per_day"]
+
+    def record_call(self, endpoint: str, credits_cost: int = 100) -> None:
+        """Record an executed live FortyGuard API request and deduct credits."""
+        self._check_and_reset_daily(self.data)
+        
+        # Deduct credits
+        acc = self.data["account"]
+        acc["credits_used"] += credits_cost
+        acc["credits_remaining"] = max(0, acc["credit_allowance"] - acc["credits_used"])
+
+        # Increment daily endpoint counters
+        if endpoint in self.data["daily_limits"]:
+            ep = self.data["daily_limits"][endpoint]
+            ep["calls_today"] = ep.get("calls_today", 0) + 1
+            if "max_per_day" in ep:
+                ep["remaining_today"] = max(0, ep["max_per_day"] - ep["calls_today"])
+
+        self._save()
+        logger.info(
+            f"FortyGuard API [{endpoint}] called. Credits used: +{credits_cost}. "
+            f"Remaining allowance: {acc['credits_remaining']:,} credits. "
+            f"Daily heatmap quota: {self.data['daily_limits']['heatmap']['remaining_today']}/30 left."
+        )
+
+    def record_cache_hit(self, saved_credits: int = 500) -> None:
+        """Track credit savings through our persistent cache."""
+        cs = self.data.setdefault("cache_stats", {"hits": 0, "saved_credits": 0})
+        cs["hits"] += 1
+        cs["saved_credits"] += saved_credits
+        self._save()
+
+    def get_summary(self) -> Dict[str, Any]:
+        """Return human-readable and machine-readable quota telemetry."""
+        self._check_and_reset_daily(self.data)
+        hm = self.data["daily_limits"]["heatmap"]
+        acc = self.data["account"]
+        return {
+            "is_live_ready": bool(os.getenv("FORTYGUARD_API_KEY")),
+            "credit_allowance": acc["credit_allowance"],
+            "credits_used": acc["credits_used"],
+            "credits_remaining": acc["credits_remaining"],
+            "days_remaining": acc["days_remaining"],
+            "valid_days_total": acc["valid_days_total"],
+            "heatmap_daily_limit": hm["max_per_day"],
+            "heatmap_calls_today": hm["calls_today"],
+            "heatmap_remaining_today": hm["remaining_today"],
+            "cache_hits": self.data.get("cache_stats", {}).get("hits", 0),
+            "credits_saved_by_cache": self.data.get("cache_stats", {}).get("saved_credits", 0),
+            "quota_status": "OK" if hm["calls_today"] < hm["max_per_day"] else "DAILY_LIMIT_REACHED",
+        }
+
+
 class FortyGuardAdapter:
-    """Dual-Mode Adapter for FortyGuard Microclimate & Temperature API."""
+    """Dual-Mode Adapter with Smart Quota Guard & Persistent Disk Caching."""
 
     def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None):
         self.api_key = api_key or os.getenv("FORTYGUARD_API_KEY")
         self.base_url = base_url or os.getenv("FORTYGUARD_BASE_URL", "https://api.fortyguard.com")
         self.is_live = bool(self.api_key and self.api_key.strip() and not self.api_key.startswith("your_"))
+        self.quota_tracker = FortyGuardQuotaTracker()
         
         self.sdk_client = None
         if self.is_live and FORTYGUARD_SDK_AVAILABLE:
             try:
                 self.sdk_client = FortyGuardClient(api_key=self.api_key, base_url=self.base_url)
-                logger.info("FortyGuardAdapter initialized in LIVE API mode.")
+                logger.info("FortyGuardAdapter initialized in LIVE API mode with Quota Guard active.")
             except Exception as e:
                 logger.warning(f"Failed to initialize live FortyGuardClient: {e}. Falling back to CACHED mode.")
                 self.is_live = False
         else:
-            logger.info("FortyGuardAdapter initialized in CACHED / OFFLINE mode.")
+            logger.info("FortyGuardAdapter initialized in CACHED / OFFLINE mode with Quota Guard active.")
 
         self._cached_env_params: List[Dict[str, Any]] = []
         self._cached_heatmaps: List[Dict[str, Any]] = []
@@ -102,46 +268,62 @@ class FortyGuardAdapter:
             return
 
         # 1. Load Environmental Parameters
-        env_files = list(QUICKSTART_DATA_DIR.glob("env_params/*.json"))
-        for fpath in env_files:
+        for fpath in QUICKSTART_DATA_DIR.glob("env_params/*.json"):
             try:
                 with open(fpath, "r", encoding="utf-8") as f:
                     self._cached_env_params.append(json.load(f))
             except Exception as e:
                 logger.warning(f"Error loading {fpath.name}: {e}")
 
-        # 2. Load Heatmaps (TCM, Exceedance, Persistence)
-        heatmap_files = list(QUICKSTART_DATA_DIR.glob("heatmaps/*.json"))
-        for fpath in heatmap_files:
+        # 2. Load Heatmaps
+        for fpath in QUICKSTART_DATA_DIR.glob("heatmaps/*.json"):
             try:
                 with open(fpath, "r", encoding="utf-8") as f:
                     self._cached_heatmaps.append(json.load(f))
             except Exception as e:
                 logger.warning(f"Error loading {fpath.name}: {e}")
 
-        # 3. Load Satellite Segmentations
-        sat_files = list(QUICKSTART_DATA_DIR.glob("satellite/*.json"))
-        for fpath in sat_files:
+        # 3. Load Satellite
+        for fpath in QUICKSTART_DATA_DIR.glob("satellite/*.json"):
             try:
                 with open(fpath, "r", encoding="utf-8") as f:
                     self._cached_satellite.append(json.load(f))
             except Exception as e:
                 logger.warning(f"Error loading {fpath.name}: {e}")
 
-        # 4. Load Street View Segmentations
-        sv_files = list(QUICKSTART_DATA_DIR.glob("street_view/*.json"))
-        for fpath in sv_files:
+        # 4. Load Street View
+        for fpath in QUICKSTART_DATA_DIR.glob("street_view/*.json"):
             try:
                 with open(fpath, "r", encoding="utf-8") as f:
                     self._cached_street_views.append(json.load(f))
             except Exception as e:
                 logger.warning(f"Error loading {fpath.name}: {e}")
 
-        logger.info(
-            f"Loaded FortyGuard Quickstart caches: {len(self._cached_env_params)} env_params, "
-            f"{len(self._cached_heatmaps)} heatmaps, {len(self._cached_satellite)} satellite, "
-            f"{len(self._cached_street_views)} street_views."
-        )
+    # -------------------------------------------------------------------------
+    # Disk Cache Helpers
+    # -------------------------------------------------------------------------
+    def _read_disk_cache(self, category: str, cache_key: str) -> Optional[Dict[str, Any]]:
+        safe_name = "".join([c if c.isalnum() or c in "._-" else "_" for c in cache_key]) + ".json"
+        cfile = CACHE_DIR / category / safe_name
+        if cfile.exists():
+            try:
+                with open(cfile, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    self.quota_tracker.record_cache_hit(saved_credits=500)
+                    logger.info(f"Served {category} from persistent disk cache: {safe_name}")
+                    return data
+            except Exception as e:
+                logger.warning(f"Error reading disk cache {safe_name}: {e}")
+        return None
+
+    def _write_disk_cache(self, category: str, cache_key: str, data: Dict[str, Any]) -> None:
+        safe_name = "".join([c if c.isalnum() or c in "._-" else "_" for c in cache_key]) + ".json"
+        cfile = CACHE_DIR / category / safe_name
+        try:
+            with open(cfile, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+        except Exception as e:
+            logger.warning(f"Error writing disk cache {safe_name}: {e}")
 
     # -------------------------------------------------------------------------
     # 1. Environmental Parameters (POST /v1/env_params)
@@ -152,54 +334,45 @@ class FortyGuardAdapter:
         lat: Optional[float] = None,
         lon: Optional[float] = None,
         temp_f: Optional[float] = None,
-        date: str = "2024-07-15",
+        date_str: str = "2024-07-15",
         filter_type: int = 3,
     ) -> Dict[str, Any]:
-        """Fetch high-precision 24h environmental and solar metrics.
-        
-        Returns:
-            Dict containing metadata, hourly heat_index_celsius, wet_bulb_temperature_celsius,
-            relative_humidity_percent, solar_irradiance (GHI/DNI/DHI), and air quality indices.
-        """
+        """Fetch 24h environmental and solar metrics with disk caching & quota protection."""
+        cache_key = f"env_{city}_{date_str}_{filter_type}"
+        cached = self._read_disk_cache("env_params", cache_key)
+        if cached:
+            return cached
+
         coords = CITY_COORDINATES.get(city, {"lat": 33.4484, "lon": -112.0740, "elevation": 331.0})
         target_lat = lat if lat is not None else coords["lat"]
         target_lon = lon if lon is not None else coords["lon"]
         curr_temp_c = f_to_c(temp_f) if temp_f is not None else 35.0
 
+        # Try Live API if configured
         if self.is_live and self.sdk_client:
             try:
-                return self.sdk_client.environmental_parameters(
+                res = self.sdk_client.environmental_parameters(
                     latitude=target_lat,
                     longitude=target_lon,
                     temperature=curr_temp_c,
-                    start_date=date,
+                    start_date=date_str,
                     filter_type=filter_type,
                     wait=True,
                     verbose=False,
                 )
+                self.quota_tracker.record_call(endpoint="env_params", credits_cost=200)
+                self._write_disk_cache("env_params", cache_key, res)
+                return res
             except Exception as e:
-                logger.error(f"Live environmental_parameters failed: {e}. Using cached model.")
+                logger.error(f"Live environmental_parameters failed: {e}. Falling back to physics model.")
 
-        # CACHED / ADAPTIVE MODE:
-        # Use authentic FortyGuard schema from quickstart env_params
-        base_env = self._cached_env_params[0] if self._cached_env_params else None
-        
-        # Scale parameters to target city and temperature
-        temp_factor = curr_temp_c / 27.3  # Scale relative to Diridon base temp
+        # High-Fidelity Microclimate Model (FortyGuard Standard Format)
         hum_base = 25.0 if "Phoenix" in city or "Las Vegas" in city else 55.0
-
-        timestamps = [f"{date}T{h:02d}:00:00-08:00" for h in range(24)]
+        timestamps = [f"{date_str}T{h:02d}:00:00-08:00" for h in range(24)]
         
-        # Diurnal curve modeling matching FortyGuard format
-        heat_indices = []
-        apparent_temps = []
-        wet_bulbs = []
-        humidity_series = []
-        pm25_series = []
-        aqi_series = []
+        heat_indices, apparent_temps, wet_bulbs, humidity_series, pm25_series, aqi_series = [], [], [], [], [], []
 
         for h in range(24):
-            # Diurnal solar cycle: peak at 15:00
             diurnal_wave = math.sin((h - 8) * math.pi / 12) if 6 <= h <= 20 else -0.5
             h_temp = curr_temp_c + (diurnal_wave * 4.5)
             h_hum = max(10.0, hum_base - (diurnal_wave * 12.0))
@@ -219,16 +392,15 @@ class FortyGuardAdapter:
             pm25_series.append(round(42.0 + math.sin(h * 0.5) * 6.0, 1))
             aqi_series.append(round(45.0 + math.sin(h * 0.5) * 5.0, 1))
 
-        # FortyGuard Solar Irradiance Payload
         solar_ghi = round(620.0 * max(0.0, math.sin((14 - 6) * math.pi / 14)), 2)
         solar_dni = round(710.0 * max(0.0, math.sin((14 - 6) * math.pi / 14)), 2)
         solar_dhi = round(95.0, 2)
 
-        return {
+        res = {
             "metadata": {
                 "timezone": "GMT-8",
                 "timezone_offset_hours": -8,
-                "time_range": {"start": f"{date}T00:00:00-08:00", "end": f"{date}T23:00:00-08:00", "interval": "1h", "count": 24},
+                "time_range": {"start": f"{date_str}T00:00:00-08:00", "end": f"{date_str}T23:00:00-08:00", "interval": "1h", "count": 24},
                 "timestamps": timestamps,
             },
             "locations": [
@@ -261,56 +433,60 @@ class FortyGuardAdapter:
                 }
             ],
         }
+        self._write_disk_cache("env_params", cache_key, res)
+        return res
 
     # -------------------------------------------------------------------------
-    # 2. Heatmap Analytics (POST /v1/heatmap)
+    # 2. Heatmap Analytics (POST /v1/heatmap) with Strict 30/day Quota Guard
     # -------------------------------------------------------------------------
     def get_heatmap_analytics(
         self,
         city: str = "Phoenix, AZ",
         analytic_type: str = "tcm",
-        date: str = "2024-07-15",
+        date_str: str = "2024-07-15",
         granularity: int = 100,
     ) -> Dict[str, Any]:
-        """Fetch spatial microclimate thermal tiles and distribution statistics.
-        
-        Supported analytic_type:
-            - "tcm": Thermal Canopy Model (Surface/Ambient Tile °C)
-            - "exceedance": Cumulative hours above heat stress threshold
-            - "persistence": Longest continuous run of heatwave hours
-        """
-        if self.is_live and self.sdk_client:
-            try:
-                from fortyguard.samples import SAN_JOSE_POLYGON
-                return self.sdk_client.create_heatmap(
-                    polygon_aoi=SAN_JOSE_POLYGON,
-                    start_date=date,
-                    filter_type=3,
-                    granularity=granularity,
-                    analytic_type=analytic_type,
-                    threshold=32.0 if analytic_type in ("exceedance", "persistence") else None,
-                    direction="above" if analytic_type in ("exceedance", "persistence") else None,
-                    wait=True,
-                    verbose=False,
-                )
-            except Exception as e:
-                logger.error(f"Live create_heatmap failed: {e}. Using cached model.")
+        """Fetch spatial thermal tile mesh with strict 30/day daily limit enforcement."""
+        cache_key = f"heatmap_{city}_{analytic_type}_{date_str}_{granularity}"
+        cached = self._read_disk_cache("heatmaps", cache_key)
+        if cached:
+            return cached
 
-        # Find matching cached heatmap in quickstart data
-        matched = None
+        # Check Quota before making live API call
+        if self.is_live and self.sdk_client:
+            if self.quota_tracker.can_call_heatmap():
+                try:
+                    from fortyguard.samples import SAN_JOSE_POLYGON
+                    res = self.sdk_client.create_heatmap(
+                        polygon_aoi=SAN_JOSE_POLYGON,
+                        start_date=date_str,
+                        filter_type=3,
+                        granularity=granularity,
+                        analytic_type=analytic_type,
+                        threshold=32.0 if analytic_type in ("exceedance", "persistence") else None,
+                        direction="above" if analytic_type in ("exceedance", "persistence") else None,
+                        wait=True,
+                        verbose=False,
+                    )
+                    self.quota_tracker.record_call(endpoint="heatmap", credits_cost=1000)
+                    self._write_disk_cache("heatmaps", cache_key, res)
+                    return res
+                except Exception as e:
+                    logger.error(f"Live create_heatmap failed: {e}. Falling back to cached grid.")
+            else:
+                logger.warning("FortyGuard daily heatmap limit (30/day) reached. Serving cached microclimate grid.")
+
+        # Quickstart Cache Match
         for hm in self._cached_heatmaps:
             stats = hm.get("stats_data", {})
             if analytic_type == "tcm" and "Temperature_stats" in stats:
-                matched = hm
-                break
+                self._write_disk_cache("heatmaps", cache_key, hm)
+                return hm
             elif stats.get("analytic_type") == analytic_type:
-                matched = hm
-                break
+                self._write_disk_cache("heatmaps", cache_key, hm)
+                return hm
 
-        if matched:
-            return matched
-
-        # Fallback synthesized FortyGuard GeoJSON FeatureCollection
+        # Synthesized Microclimate GeoJSON FeatureCollection
         coords = CITY_COORDINATES.get(city, {"lat": 33.4484, "lon": -112.0740})
         base_lat, base_lon = coords["lat"], coords["lon"]
         
@@ -343,18 +519,21 @@ class FortyGuardAdapter:
                     },
                 })
 
-        return {
+        res = {
             "stats_data": {
                 "Temperature_stats": {"min": 28.5, "max": 42.1, "mean": 35.8},
                 "units": "°C" if analytic_type == "tcm" else "hour",
                 "analytic_type": analytic_type,
                 "n_cells": len(features),
+                "quota_info": self.quota_tracker.get_summary(),
             },
             "map_data": {
                 "type": "FeatureCollection",
                 "features": features,
             },
         }
+        self._write_disk_cache("heatmaps", cache_key, res)
+        return res
 
     # -------------------------------------------------------------------------
     # 3. Satellite Land-Cover Segmentation (POST /v1/satellite)
@@ -364,27 +543,35 @@ class FortyGuardAdapter:
         city: str = "Phoenix, AZ",
         lat: Optional[float] = None,
         lon: Optional[float] = None,
-        date: str = "2024-07-15",
+        date_str: str = "2024-07-15",
     ) -> Dict[str, Any]:
         """Fetch 100m satellite land-cover material classification."""
+        cache_key = f"satellite_{city}_{date_str}"
+        cached = self._read_disk_cache("satellite", cache_key)
+        if cached:
+            return cached
+
         if self.is_live and self.sdk_client:
             try:
                 coords = CITY_COORDINATES.get(city, {"lat": 33.4484, "lon": -112.0740})
-                return self.sdk_client.satellite_segmentation(
+                res = self.sdk_client.satellite_segmentation(
                     latitude=lat or coords["lat"],
                     longitude=lon or coords["lon"],
-                    start_date=date,
+                    start_date=date_str,
                     filter_type=3,
                     wait=True,
                     verbose=False,
                 )
+                self.quota_tracker.record_call(endpoint="satellite", credits_cost=500)
+                self._write_disk_cache("satellite", cache_key, res)
+                return res
             except Exception as e:
-                logger.error(f"Live satellite_segmentation failed: {e}. Using cached model.")
+                logger.error(f"Live satellite_segmentation failed: {e}. Using cached segmentation.")
 
         if self._cached_satellite:
             return self._cached_satellite[0]
 
-        return {
+        res = {
             "coordinates": {"latitude": lat or 33.4484, "longitude": lon or -112.0740},
             "image_year": 2024,
             "segmentation": {
@@ -404,6 +591,8 @@ class FortyGuardAdapter:
                 },
             },
         }
+        self._write_disk_cache("satellite", cache_key, res)
+        return res
 
     # -------------------------------------------------------------------------
     # 4. Heat Intelligence Report (POST /v1/heat_intelligence)
@@ -412,10 +601,10 @@ class FortyGuardAdapter:
         self,
         city: str = "Phoenix, AZ",
         temp_f: Optional[float] = None,
-        date: str = "2024-07-15",
+        date_str: str = "2024-07-15",
         analysis_types: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
-        """Generate/extract comprehensive 5-pillar Heat Intelligence metadata."""
+        """Generate comprehensive 5-pillar Heat Intelligence metadata."""
         types = analysis_types or ["geographic", "environmental", "urban", "events", "anthropogenic"]
         coords = CITY_COORDINATES.get(city, {"lat": 33.4484, "lon": -112.0740, "elevation": 331.0})
         curr_temp_c = f_to_c(temp_f) if temp_f is not None else 38.0
@@ -425,7 +614,7 @@ class FortyGuardAdapter:
             "coordinates": coords,
             "baseline_temperature_c": curr_temp_c,
             "baseline_temperature_f": c_to_f(curr_temp_c),
-            "date": date,
+            "date": date_str,
             "analysis_categories": types,
             "intelligence_pillars": {
                 "geographic": {
@@ -458,11 +647,12 @@ class FortyGuardAdapter:
                 },
             },
             "status": "ready",
-            "report_source": "FortyGuard tOS Enterprise API" if self.is_live else "FortyGuard Quickstart Engine (Cached)",
+            "quota_summary": self.quota_tracker.get_summary(),
+            "report_source": "FortyGuard tOS Enterprise API" if self.is_live else "FortyGuard Quickstart Engine (Cached Safe)",
         }
 
     # -------------------------------------------------------------------------
-    # 5. Real-Time Telemetry Snapshot (Synchronized Feed for ThermalOS)
+    # 5. Real-Time Telemetry Snapshot
     # -------------------------------------------------------------------------
     def get_live_telemetry_snapshot(self, city: str = "Phoenix, AZ", temp_f: Optional[float] = None) -> Dict[str, Any]:
         """Generate a complete, FortyGuard-aligned microclimate telemetry packet."""
@@ -471,11 +661,10 @@ class FortyGuardAdapter:
         params = loc["parameters"]
         solar = loc["solar_irradiance"]["clear_sky"]
 
-        # Current hourly index (midday peak)
         hour_idx = 14
         ambient_c = loc["temperature"]
         ambient_f = c_to_f(ambient_c)
-        surface_c = round(ambient_c + 7.4, 2)  # FortyGuard surface temperature offset
+        surface_c = round(ambient_c + 7.4, 2)
         surface_f = c_to_f(surface_c)
         
         wet_bulb_c = params["wet_bulb_temperature_celsius"][hour_idx]
@@ -488,7 +677,6 @@ class FortyGuardAdapter:
         aqi_pm25 = params["air_quality_pm2p5:idx"][hour_idx]
         solar_ghi = solar["ghi"]
 
-        # Risk classification
         if ambient_f >= 105.0 or wet_bulb_f >= 88.0:
             risk = "extreme"
         elif ambient_f >= 102.0 or wet_bulb_f >= 84.0:
@@ -497,6 +685,8 @@ class FortyGuardAdapter:
             risk = "elevated"
         else:
             risk = "nominal"
+
+        quota_sum = self.quota_tracker.get_summary()
 
         return {
             "location": city,
@@ -513,7 +703,9 @@ class FortyGuardAdapter:
             "resolution": "100m² FortyGuard TCM",
             "measured_at": "2m canopy & surface ground truth",
             "api_mode": "LIVE" if self.is_live else "CACHED_QUICKSTART",
-            "credits_remaining": 999999,
+            "quota": quota_sum,
+            "credits_remaining": quota_sum["credits_remaining"],
+            "heatmap_remaining_today": quota_sum["heatmap_remaining_today"],
         }
 
 
