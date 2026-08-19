@@ -26,6 +26,10 @@ import logging
 from datetime import datetime, date, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 logger = logging.getLogger("thermalos.fortyguard")
 
@@ -360,9 +364,10 @@ class FortyGuardAdapter:
                     wait=True,
                     verbose=False,
                 )
+                payload = res.get("result", res) if isinstance(res, dict) else res
                 self.quota_tracker.record_call(endpoint="env_params", credits_cost=200)
-                self._write_disk_cache("env_params", cache_key, res)
-                return res
+                self._write_disk_cache("env_params", cache_key, payload)
+                return payload
             except Exception as e:
                 logger.error(f"Live environmental_parameters failed: {e}. Falling back to physics model.")
 
@@ -468,9 +473,10 @@ class FortyGuardAdapter:
                         wait=True,
                         verbose=False,
                     )
+                    payload = res.get("result", res) if isinstance(res, dict) else res
                     self.quota_tracker.record_call(endpoint="heatmap", credits_cost=1000)
-                    self._write_disk_cache("heatmaps", cache_key, res)
-                    return res
+                    self._write_disk_cache("heatmaps", cache_key, payload)
+                    return payload
                 except Exception as e:
                     logger.error(f"Live create_heatmap failed: {e}. Falling back to cached grid.")
             else:
@@ -562,9 +568,10 @@ class FortyGuardAdapter:
                     wait=True,
                     verbose=False,
                 )
+                payload = res.get("result", res) if isinstance(res, dict) else res
                 self.quota_tracker.record_call(endpoint="satellite", credits_cost=500)
-                self._write_disk_cache("satellite", cache_key, res)
-                return res
+                self._write_disk_cache("satellite", cache_key, payload)
+                return payload
             except Exception as e:
                 logger.error(f"Live satellite_segmentation failed: {e}. Using cached segmentation.")
 
