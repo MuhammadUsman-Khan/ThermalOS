@@ -63,10 +63,7 @@ if not logger.handlers:
 # CONFIGURATION & N8N WEBHOOK MAPPING
 # =========================================================================
 
-DEFAULT_N8N_ALERT_WEBHOOK = os.getenv(
-    "N8N_ALERT_WEBHOOK_URL",
-    "https://usmankhan0.app.n8n.cloud/webhook/thermalos-alert",
-)
+DEFAULT_N8N_ALERT_WEBHOOK = os.getenv("N8N_ALERT_WEBHOOK_URL", "")
 
 # Safe human survivability WBGT index threshold in Fahrenheit
 WBGT_SURVIVABILITY_THRESHOLD_F = 85.0
@@ -176,6 +173,10 @@ def dispatch_n8n_safety_alert(
     Dispatches automated high-priority safety alert HTTP POST payload to n8n webhook asynchronously.
     Maintains exact n8n JSON schema contract.
     """
+    if not webhook_url:
+        logger.info("Agent 3: N8N_ALERT_WEBHOOK_URL not configured. Skipping webhook dispatch.")
+        return False
+
     import threading
     t = threading.Thread(target=_send_civic_alert_http, args=(payload, webhook_url, timeout_seconds), daemon=True)
     t.start()

@@ -25,10 +25,7 @@ HIGH_SOLAR_GHI_THRESHOLD = 600.0  # W/m² FortyGuard Solar threshold
 COOLDOWN_SECONDS = 60.0
 DEFAULT_TARGET_PRECOOL_TEMP_F = 68.0
 
-N8N_HVAC_WEBHOOK_URL = os.getenv(
-    "N8N_HVAC_WEBHOOK_URL",
-    "https://usmankhan0.app.n8n.cloud/webhook/thermalos-hvac-precool",
-)
+N8N_HVAC_WEBHOOK_URL = os.getenv("N8N_HVAC_WEBHOOK_URL", "")
 
 
 @dataclass
@@ -130,6 +127,10 @@ class N8nHvacDispatcher:
             logger.info("Agent 2 n8n webhook dispatch attempted (%s)", e)
 
     def dispatch(self, payload: dict) -> dict:
+        if not self.webhook_url:
+            logger.info("Agent 2: N8N_HVAC_WEBHOOK_URL not configured. Skipping webhook dispatch.")
+            return {"dispatched": False, "reason": "no_webhook_configured"}
+
         now = time.time()
         location = payload.get("target_zone") or payload.get("city") or "unknown_zone"
 

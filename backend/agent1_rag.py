@@ -22,10 +22,7 @@ os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
 
 load_dotenv()
 
-N8N_AUDIT_WEBHOOK_URL = os.getenv(
-    "N8N_AUDIT_WEBHOOK_URL",
-    "https://usmankhan0.app.n8n.cloud/webhook/thermalos-audit",
-)
+N8N_AUDIT_WEBHOOK_URL = os.getenv("N8N_AUDIT_WEBHOOK_URL", "")
 
 try:
     from langchain_community.document_loaders import PyPDFLoader
@@ -36,6 +33,7 @@ try:
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 except Exception:  # noqa: BLE001
     try:
+        # pyrefly: ignore [missing-import]
         from langchain.text_splitter import RecursiveCharacterTextSplitter
     except Exception:  # noqa: BLE001
         RecursiveCharacterTextSplitter = None
