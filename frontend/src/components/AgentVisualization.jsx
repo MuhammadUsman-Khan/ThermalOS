@@ -8,9 +8,11 @@ export default function AgentVisualization({
   onRunAudit,
   onRunInfra,
   onRunCivic,
+  onGenerateBrief,
   isAuditLoading,
   isInfraLoading,
   isCivicLoading,
+  isSynthesisLoading,
 }) {
   const containerRef = useRef(null);
   const gameRef = useRef(null);
@@ -1390,11 +1392,26 @@ export default function AgentVisualization({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-xs font-mono">
-          <span className="px-3 py-1.5 rounded-xl glass-panel-subtle border border-gray-200/60 dark:border-white/[0.08] text-xs font-mono text-gray-700 dark:text-zinc-300 flex items-center gap-2">
+        <div className="flex items-center gap-2.5 text-xs font-mono">
+          <span className="hidden sm:flex px-3 py-1.5 rounded-xl glass-panel-subtle border border-gray-200/60 dark:border-white/[0.08] text-xs font-mono text-gray-700 dark:text-zinc-300 items-center gap-2">
             <Activity className="w-3.5 h-3.5 text-orange-500 animate-pulse" />
-            <span>Phaser 3 Engine · 3 Active Vector Cores</span>
+            <span>Phaser 3 Engine · 3 Vector Cores</span>
           </span>
+
+          {onGenerateBrief && (
+            <button
+              onClick={onGenerateBrief}
+              disabled={isSynthesisLoading}
+              className="px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer bg-gradient-to-r from-orange-500/20 via-amber-500/15 to-orange-500/20 text-orange-500 border border-orange-500/35 hover:border-orange-500/60 hover:bg-orange-500 hover:text-white shadow-xs flex items-center gap-1.5 disabled:opacity-50"
+            >
+              {isSynthesisLoading ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Sparkles className="w-3.5 h-3.5 text-orange-500 group-hover:text-white" />
+              )}
+              <span>{isSynthesisLoading ? "Synthesizing..." : "Executive Municipal Brief"}</span>
+            </button>
+          )}
         </div>
       </div>
 

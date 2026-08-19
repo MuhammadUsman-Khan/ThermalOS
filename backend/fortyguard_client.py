@@ -683,25 +683,42 @@ class FortyGuardAdapter:
     def get_live_telemetry_snapshot(self, city: str = "Phoenix, AZ", temp_f: Optional[float] = None) -> Dict[str, Any]:
         """Generate a complete, FortyGuard-aligned microclimate telemetry packet."""
         env_data = self.get_environmental_parameters(city=city, temp_f=temp_f)
-        loc = env_data["locations"][0]
-        params = loc["parameters"]
-        solar = loc["solar_irradiance"]["clear_sky"]
+        
+        # Safe extraction of locations list
+        locs = env_data.get("locations", []) if isinstance(env_data, dict) else []
+        loc = locs[0] if locs and isinstance(locs[0], dict) else {}
+        params = loc.get("parameters", {})
+        solar = loc.get("solar_irradiance", {}).get("clear_sky", {})
 
         hour_idx = 14
-        ambient_c = loc["temperature"]
-        ambient_f = c_to_f(ambient_c)
+        
+        # Temperature parsing
+        if temp_f is not None:
+            ambient_f = float(temp_f)
+            ambient_c = f_to_c(ambient_f)
+        else:
+            ambient_c = float(loc.get("temperature", 38.0))
+            ambient_f = c_to_f(ambient_c)
+
         surface_c = round(ambient_c + 7.4, 2)
         surface_f = c_to_f(surface_c)
-        
-        wet_bulb_c = params["wet_bulb_temperature_celsius"][hour_idx]
+
+        # Parameter extractions with defaults
+        wet_bulb_series = params.get("wet_bulb_temperature_celsius", [])
+        wet_bulb_c = wet_bulb_series[hour_idx] if len(wet_bulb_series) > hour_idx else (ambient_c - 12.0)
         wet_bulb_f = c_to_f(wet_bulb_c)
-        
-        heat_index_c = params["heat_index_celsius"][hour_idx]
+
+        heat_index_series = params.get("heat_index_celsius", [])
+        heat_index_c = heat_index_series[hour_idx] if len(heat_index_series) > hour_idx else (ambient_c + 4.0)
         heat_index_f = c_to_f(heat_index_c)
-        
-        humidity = params["relative_humidity_percent"][hour_idx]
-        aqi_pm25 = params["air_quality_pm2p5:idx"][hour_idx]
-        solar_ghi = solar["ghi"]
+
+        hum_series = params.get("relative_humidity_percent", [])
+        humidity = hum_series[hour_idx] if len(hum_series) > hour_idx else (18.0 if "Phoenix" in city else 45.0)
+
+        pm25_series = params.get("air_quality_pm2p5:idx", [])
+        aqi_pm25 = pm25_series[hour_idx] if len(pm25_series) > hour_idx else 42.0
+
+        solar_ghi = float(solar.get("ghi", 604.5))
 
         if ambient_f >= 105.0 or wet_bulb_f >= 88.0:
             risk = "extreme"

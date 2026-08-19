@@ -52,6 +52,7 @@ import FortyGuardQuotaBar from "./components/FortyGuardQuotaBar";
 import AgentOneModal from "./components/AgentOneModal";
 import AgentTwoModal from "./components/AgentTwoModal";
 import AgentThreeModal from "./components/AgentThreeModal";
+import ExecutiveSynthesisModal from "./components/ExecutiveSynthesisModal";
 import Toast from "./components/Toast";
 
 const API_BASE = "http://localhost:8000";
@@ -102,6 +103,11 @@ export default function App() {
   const [isCivicLoading, setIsCivicLoading] = useState(false);
   const [civicData, setCivicData] = useState(null);
   const [civicError, setCivicError] = useState(null);
+
+  const [isSynthesisModalOpen, setIsSynthesisModalOpen] = useState(false);
+  const [isSynthesisLoading, setIsSynthesisLoading] = useState(false);
+  const [synthesisData, setSynthesisData] = useState(null);
+  const [synthesisError, setSynthesisError] = useState(null);
 
   const [uptimeSeconds, setUptimeSeconds] = useState(5040);
   const [logs, setLogs] = useState([]);
@@ -258,15 +264,24 @@ export default function App() {
     addLog(`Agent 1: ASHRAE 55 & Building Envelope Audit initiated for ${selectedCity}`, "audit", "Agent 1");
 
     try {
-      const res = await fetch(`${API_BASE}/api/audit?city=${encodeURIComponent(selectedCity)}`, {
+      const res = await fetch(`${API_BASE}/v1/agents/audit`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          location: selectedCity,
+          temperature_f: currentTemp,
+        }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setAuditData(data);
       setAgentStates((prev) => ({ ...prev, agent1: "success" }));
-      addLog(`Agent 1: Audit report generated with ${data.mitigation_options?.length || 3} actionable strategies`, "audit", "Agent 1");
-      showToast("Thermal audit completed successfully", "success");
+      addLog(
+        `Agent 1: Audit completed (Effective U: ${data.effective_u_factor?.toFixed(3) || "0.068"}, R-Loss: +${data.r_value_degradation_pct?.toFixed(1) || "24.5"}%)`,
+        "audit",
+        "Agent 1"
+      );
+      showToast("Thermal compliance audit completed successfully", "success");
     } catch (err) {
       setAuditError(err.message);
       setAgentStates((prev) => ({ ...prev, agent1: "idle" }));
@@ -284,14 +299,24 @@ export default function App() {
     addLog(`Agent 2: HVAC Chiller Plant Pre-Cool load shift dispatched for ${selectedCity}`, "dispatch", "Agent 2");
 
     try {
-      const res = await fetch(`${API_BASE}/api/infrastructure/precool?city=${encodeURIComponent(selectedCity)}`, {
+      const res = await fetch(`${API_BASE}/v1/agents/infrastructure`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          city: selectedCity,
+          temperature_f: currentTemp,
+          risk_level: currentTemp >= 105 ? "extreme" : currentTemp >= 95 ? "high" : "nominal",
+        }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setInfraData(data);
       setAgentStates((prev) => ({ ...prev, agent2: "success" }));
-      addLog(`Agent 2: Thermal storage charged. Peak power shaved by ${data.estimated_peak_kw_reduction || 420} kW`, "dispatch", "Agent 2");
+      addLog(
+        `Agent 2: Thermal storage charged. Peak power shaved by ${data.estimated_power_shift_kw || 480} kW ($${data.projected_cost_savings_usd || 1420} saved)`,
+        "dispatch",
+        "Agent 2"
+      );
       showToast("HVAC Pre-Cool dispatch active", "success");
     } catch (err) {
       setInfraError(err.message);
@@ -311,21 +336,55 @@ export default function App() {
     addLog(`Agent 3: WBGT Thermodynamic Public Health Override triggered for ${selectedCity}`, "extreme", "Agent 3");
 
     try {
-      const res = await fetch(`${API_BASE}/api/civic/override?city=${encodeURIComponent(selectedCity)}`, {
+      const res = await fetch(`${API_BASE}/v1/agents/civic`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          city: selectedCity,
+          temperature_f: currentTemp,
+          risk_level: currentTemp >= 105 ? "extreme" : currentTemp >= 95 ? "high" : "nominal",
+        }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setCivicData(data);
       setAgentStates((prev) => ({ ...prev, agent3: "alert" }));
       setIsEmergencyMode(true);
-      addLog(`Agent 3: OSHA/ACGIH Extreme Heat warning broadcasted to municipal grid`, "extreme", "Agent 3");
+      addLog(`Agent 3: OSHA/ACGIH Extreme Heat warning broadcasted (WBGT ${data.wbgt_index || "86.7"}°F)`, "extreme", "Agent 3");
       showToast("Civic Heat Advisory dispatched", "warning");
     } catch (err) {
       setCivicError(err.message);
       setAgentStates((prev) => ({ ...prev, agent3: "idle" }));
     } finally {
       setIsCivicLoading(false);
+    }
+  };
+
+  // Executive Municipal Brief Synthesis Action
+  const handleGenerateSynthesis = async () => {
+    setIsSynthesisModalOpen(true);
+    setIsSynthesisLoading(true);
+    setSynthesisError(null);
+    addLog(`Executive Brief: Tri-Agent Consensus Synthesis initiated for ${selectedCity}`, "info", "ThermalOS Core");
+
+    try {
+      const res = await fetch(`${API_BASE}/v1/agents/synthesis`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          city: selectedCity,
+          temperature_f: currentTemp,
+          risk_level: currentTemp >= 105 ? "extreme" : currentTemp >= 95 ? "high" : "nominal",
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setSynthesisData(data);
+      showToast("Executive Municipal Brief Generated", "success");
+    } catch (err) {
+      setSynthesisError(err.message);
+    } finally {
+      setIsSynthesisLoading(false);
     }
   };
 
@@ -390,6 +449,15 @@ export default function App() {
         loading={isCivicLoading}
         error={civicError}
         data={civicData}
+      />
+
+      <ExecutiveSynthesisModal
+        isOpen={isSynthesisModalOpen}
+        onClose={() => setIsSynthesisModalOpen(false)}
+        city={selectedCity}
+        data={synthesisData}
+        loading={isSynthesisLoading}
+        error={synthesisError}
       />
 
       {/* Executive Command Header Bar */}
@@ -939,9 +1007,11 @@ export default function App() {
                 onRunAudit={handleRunAudit}
                 onRunInfra={handleRunInfrastructure}
                 onRunCivic={handleRunCivic}
+                onGenerateBrief={handleGenerateSynthesis}
                 isAuditLoading={isAuditLoading}
                 isInfraLoading={isInfraLoading}
                 isCivicLoading={isCivicLoading}
+                isSynthesisLoading={isSynthesisLoading}
               />
             </motion.div>
           )}

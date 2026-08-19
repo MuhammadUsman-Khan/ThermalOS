@@ -44,6 +44,11 @@ class InfrastructurePrecoolReport:
     grid_load_shift_active: bool
     trigger_reason: Optional[str]
     hvac_action_plan: str
+    peak_demand_window: str = "14:00 – 18:00 Local"
+    estimated_power_shift_kw: float = 480.0
+    projected_cost_savings_usd: float = 1420.0
+    chiller_pre_cool_duration_hrs: float = 2.5
+    solar_ghi: float = 550.0
 
 
 class RollingWindowThresholdModel:
@@ -168,6 +173,12 @@ def process_reading(payload: dict) -> dict:
     # Calculate optimal pre-cool target based on FortyGuard thermal lag
     target_precool = 66.0 if reading.temperature_f >= 106.0 else DEFAULT_TARGET_PRECOOL_TEMP_F
 
+    # Dynamic Peak Tariff & Grid Shaving Calculations
+    power_shift_kw = round(min(920.0, max(180.0, (reading.temperature_f - 72.0) * 18.2 + (solar_ghi * 0.28))), 1)
+    cost_savings = round(power_shift_kw * 2.92 + 65.0, 2)
+    precool_duration = round(min(4.0, max(1.5, (reading.temperature_f - 80.0) * 0.08 + 1.2)), 1)
+    peak_window = "13:30 – 18:00 Local (Solar Zenith)" if solar_ghi >= 500 else "14:00 – 17:30 Local"
+
     report = InfrastructurePrecoolReport(
         city=reading.location,
         current_temp_f=reading.temperature_f,
@@ -176,11 +187,16 @@ def process_reading(payload: dict) -> dict:
         trigger_reason=model.describe_trigger(triggered, reading, solar_ghi=solar_ghi),
         hvac_action_plan=(
             f"Initiate Stage 2 pre-cooling sequence for {reading.location} "
-            f"to reach {target_precool}°F before peak load window "
-            f"({reading.temperature_f}°F observed, FortyGuard GHI={solar_ghi:.1f}W/m², risk={reading.risk_level})."
+            f"to reach {target_precool}°F before peak load window {peak_window} "
+            f"({reading.temperature_f}°F observed, FortyGuard GHI={solar_ghi:.1f}W/m², shifting {power_shift_kw} kW)."
         )
         if triggered
         else "Standby: thermal profile within normal operating envelope.",
+        peak_demand_window=peak_window,
+        estimated_power_shift_kw=power_shift_kw if triggered else 0.0,
+        projected_cost_savings_usd=cost_savings if triggered else 0.0,
+        chiller_pre_cool_duration_hrs=precool_duration if triggered else 0.0,
+        solar_ghi=solar_ghi,
     )
 
     dispatch_result = {"dispatched": False, "reason": "no_trigger"}

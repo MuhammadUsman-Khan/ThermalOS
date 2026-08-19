@@ -85,6 +85,10 @@ class CivicDispatchReport(BaseModel):
     relative_humidity: float = Field(description="Relative humidity percentage from FortyGuard Microclimate engine")
     ambient_temp_f: float = Field(description="Ambient air surface temperature in Fahrenheit")
     timestamp: str = Field(description="ISO-8601 formatted execution timestamp")
+    compound_hazard_index: float = Field(default=75.0, description="0-100 Compound Atmospheric Threat Index")
+    vulnerable_demographic_advisory: str = Field(default="", description="Targeted public health advisory for sensitive populations")
+    cooling_shelters_active: int = Field(default=8, description="Number of activated municipal cooling shelters")
+    osha_work_rest_ratio: str = Field(default="Standard Schedule", description="OSHA outdoor labor work/rest guidelines")
 
 
 # =========================================================================
@@ -194,13 +198,21 @@ def evaluate_civic_dispatch(
     
     # Step 1: Environmental Data Fusion (FortyGuard Ingestion)
     humidity = get_fortyguard_humidity(city, temp_f)
+    env_snapshot = fortyguard_client.get_live_telemetry_snapshot(city=city, temp_f=temp_f)
+    solar_ghi = float(env_snapshot.get("solar_irradiance_ghi", 550.0))
 
     # Step 2: Thermodynamic Modeling
     wbgt_index = calculate_wbgt(temp_f, humidity)
 
-    # Step 3: Human Survivability Risk Classification
+    # Step 3: Multi-Hazard Compound Stress Index (0-100)
+    compound_index = round(min(100.0, max(12.0, (wbgt_index - 60.0) * 3.1 + (solar_ghi * 0.032) + (humidity * 0.12))), 1)
+
+    # Step 4: Human Survivability & OSHA Guidelines
     if wbgt_index >= 90.0 or temp_f >= 105.0:
         heat_stress_risk = "EXTREME"
+        osha_schedule = "15 min Work / 45 min Rest (Halt heavy outdoor labor)"
+        shelters_count = 16
+        vulnerable_adv = "CRITICAL: Urgent outreach for unhoused & elderly populations. Mandatory misting and cooling hub deployment."
         emergency_protocol = (
             f"CRITICAL HEAT EMERGENCY: WBGT {wbgt_index}°F breaches extreme human survivability limits. "
             "Activate municipal cooling centers, issue regional red-flag heat health advisories, "
@@ -208,23 +220,32 @@ def evaluate_civic_dispatch(
         )
     elif wbgt_index >= WBGT_SURVIVABILITY_THRESHOLD_F:
         heat_stress_risk = "HIGH"
+        osha_schedule = "30 min Work / 30 min Rest per hour"
+        shelters_count = 10
+        vulnerable_adv = "HIGH RISK: Distribute electrolyte hydration packs; enforce shaded rest cycles for municipal workers."
         emergency_protocol = (
             f"HIGH HEAT STRESS WARNING: WBGT {wbgt_index}°F exceeds safe outdoor labor threshold (85°F). "
             "Enforce mandatory shade breaks, hydrate public works crews, and open regional hydration stations."
         )
     elif wbgt_index >= 80.0:
         heat_stress_risk = "ELEVATED"
+        osha_schedule = "45 min Work / 15 min Rest per hour"
+        shelters_count = 4
+        vulnerable_adv = "MONITORING: Advise vulnerable residents to limit direct sun exposure between 12:00 PM and 5:00 PM."
         emergency_protocol = (
             f"ELEVATED THERMAL PROFILE: WBGT {wbgt_index}°F. "
             "Continuous micro-climate monitoring active. Standard preventative heat measures deployed."
         )
     else:
         heat_stress_risk = "NOMINAL"
+        osha_schedule = "Continuous Standard Schedule"
+        shelters_count = 0
+        vulnerable_adv = "Nominal conditions. No acute public health emergency."
         emergency_protocol = (
             f"NOMINAL THERMAL ENVELOPE: WBGT {wbgt_index}°F is within safe human comfort and survivability envelope."
         )
 
-    # Step 4: Mathematical Trigger Condition & Webhook Execution
+    # Step 5: Mathematical Trigger Condition & Webhook Execution
     should_alert = wbgt_index > WBGT_SURVIVABILITY_THRESHOLD_F or temp_f >= 105.0
 
     event_timestamp = datetime.now(timezone.utc).isoformat()
@@ -240,12 +261,15 @@ def evaluate_civic_dispatch(
             "wbgt_index_f": wbgt_index,
             "survivability_threshold_f": WBGT_SURVIVABILITY_THRESHOLD_F,
             "heat_stress_risk": heat_stress_risk,
+            "compound_hazard_index": compound_index,
+            "osha_work_rest_ratio": osha_schedule,
+            "cooling_shelters_active": shelters_count,
             "emergency_protocol": emergency_protocol,
             "timestamp": event_timestamp
         }
         alert_dispatched = dispatch_n8n_safety_alert(alert_payload, webhook_url=target_webhook)
 
-    # Step 5: Construct & Return Pydantic Report
+    # Step 6: Construct & Return Pydantic Report
     return CivicDispatchReport(
         city=city,
         wbgt_index=wbgt_index,
@@ -254,7 +278,11 @@ def evaluate_civic_dispatch(
         emergency_protocol=emergency_protocol,
         relative_humidity=humidity,
         ambient_temp_f=float(temp_f),
-        timestamp=event_timestamp
+        timestamp=event_timestamp,
+        compound_hazard_index=compound_index,
+        vulnerable_demographic_advisory=vulnerable_adv,
+        cooling_shelters_active=shelters_count,
+        osha_work_rest_ratio=osha_schedule,
     )
 
 

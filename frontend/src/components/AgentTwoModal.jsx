@@ -28,51 +28,71 @@ export default function AgentTwoModal({ isOpen, onClose, city, currentTemp, load
           <p>{error}</p>
         </div>
       ) : data ? (
-        <div className="space-y-3 font-sans text-xs">
+        <div className="space-y-3.5 font-sans text-xs">
+          {/* Status Header Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 font-mono">
-            <div className="p-3 rounded-xl glass-panel-subtle flex items-center justify-between">
+            <div className="p-3 rounded-2xl glass-panel-subtle flex items-center justify-between border border-black/5 dark:border-white/[0.04]">
               <span className="text-gray-500 dark:text-zinc-400">Target Region:</span>
-              <strong className="text-black dark:text-white">{data.city || city}</strong>
+              <strong className="text-black dark:text-white font-bold">{data.city || city}</strong>
             </div>
-            <div className="p-3 rounded-xl glass-panel-subtle flex items-center justify-between">
+            <div className="p-3 rounded-2xl glass-panel-subtle flex items-center justify-between border border-black/5 dark:border-white/[0.04]">
               <span className="text-gray-500 dark:text-zinc-400">Current Ambient:</span>
               <strong className="text-orange-500 font-semibold">{data.current_temp_f || "104.0"}°F</strong>
             </div>
-            <div className="p-3 rounded-xl glass-panel-subtle border-cyan-500/25 flex items-center justify-between">
-              <span className="text-cyan-700 dark:text-cyan-400 font-medium">Target Pre-Cool:</span>
-              <strong className="text-cyan-700 dark:text-cyan-400 font-semibold">
-                {data.target_precool_temp_f || "68.0"}°F
-              </strong>
+          </div>
+
+          {/* Peak Tariff ROI & Load Shifting Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="p-3 rounded-xl glass-panel-subtle border border-cyan-500/20 space-y-1">
+              <div className="text-[10.5px] text-gray-500 dark:text-zinc-400 font-medium">Power Curtailed</div>
+              <div className="text-sm font-bold font-mono text-cyan-600 dark:text-cyan-400">
+                {data.estimated_power_shift_kw ? `${data.estimated_power_shift_kw.toFixed(0)} kW` : "480 kW"}
+              </div>
+              <div className="text-[9.5px] font-mono text-gray-400 dark:text-zinc-500">Peak grid reduction</div>
             </div>
-            <div className="p-3 rounded-xl glass-panel-subtle border-cyan-500/25 flex items-center justify-between">
-              <span className="text-cyan-700 dark:text-cyan-400 font-medium">Grid Load Shift:</span>
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30">
-                {data.grid_load_shift_active ? "Active" : "Dispatched"}
-              </span>
+
+            <div className="p-3 rounded-xl glass-panel-subtle border border-emerald-500/20 space-y-1">
+              <div className="text-[10.5px] text-gray-500 dark:text-zinc-400 font-medium">Estimated Tariff ROI</div>
+              <div className="text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                ${data.projected_cost_savings_usd ? data.projected_cost_savings_usd.toFixed(2) : "1,420.00"}
+              </div>
+              <div className="text-[9.5px] font-mono text-gray-400 dark:text-zinc-500">Avoided surcharges</div>
+            </div>
+
+            <div className="p-3 rounded-xl glass-panel-subtle border border-orange-500/20 space-y-1">
+              <div className="text-[10.5px] text-gray-500 dark:text-zinc-400 font-medium">Pre-Cool Window</div>
+              <div className="text-sm font-bold font-mono text-orange-500">
+                {data.chiller_pre_cool_duration_hrs ? `${data.chiller_pre_cool_duration_hrs.toFixed(1)} hrs` : "2.5 hrs"}
+              </div>
+              <div className="text-[9.5px] font-mono text-gray-400 dark:text-zinc-500">{data.peak_demand_window || "13:30 – 18:00"}</div>
             </div>
           </div>
 
           <div className="p-3.5 rounded-2xl glass-panel-subtle border-cyan-500/25 space-y-2">
-            <div className="flex items-center gap-2">
-              <Zap className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-500" />
-              <span className="font-mono text-xs font-semibold uppercase text-cyan-700 dark:text-cyan-400 tracking-tight">
-                HVAC Pre-Cooling Action Plan
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Zap className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-500" />
+                <span className="font-mono text-xs font-semibold uppercase text-cyan-700 dark:text-cyan-400 tracking-tight">
+                  HVAC Pre-Cooling Action Plan
+                </span>
+              </div>
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30 font-mono">
+                {data.grid_load_shift_active ? "Thermal Shift Active" : "Dispatched"}
               </span>
             </div>
             <p className="font-mono text-xs leading-relaxed p-3 rounded-xl glass-panel text-gray-800 dark:text-zinc-200">
-              {currentTemp != null
-                ? `Current ambient ${Math.round(currentTemp)}°F is ${Math.round(
-                    currentTemp - 68
-                  )}°F above target. Initiating Stage 2 pre-cooling sequence at 03:00 AM to reach 68°F before 2 PM peak load window.`
-                : data.hvac_action_plan ||
-                  "Current ambient 104°F is 36°F above target. Initiating Stage 2 pre-cooling sequence at 03:00 AM to reach 68°F before 2 PM peak load window."}
+              {data.hvac_action_plan ||
+                `Initiate Stage 2 pre-cooling sequence for ${data.city || city} to reach ${data.target_precool_temp_f || "68.0"}°F before solar peak load window (${data.current_temp_f || 104}°F observed).`}
             </p>
 
-            <div className="pt-1 flex items-center gap-3">
+            <div className="pt-1 flex items-center justify-between gap-3">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-xs">
                 <Check className="w-3 h-3 text-emerald-500" />
-                <span>n8n HVAC Pre-Cool Webhook: Confirmed ✓</span>
+                <span>n8n HVAC Webhook: Dispatched ✓</span>
               </div>
+              <span className="text-[10px] font-mono text-gray-400 dark:text-zinc-500">
+                Target: {data.target_precool_temp_f || "68.0"}°F Setpoint
+              </span>
             </div>
           </div>
         </div>
