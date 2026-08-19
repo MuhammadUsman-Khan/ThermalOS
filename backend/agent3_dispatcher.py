@@ -142,26 +142,16 @@ def calculate_wbgt(temp_f: float, relative_humidity: float) -> float:
     return round(wbgt_f, 1)
 
 
-def dispatch_n8n_safety_alert(
-    payload: Dict[str, Any],
-    webhook_url: str = DEFAULT_N8N_ALERT_WEBHOOK,
-    timeout_seconds: float = 4.0
-) -> bool:
-    """
-    Dispatches automated high-priority safety alert HTTP POST payload to n8n webhook.
-    Maintains exact n8n JSON schema contract.
-    """
-    # Tier 1: Try requests
+def _send_civic_alert_http(payload: Dict[str, Any], webhook_url: str, timeout_seconds: float = 3.0):
     if requests is not None:
         try:
             response = requests.post(webhook_url, json=payload, timeout=timeout_seconds)
             if 200 <= response.status_code < 300:
                 logger.info("🚀 n8n Civic Safety Alert dispatched via requests to %s", webhook_url)
-                return True
+                return
         except Exception as err:
             logger.info("n8n requests POST attempted for %s (%s)", payload.get("city"), err)
 
-    # Tier 2: Try urllib.request
     try:
         json_data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(
@@ -173,12 +163,23 @@ def dispatch_n8n_safety_alert(
         with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:
             if 200 <= resp.status < 300:
                 logger.info("🚀 n8n Civic Safety Alert dispatched via urllib to %s", webhook_url)
-                return True
     except Exception as err:
-        logger.info("n8n webhook dispatch attempted for %s (n8n endpoint offline/unreachable: %s)", payload.get("city"), err)
-        return False
+        logger.info("n8n webhook dispatch attempted for %s (%s)", payload.get("city"), err)
 
-    return False
+
+def dispatch_n8n_safety_alert(
+    payload: Dict[str, Any],
+    webhook_url: str = DEFAULT_N8N_ALERT_WEBHOOK,
+    timeout_seconds: float = 3.0
+) -> bool:
+    """
+    Dispatches automated high-priority safety alert HTTP POST payload to n8n webhook asynchronously.
+    Maintains exact n8n JSON schema contract.
+    """
+    import threading
+    t = threading.Thread(target=_send_civic_alert_http, args=(payload, webhook_url, timeout_seconds), daemon=True)
+    t.start()
+    return True
 
 
 def evaluate_civic_dispatch(
