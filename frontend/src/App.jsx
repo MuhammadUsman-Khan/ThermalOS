@@ -614,29 +614,15 @@ export default function App() {
               </span>
             </div>
 
-            {/* Theme Toggle with Smooth Spring Icon Flip */}
+            {/* Theme Toggle */}
             <motion.button
-              whileHover={{ scale: 1.08 }}
-              whileTap={{ scale: 0.92 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setDarkMode(!darkMode)}
               title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              className="p-2 rounded-2xl glass-panel-subtle text-gray-600 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-500/30 transition-all shadow-xs cursor-pointer h-9 w-9 flex items-center justify-center overflow-hidden"
+              className="p-2 rounded-2xl glass-panel-subtle text-gray-600 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-500/30 transition-colors shadow-xs cursor-pointer h-9 w-9 flex items-center justify-center"
             >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={darkMode ? "dark" : "light"}
-                  initial={{ y: -12, opacity: 0, rotate: -60, scale: 0.7 }}
-                  animate={{ y: 0, opacity: 1, rotate: 0, scale: 1 }}
-                  exit={{ y: 12, opacity: 0, rotate: 60, scale: 0.7 }}
-                  transition={{ type: "spring", stiffness: 450, damping: 25 }}
-                >
-                  {darkMode ? (
-                    <Sun className="w-4 h-4 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
-                  ) : (
-                    <Moon className="w-4 h-4 text-indigo-500 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
-                  )}
-                </motion.div>
-              </AnimatePresence>
+              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </motion.button>
 
             {/* High-Contrast Searchable City Dropdown */}
