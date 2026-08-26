@@ -109,7 +109,8 @@ export default function App() {
   const [synthesisData, setSynthesisData] = useState(null);
   const [synthesisError, setSynthesisError] = useState(null);
 
-  const [uptimeSeconds, setUptimeSeconds] = useState(5040);
+  const [backendStatus, setBackendStatus] = useState("checking"); // 'connected' | 'disconnected' | 'checking'
+  const [uptimeSeconds, setUptimeSeconds] = useState(0);
   const [logs, setLogs] = useState([]);
 
   const [agentStates, setAgentStates] = useState({
@@ -119,6 +120,29 @@ export default function App() {
   });
 
   const dropdownRef = useRef(null);
+
+  // Live Backend Health & Quota Polling
+  useEffect(() => {
+    let isMounted = true;
+    const checkBackend = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/v1/fortyguard/quota`, { method: "GET" });
+        if (res.ok && isMounted) {
+          setBackendStatus("connected");
+        } else if (isMounted) {
+          setBackendStatus("disconnected");
+        }
+      } catch {
+        if (isMounted) setBackendStatus("disconnected");
+      }
+    };
+    checkBackend();
+    const interval = setInterval(checkBackend, 8000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // Sync dark mode class on html tag
   useEffect(() => {
@@ -549,11 +573,44 @@ export default function App() {
               </motion.button>
             </div>
 
-            {/* Live Telemetry Heartbeat */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 text-xs font-mono h-9">
-              <span className={`w-2 h-2 rounded-full ${isEmergencyMode ? "bg-rose-500 animate-ping" : "bg-emerald-500 animate-radar-ping"}`} />
-              <span className={isEmergencyMode ? "text-rose-500 font-semibold" : "text-emerald-500 font-medium"}>
-                {isEmergencyMode ? "Advisory" : `Sync · ${uptime}`}
+            {/* Real-Time Backend & Telemetry Connection Status Badge */}
+            <div
+              title={
+                backendStatus === "connected"
+                  ? "ThermalOS FastAPI Engine & FortyGuard Live API Connected (Port 8000)"
+                  : backendStatus === "checking"
+                  ? "Checking Backend connection on Port 8000..."
+                  : "Backend disconnected. Run 'python mock_api.py' in d:\\ThermalOS\\backend"
+              }
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl border text-xs font-mono h-9 transition-colors select-none ${
+                isEmergencyMode
+                  ? "border-rose-500/30 bg-rose-500/10 text-rose-500"
+                  : backendStatus === "connected"
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  : backendStatus === "checking"
+                  ? "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                  : "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400"
+              }`}
+            >
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  isEmergencyMode
+                    ? "bg-rose-500 animate-ping"
+                    : backendStatus === "connected"
+                    ? "bg-emerald-500 animate-radar-ping"
+                    : backendStatus === "checking"
+                    ? "bg-amber-500 animate-pulse"
+                    : "bg-rose-500 animate-ping"
+                }`}
+              />
+              <span className="font-semibold tracking-tight">
+                {isEmergencyMode
+                  ? "Thermal Advisory"
+                  : backendStatus === "connected"
+                  ? "Live · 40G Online"
+                  : backendStatus === "checking"
+                  ? "Syncing..."
+                  : "Backend Offline"}
               </span>
             </div>
 
