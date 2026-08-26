@@ -87,10 +87,58 @@ try:
     from fortyguard import FortyGuardClient  # type: ignore
     from fortyguard.exceptions import FortyGuardError  # type: ignore
     FORTYGUARD_SDK_AVAILABLE = True
-except (ImportError, ModuleNotFoundError):
+except Exception:
     FortyGuardClient = None
     FortyGuardError = Exception  # type: ignore
     FORTYGUARD_SDK_AVAILABLE = False
+
+# Default ~104 km² polygon covering central San Jose, CA for FortyGuard API Heatmaps
+SAN_JOSE_POLYGON: Dict[str, Any] = {
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [[
+                    [-121.9430, 37.2930],
+                    [-121.8280, 37.2930],
+                    [-121.8280, 37.3850],
+                    [-121.9430, 37.3850],
+                    [-121.9430, 37.2930],
+                ]],
+            },
+        }
+    ],
+}
+
+
+def get_city_aoi(city_name: str) -> Dict[str, Any]:
+    """Generate dynamic FeatureCollection AOI polygon for any monitored US metro."""
+    coords = CITY_COORDINATES.get(city_name, {"lat": 33.4484, "lon": -112.0740})
+    lat, lon = coords["lat"], coords["lon"]
+    d_lat = 0.038
+    d_lon = round(0.038 / max(0.2, math.cos(math.radians(lat))), 4)
+    return {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {"city": city_name},
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[
+                        [round(lon - d_lon, 4), round(lat - d_lat, 4)],
+                        [round(lon + d_lon, 4), round(lat - d_lat, 4)],
+                        [round(lon + d_lon, 4), round(lat + d_lat, 4)],
+                        [round(lon - d_lon, 4), round(lat + d_lat, 4)],
+                        [round(lon - d_lon, 4), round(lat - d_lat, 4)],
+                    ]],
+                },
+            }
+        ],
+    }
 
 
 def f_to_c(temp_f: float) -> float:
@@ -475,15 +523,19 @@ class FortyGuardAdapter:
         cache_key = f"heatmap_{city}_{analytic_type}_{date_str}_{granularity}"
         cached = self._read_disk_cache("heatmaps", cache_key)
         if cached:
+            st = cached.setdefault("stats_data", {})
+            st["granularity_meters"] = granularity
+            st["resolution_label"] = f"{granularity}m FortyGuard Spatial Mesh"
+            st["n_cells"] = len(cached.get("map_data", {}).get("features", [])) or 144
             return cached
 
         # Check Quota before making live API call
         if self.is_live and self.sdk_client:
             if self.quota_tracker.can_call_heatmap():
                 try:
-                    from fortyguard.samples import SAN_JOSE_POLYGON
+                    target_aoi = get_city_aoi(city) if city in CITY_COORDINATES else SAN_JOSE_POLYGON
                     res = self.sdk_client.create_heatmap(
-                        polygon_aoi=SAN_JOSE_POLYGON,
+                        polygon_aoi=target_aoi,
                         start_date=date_str,
                         filter_type=3,
                         granularity=granularity,
@@ -494,6 +546,11 @@ class FortyGuardAdapter:
                         verbose=False,
                     )
                     payload = res.get("result", res) if isinstance(res, dict) else res
+                    if isinstance(payload, dict):
+                        st = payload.setdefault("stats_data", {})
+                        st["granularity_meters"] = granularity
+                        st["resolution_label"] = f"{granularity}m FortyGuard Spatial Mesh"
+                        st["n_cells"] = len(payload.get("map_data", {}).get("features", [])) or 144
                     self.quota_tracker.record_call(endpoint="heatmap", credits_cost=1000)
                     self._write_disk_cache("heatmaps", cache_key, payload)
                     return payload
