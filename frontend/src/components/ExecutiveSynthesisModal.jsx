@@ -16,6 +16,13 @@ import {
 } from "lucide-react";
 import ModalShell from "./ModalShell";
 
+const SECTOR_TRACKS = [
+  { id: "all", label: "Tri-Agent Consensus", icon: Layers },
+  { id: "energy", label: "Grid & Energy", icon: Zap },
+  { id: "real_estate", label: "Real Estate & Envelope", icon: Building },
+  { id: "civic", label: "Civic Public Health", icon: Users },
+];
+
 export default function ExecutiveSynthesisModal({
   isOpen,
   onClose,
@@ -25,6 +32,7 @@ export default function ExecutiveSynthesisModal({
   error,
 }) {
   const [downloaded, setDownloaded] = useState(false);
+  const [activeSector, setActiveSector] = useState("all");
 
   const handleDownload = () => {
     if (!data) return;
@@ -95,10 +103,40 @@ export default function ExecutiveSynthesisModal({
             </div>
           </div>
 
+          {/* Enterprise Sector / Track Switcher */}
+          <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-2xl glass-panel-subtle font-mono text-xs">
+            {SECTOR_TRACKS.map((trk) => {
+              const Icon = trk.icon;
+              const isActive = activeSector === trk.id;
+              return (
+                <button
+                  key={trk.id}
+                  onClick={() => setActiveSector(trk.id)}
+                  className={`px-3 py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-orange-500 text-white font-bold shadow-xs shadow-orange-500/30"
+                      : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{trk.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
           {/* 3-Pillar Cross-Agent Synthesis Matrix */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {/* Pillar 1: Energy & Envelope Compliance */}
-            <div className="p-3.5 rounded-2xl glass-panel-subtle border border-amber-500/20 space-y-2.5 flex flex-col justify-between">
+            <div
+              className={`p-3.5 rounded-2xl glass-panel-subtle transition-all border space-y-2.5 flex flex-col justify-between ${
+                activeSector === "real_estate"
+                  ? "border-amber-500 ring-2 ring-amber-500/30 scale-[1.02] shadow-lg shadow-amber-500/10 bg-amber-500/5"
+                  : activeSector === "all"
+                  ? "border-amber-500/20"
+                  : "border-amber-500/10 opacity-40"
+              }`}
+            >
               <div>
                 <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold font-display text-xs">
                   <Building className="w-3.5 h-3.5" />
@@ -125,7 +163,15 @@ export default function ExecutiveSynthesisModal({
             </div>
 
             {/* Pillar 2: Grid & Infrastructure Shaving */}
-            <div className="p-3.5 rounded-2xl glass-panel-subtle border border-cyan-500/20 space-y-2.5 flex flex-col justify-between">
+            <div
+              className={`p-3.5 rounded-2xl glass-panel-subtle transition-all border space-y-2.5 flex flex-col justify-between ${
+                activeSector === "energy"
+                  ? "border-cyan-500 ring-2 ring-cyan-500/30 scale-[1.02] shadow-lg shadow-cyan-500/10 bg-cyan-500/5"
+                  : activeSector === "all"
+                  ? "border-cyan-500/20"
+                  : "border-cyan-500/10 opacity-40"
+              }`}
+            >
               <div>
                 <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-bold font-display text-xs">
                   <Zap className="w-3.5 h-3.5" />
@@ -152,7 +198,15 @@ export default function ExecutiveSynthesisModal({
             </div>
 
             {/* Pillar 3: Civic & Public Health Override */}
-            <div className="p-3.5 rounded-2xl glass-panel-subtle border border-rose-500/20 space-y-2.5 flex flex-col justify-between">
+            <div
+              className={`p-3.5 rounded-2xl glass-panel-subtle transition-all border space-y-2.5 flex flex-col justify-between ${
+                activeSector === "civic"
+                  ? "border-rose-500 ring-2 ring-rose-500/30 scale-[1.02] shadow-lg shadow-rose-500/10 bg-rose-500/5"
+                  : activeSector === "all"
+                  ? "border-rose-500/20"
+                  : "border-rose-500/10 opacity-40"
+              }`}
+            >
               <div>
                 <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-bold font-display text-xs">
                   <Users className="w-3.5 h-3.5" />

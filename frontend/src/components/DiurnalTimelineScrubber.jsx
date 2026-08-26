@@ -83,6 +83,7 @@ export default function DiurnalTimelineScrubber({
   }, [isPlaying]);
 
   const activePoint = curveData[currentHour] || curveData[0];
+  const isForecastZone = currentHour >= 12;
 
   return (
     <div className="glass-panel rounded-2xl p-4 flex flex-col space-y-4 font-sans">
@@ -100,15 +101,27 @@ export default function DiurnalTimelineScrubber({
               <span className="px-2 py-0.5 rounded-md bg-orange-500/10 border border-orange-500/20 text-xs font-mono text-orange-500">
                 {selectedCity}
               </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-mono text-emerald-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                FortyGuard 12h AI Casting
+              </span>
             </div>
             <p className="text-xs text-gray-500 dark:text-zinc-400">
-              Thermodynamic lag simulation: Surface irradiance vs. Canopy air lag & HVAC shifting windows
+              Thermodynamic lag simulation: 00:00–12:00 Historical Baseline · 12:00–24:00 Real-Time AI Casting
             </p>
           </div>
         </div>
 
         {/* Legend */}
         <div className="flex items-center gap-3 font-mono text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-500/20 border border-blue-400" />
+            <span className="text-gray-600 dark:text-zinc-400 text-[11px]">Past 12h History</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/20 border border-emerald-400" />
+            <span className="text-gray-600 dark:text-zinc-400 text-[11px]">Next 12h AI Forecast</span>
+          </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-cyan-500/30 border border-cyan-500" />
             <span className="text-gray-600 dark:text-zinc-400 text-[11px]">03:00–07:00 Pre-Cool</span>
@@ -144,7 +157,7 @@ export default function DiurnalTimelineScrubber({
 
         {/* Hour Slider */}
         <div className="flex-1 max-w-md w-full flex items-center gap-3">
-          <span className="font-mono text-xs text-gray-500 dark:text-zinc-400">00:00</span>
+          <span className="font-mono text-[10px] text-blue-400 font-semibold">00:00 Hist</span>
           <input
             type="range"
             min="0"
@@ -157,12 +170,14 @@ export default function DiurnalTimelineScrubber({
             }}
             className="w-full h-1.5 bg-gray-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#FF6B2B]"
           />
-          <span className="font-mono text-xs text-gray-500 dark:text-zinc-400">23:00</span>
+          <span className="font-mono text-[10px] text-emerald-400 font-semibold">+12h Cast</span>
         </div>
 
         {/* Selected Hour Telemetry Callout */}
         <div className="flex items-center gap-3 font-mono text-xs bg-white dark:bg-zinc-950/80 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-xs">
-          <span className="font-bold text-orange-500">{activePoint.hour}</span>
+          <span className={`font-bold ${isForecastZone ? "text-emerald-400" : "text-blue-400"}`}>
+            {activePoint.hour} {isForecastZone ? "(AI Cast)" : "(Hist)"}
+          </span>
           <span className="text-gray-300 dark:text-zinc-700">|</span>
           <span>
             Surf: <strong className="text-orange-400">{activePoint.surface}°F</strong>
@@ -186,6 +201,37 @@ export default function DiurnalTimelineScrubber({
                 <stop offset="95%" stopColor="#FF6B2B" stopOpacity={0} />
               </linearGradient>
             </defs>
+
+            {/* Historical Zone Background (00:00 - 12:00) */}
+            <ReferenceArea
+              x1="00:00"
+              x2="12:00"
+              fill="#3B82F6"
+              fillOpacity={0.03}
+            />
+
+            {/* AI Casting Forecast Horizon (12:00 - 23:00) */}
+            <ReferenceArea
+              x1="12:00"
+              x2="23:00"
+              fill="#10B981"
+              fillOpacity={0.04}
+            />
+
+            {/* 12h AI Casting Horizon Line */}
+            <ReferenceLine
+              x="12:00"
+              stroke="#10B981"
+              strokeWidth={1.5}
+              strokeDasharray="4 4"
+              label={{
+                value: "⚡ 12h AI Casting Horizon",
+                fill: "#10B981",
+                fontSize: 9.5,
+                fontFamily: "JetBrains Mono, monospace",
+                position: "insideTopLeft",
+              }}
+            />
 
             {/* Pre-Cool Window */}
             <ReferenceArea

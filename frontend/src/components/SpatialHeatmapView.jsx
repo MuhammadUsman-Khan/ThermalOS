@@ -384,13 +384,29 @@ const BASEMAP_PRESETS = {
   },
 };
 
-function generateCityThermalGrid(city, scope = "core") {
+function generateCityThermalGrid(city, scope = "core", granularity = 80) {
   const features = [];
   const isMetro = scope === "metro";
-  const rows = isMetro ? 28 : 20;
-  const cols = isMetro ? 32 : 24;
-  const stepLat = isMetro ? 0.0055 : 0.0026;
-  const stepLng = isMetro ? 0.0068 : 0.0032;
+  
+  let rows, cols, stepLat, stepLng;
+  if (granularity === 60) {
+    rows = isMetro ? 36 : 28;
+    cols = isMetro ? 42 : 32;
+    stepLat = isMetro ? 0.0038 : 0.0018;
+    stepLng = isMetro ? 0.0048 : 0.0022;
+  } else if (granularity === 100) {
+    rows = isMetro ? 20 : 14;
+    cols = isMetro ? 24 : 18;
+    stepLat = isMetro ? 0.0072 : 0.0036;
+    stepLng = isMetro ? 0.0088 : 0.0044;
+  } else {
+    // 80m standard default
+    rows = isMetro ? 28 : 20;
+    cols = isMetro ? 32 : 24;
+    stepLat = isMetro ? 0.0055 : 0.0026;
+    stepLng = isMetro ? 0.0068 : 0.0032;
+  }
+
   const minLat = city.lat - (rows / 2) * stepLat;
   const minLng = city.lng - (cols / 2) * stepLng;
 
@@ -420,10 +436,11 @@ function generateCityThermalGrid(city, scope = "core") {
 
       features.push({
         type: "Feature",
-        id: `${city.id}-${r}-${c}`,
+        id: `${city.id}-${granularity}m-${r}-${c}`,
         properties: {
           city_name: city.name,
-          tile_id: `${city.id.toUpperCase()}-${r * cols + c}`,
+          tile_id: `${city.id.toUpperCase()}-${granularity}M-${r * cols + c}`,
+          granularity_meters: granularity,
           average_temperature: tempC,
           average_temperature_f: tempF,
           color: assignedClass.hex,
@@ -451,10 +468,10 @@ function generateCityThermalGrid(city, scope = "core") {
   return features;
 }
 
-function generateAllCitiesThermalGrid(scope = "core") {
+function generateAllCitiesThermalGrid(scope = "core", granularity = 80) {
   const allFeatures = [];
   MONITORED_CITIES.forEach((city) => {
-    const cityFeatures = generateCityThermalGrid(city, scope);
+    const cityFeatures = generateCityThermalGrid(city, scope, granularity);
     allFeatures.push(...cityFeatures);
   });
   return { type: "FeatureCollection", features: allFeatures };
@@ -476,8 +493,8 @@ export default function SpatialHeatmapView({
   const [scope, setScope] = useState("core");
   const [currentView, setCurrentView] = useState("national");
   const [focusedCityName, setFocusedCityName] = useState(selectedCity);
-  const [baseMapStyle, setBaseMapStyle] = useState(darkMode ? "dark" : "voyager");
   const [opacity, setOpacity] = useState(0.7);
+  const [granularity, setGranularity] = useState(80);
   const [selectedParcel, setSelectedParcel] = useState(null);
   const [selectedClassHex, setSelectedClassHex] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -569,7 +586,7 @@ export default function SpatialHeatmapView({
 
     setIsLoading(true);
 
-    const unifiedGeoData = generateAllCitiesThermalGrid(scope);
+    const unifiedGeoData = generateAllCitiesThermalGrid(scope, granularity);
 
     if (geoJsonLayerRef.current) {
       mapInstanceRef.current.removeLayer(geoJsonLayerRef.current);
@@ -602,19 +619,13 @@ export default function SpatialHeatmapView({
               fillOpacity: 0.95,
             });
             target.bringToFront();
-            setSelectedParcel(feature.properties);
           },
           mouseout: (e) => {
-            layer.resetStyle(e.target);
+            const target = e.target;
+            layer.resetStyle(target);
           },
-          click: (e) => {
+          click: () => {
             setSelectedParcel(feature.properties);
-            if (feature.properties?.city_name) {
-              setFocusedCityName(feature.properties.city_name);
-              setCurrentView("city");
-              if (onSelectCity) onSelectCity(feature.properties.city_name);
-            }
-            mapInstanceRef.current.panTo(e.latlng);
           },
         });
       },
@@ -623,23 +634,23 @@ export default function SpatialHeatmapView({
     layer.addTo(mapInstanceRef.current);
     geoJsonLayerRef.current = layer;
 
-    // Add City Hub Markers
+    // Place Monitored Cities Markers with live heat badges
     const markersGroup = L.layerGroup();
-
     MONITORED_CITIES.forEach((city) => {
-      const isCurrent = city.name === focusedCityName && currentView === "city";
-
+      const isSelected = currentView === "city" && focusedCityName === city.name;
       const markerHtml = `
-        <div class="cursor-pointer group flex flex-col items-center select-none" style="transform: translate(-50%, -100%);">
-          <div class="px-2.5 py-1 rounded-lg bg-black/95 border ${
-            isCurrent ? "border-orange-500 ring-2 ring-orange-500/40" : "border-zinc-800"
-          } text-white font-mono text-[11px] shadow-lg flex items-center gap-1.5 backdrop-blur-sm transition-transform hover:scale-105">
-            <span class="w-2 h-2 rounded-full ${city.dotClass}"></span>
-            <span class="font-medium text-white">${city.shortName}</span>
-            <span class="px-1 py-0.2 rounded text-[10px] font-mono text-orange-400 bg-orange-500/15">${city.tempF}</span>
+        <div class="relative flex flex-col items-center group cursor-pointer" style="transform: translate(-50%, -100%);">
+          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full shadow-lg border transition-all ${
+            isSelected
+              ? "bg-[#FF6B2B] text-black border-white font-bold scale-110 shadow-[0_0_16px_rgba(255,107,43,0.8)]"
+              : "bg-black/85 text-white border-white/20 hover:border-orange-400/60 hover:scale-105"
+          }">
+            <span class="w-2 h-2 rounded-full ${city.dotClass} ${isSelected ? "bg-black" : "animate-pulse"}"></span>
+            <span class="text-[10.5px] font-sans font-medium tracking-tight whitespace-nowrap">${city.shortName}</span>
+            <span class="text-[10px] font-mono opacity-85 ml-0.5">${city.tempF}</span>
           </div>
-          <div class="w-2 h-2 bg-black border-r border-b ${
-            isCurrent ? "border-orange-500" : "border-zinc-800"
+          <div class="w-2 h-2 ${
+            isSelected ? "bg-[#FF6B2B]" : "bg-black/85 border-r border-b border-white/20"
           } rotate-45 -mt-1"></div>
         </div>
       `;
@@ -662,7 +673,7 @@ export default function SpatialHeatmapView({
     markersLayerGroupRef.current = markersGroup;
 
     setIsLoading(false);
-  }, [opacity, selectedClassHex, scope, focusedCityName, currentView]);
+  }, [opacity, selectedClassHex, scope, focusedCityName, currentView, granularity]);
 
   const filteredCities = MONITORED_CITIES.filter(
     (c) =>
@@ -906,6 +917,43 @@ export default function SpatialHeatmapView({
               );
             })}
           </div>
+
+          {/* Spatial Resolution Selector: 60m / 80m / 100m */}
+          <div className="flex items-center p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
+            {[
+              { value: 60, label: "60m", title: "60m Micro-Block Resolution (High Density)" },
+              { value: 80, label: "80m", title: "80m Neighborhood Standard Resolution" },
+              { value: 100, label: "100m", title: "100m Macro-District Resolution (Fast)" },
+            ].map((item) => {
+              const isActive = granularity === item.value;
+              return (
+                <button
+                  key={item.value}
+                  onClick={() => setGranularity(item.value)}
+                  title={item.title}
+                  className={`relative px-2.5 py-1.5 rounded-xl font-medium flex items-center gap-1 transition-colors cursor-pointer z-10 select-none ${
+                    isActive
+                      ? "text-black font-bold"
+                      : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="granularityPill"
+                      className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 shadow-[0_0_12px_rgba(52,211,153,0.45)] -z-10"
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 30,
+                        mass: 0.8,
+                      }}
+                    />
+                  )}
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -916,17 +964,22 @@ export default function SpatialHeatmapView({
         {isLoading && (
           <div className="absolute inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-30 font-mono text-xs text-orange-400 gap-2">
             <RefreshCw className="w-4 h-4 animate-spin text-orange-500" />
-            <span>Rendering FortyGuard Thermal Radiometric Model...</span>
+            <span>Rendering FortyGuard Thermal Radiometric Model ({granularity}m)...</span>
           </div>
         )}
 
         {/* FortyGuard Legend Box */}
         <div className="absolute top-3.5 left-3.5 z-20 glass-panel p-3.5 rounded-2xl shadow-2xl font-mono text-xs max-w-[230px]">
-          <div className="font-bold text-black dark:text-white text-xs mb-0.5">
-            Average Temperature (24h)
+          <div className="flex items-center justify-between gap-1 mb-0.5">
+            <div className="font-bold text-black dark:text-white text-xs">
+              Average Temp (24h)
+            </div>
+            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+              {granularity}m Mesh
+            </span>
           </div>
           <div className="text-[9.5px] text-gray-500 dark:text-zinc-400 mb-2 pb-1.5 border-b border-gray-200/60 dark:border-white/[0.06]">
-            Equal-interval · 12 classes · 0.17 °C
+            FortyGuard 2m Ground Truth · 12 Classes
           </div>
 
           <div className="space-y-0.5">

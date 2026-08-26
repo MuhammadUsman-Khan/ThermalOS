@@ -83,12 +83,13 @@ if str(QUICKSTART_PKG_DIR) not in sys.path and QUICKSTART_PKG_DIR.exists():
     sys.path.insert(0, str(QUICKSTART_PKG_DIR))
 
 try:
-    from fortyguard import FortyGuardClient
-    from fortyguard.exceptions import FortyGuardError
+    # pyrefly: ignore [missing-import]
+    from fortyguard import FortyGuardClient  # type: ignore
+    from fortyguard.exceptions import FortyGuardError  # type: ignore
     FORTYGUARD_SDK_AVAILABLE = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     FortyGuardClient = None
-    FortyGuardError = Exception
+    FortyGuardError = Exception  # type: ignore
     FORTYGUARD_SDK_AVAILABLE = False
 
 
@@ -504,28 +505,37 @@ class FortyGuardAdapter:
         # Quickstart Cache Match
         for hm in self._cached_heatmaps:
             stats = hm.get("stats_data", {})
-            if analytic_type == "tcm" and "Temperature_stats" in stats:
-                self._write_disk_cache("heatmaps", cache_key, hm)
-                return hm
-            elif stats.get("analytic_type") == analytic_type:
-                self._write_disk_cache("heatmaps", cache_key, hm)
-                return hm
+            if (analytic_type == "tcm" and "Temperature_stats" in stats) or (stats.get("analytic_type") == analytic_type):
+                hm_res = json.loads(json.dumps(hm))
+                st = hm_res.setdefault("stats_data", {})
+                st["granularity_meters"] = granularity
+                st["resolution_label"] = f"{granularity}m FortyGuard Spatial Mesh"
+                st["n_cells"] = len(hm_res.get("map_data", {}).get("features", []))
+                st["quota_info"] = self.quota_tracker.get_summary()
+                self._write_disk_cache("heatmaps", cache_key, hm_res)
+                return hm_res
 
-        # Synthesized Microclimate GeoJSON FeatureCollection
+        # Synthesized Microclimate GeoJSON FeatureCollection based on FortyGuard Spatial Granularity
         coords = CITY_COORDINATES.get(city, {"lat": 33.4484, "lon": -112.0740})
         base_lat, base_lon = coords["lat"], coords["lon"]
         
+        granularity = int(granularity) if granularity in (60, 80, 100) else 100
+        step_deg = 0.003 if granularity == 60 else (0.004 if granularity == 80 else 0.005)
+        grid_dim = 14 if granularity == 60 else (12 if granularity == 80 else 10)
+        tile_offset = grid_dim // 2
+
         features = []
-        for i in range(12):
-            for j in range(12):
-                tile_lat = base_lat + (i - 6) * 0.005
-                tile_lon = base_lon + (j - 6) * 0.005
-                t_val = round(34.0 + math.sin(i * 0.4) * 3.5 + math.cos(j * 0.4) * 2.5, 2)
+        for i in range(grid_dim):
+            for j in range(grid_dim):
+                tile_lat = base_lat + (i - tile_offset) * step_deg
+                tile_lon = base_lon + (j - tile_offset) * step_deg
+                t_val = round(34.0 + math.sin(i * 0.45) * 3.5 + math.cos(j * 0.45) * 2.5, 2)
                 
                 features.append({
                     "type": "Feature",
                     "properties": {
-                        "tile_id": f"tile_{i}_{j}",
+                        "tile_id": f"tile_{granularity}m_{i}_{j}",
+                        "granularity_meters": granularity,
                         "average_temperature": t_val,
                         "max_temperature": round(t_val + 3.2, 2),
                         "min_temperature": round(t_val - 4.1, 2),
@@ -536,9 +546,9 @@ class FortyGuardAdapter:
                         "type": "Polygon",
                         "coordinates": [[
                             [tile_lon, tile_lat],
-                            [tile_lon + 0.004, tile_lat],
-                            [tile_lon + 0.004, tile_lat + 0.004],
-                            [tile_lon, tile_lat + 0.004],
+                            [tile_lon + (step_deg * 0.85), tile_lat],
+                            [tile_lon + (step_deg * 0.85), tile_lat + (step_deg * 0.85)],
+                            [tile_lon, tile_lat + (step_deg * 0.85)],
                             [tile_lon, tile_lat],
                         ]],
                     },
@@ -549,6 +559,8 @@ class FortyGuardAdapter:
                 "Temperature_stats": {"min": 28.5, "max": 42.1, "mean": 35.8},
                 "units": "°C" if analytic_type == "tcm" else "hour",
                 "analytic_type": analytic_type,
+                "granularity_meters": granularity,
+                "resolution_label": f"{granularity}m FortyGuard Spatial Mesh",
                 "n_cells": len(features),
                 "quota_info": self.quota_tracker.get_summary(),
             },
