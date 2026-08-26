@@ -17,7 +17,7 @@ import {
   Sun,
   X,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 
 // Exact 12 FortyGuard equal-interval classes from official Quickstart Notebook
 const FORTYGUARD_12_CLASSES = [
@@ -851,120 +851,120 @@ export default function SpatialHeatmapView({
           </div>
 
           {/* Animated AOI Scope Segmented Toggle */}
-          <div className="flex items-center p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
-            {[
-              { id: "core", label: "Core AOI", icon: Scan },
-              { id: "metro", label: "Metro Valley", icon: Globe2 },
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive = scope === item.id;
+          <LayoutGroup id="aoi-scope-group">
+            <div className="flex items-center gap-1 p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
+              {[
+                { id: "core", label: "Core AOI", icon: Scan },
+                { id: "metro", label: "Metro Valley", icon: Globe2 },
+              ].map((item) => {
+                const Icon = item.icon;
+                const isActive = scope === item.id;
 
-              return (
-                <motion.button
-                  key={item.id}
-                  onClick={() => setScope(item.id)}
-                  whileHover={{ y: -1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`relative px-3.5 py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition-colors cursor-pointer select-none ${
-                    isActive
-                      ? "text-black font-extrabold"
-                      : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-                  }`}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="aoiScopePill"
-                      className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7A32] to-[#FF8A3D] shadow-[0_0_16px_rgba(255,107,43,0.5),inset_0_1px_1px_rgba(255,255,255,0.45)] -z-10"
-                      transition={{
-                        type: "spring",
-                        stiffness: 420,
-                        damping: 30,
-                        mass: 0.8,
-                      }}
-                    />
-                  )}
-                  <Icon className={`w-3.5 h-3.5 relative z-10 ${isActive ? "text-black" : "text-orange-500"}`} />
-                  <span className="relative z-10">{item.label}</span>
-                </motion.button>
-              );
-            })}
-          </div>
+                return (
+                  <motion.button
+                    key={item.id}
+                    onClick={() => setScope(item.id)}
+                    whileHover={{ y: -1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="relative px-3.5 py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition-colors cursor-pointer select-none"
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="aoiScopePill"
+                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7A32] to-[#FF8A3D] shadow-[0_0_16px_rgba(255,107,43,0.5),inset_0_1px_1px_rgba(255,255,255,0.45)]"
+                        transition={{
+                          type: "spring",
+                          stiffness: 380,
+                          damping: 30,
+                          mass: 0.8,
+                        }}
+                      />
+                    )}
+                    <Icon className={`w-3.5 h-3.5 relative z-10 transition-colors ${isActive ? "text-black" : "text-orange-500"}`} />
+                    <span className={`relative z-10 transition-colors ${isActive ? "text-black font-extrabold" : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"}`}>
+                      {item.label}
+                    </span>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </LayoutGroup>
 
           {/* Animated Basemap Preset Toggle */}
-          <div className="flex items-center p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
-            {Object.entries(BASEMAP_PRESETS).map(([key, item]) => {
-              const Icon = item.icon;
-              const isActive = baseMapStyle === key;
+          <LayoutGroup id="basemap-style-group">
+            <div className="flex items-center gap-1 p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
+              {Object.entries(BASEMAP_PRESETS).map(([key, item]) => {
+                const Icon = item.icon;
+                const isActive = baseMapStyle === key;
 
-              return (
-                <motion.button
-                  key={key}
-                  onClick={() => setBaseMapStyle(key)}
-                  whileHover={{ y: -1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`relative px-3 py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition-colors cursor-pointer select-none ${
-                    isActive
-                      ? "text-black font-extrabold"
-                      : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-                  }`}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="baseMapPill"
-                      className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7A32] to-[#FF8A3D] shadow-[0_0_16px_rgba(255,107,43,0.5),inset_0_1px_1px_rgba(255,255,255,0.45)] -z-10"
-                      transition={{
-                        type: "spring",
-                        stiffness: 420,
-                        damping: 30,
-                        mass: 0.8,
-                      }}
-                    />
-                  )}
-                  <Icon className={`w-3 h-3 relative z-10 ${isActive ? "text-black" : "text-gray-500 dark:text-zinc-400"}`} />
-                  <span className="relative z-10">{item.label}</span>
-                </motion.button>
-              );
-            })}
-          </div>
+                return (
+                  <motion.button
+                    key={key}
+                    onClick={() => setBaseMapStyle(key)}
+                    whileHover={{ y: -1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="relative px-3 py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition-colors cursor-pointer select-none"
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="baseMapPill"
+                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7A32] to-[#FF8A3D] shadow-[0_0_16px_rgba(255,107,43,0.5),inset_0_1px_1px_rgba(255,255,255,0.45)]"
+                        transition={{
+                          type: "spring",
+                          stiffness: 380,
+                          damping: 30,
+                          mass: 0.8,
+                        }}
+                      />
+                    )}
+                    <Icon className={`w-3 h-3 relative z-10 transition-colors ${isActive ? "text-black" : "text-gray-500 dark:text-zinc-400"}`} />
+                    <span className={`relative z-10 transition-colors ${isActive ? "text-black font-extrabold" : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"}`}>
+                      {item.label}
+                    </span>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </LayoutGroup>
 
           {/* Spatial Resolution Selector: 60m / 80m / 100m */}
-          <div className="flex items-center p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
-            {[
-              { value: 60, label: "60m", title: "60m Micro-Block Resolution (High Density Mesh)" },
-              { value: 80, label: "80m", title: "80m Neighborhood Standard Resolution" },
-              { value: 100, label: "100m", title: "100m Macro-District Fast Resolution" },
-            ].map((item) => {
-              const isActive = granularity === item.value;
-              return (
-                <motion.button
-                  key={item.value}
-                  onClick={() => setGranularity(item.value)}
-                  whileHover={{ y: -1 }}
-                  whileTap={{ scale: 0.95 }}
-                  title={item.title}
-                  className={`relative px-3 py-1.5 rounded-xl font-medium flex items-center justify-center transition-colors cursor-pointer select-none ${
-                    isActive
-                      ? "text-black font-extrabold"
-                      : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-                  }`}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="granularityPill"
-                      className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.55),inset_0_1px_1px_rgba(255,255,255,0.5)] -z-10"
-                      transition={{
-                        type: "spring",
-                        stiffness: 420,
-                        damping: 30,
-                        mass: 0.8,
-                      }}
-                    />
-                  )}
-                  <span className="relative z-10 tracking-tight">{item.label}</span>
-                </motion.button>
-              );
-            })}
-          </div>
+          <LayoutGroup id="granularity-res-group">
+            <div className="flex items-center gap-1 p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
+              {[
+                { value: 60, label: "60m", title: "60m Micro-Block Resolution (High Density Mesh)" },
+                { value: 80, label: "80m", title: "80m Neighborhood Standard Resolution" },
+                { value: 100, label: "100m", title: "100m Macro-District Fast Resolution" },
+              ].map((item) => {
+                const isActive = granularity === item.value;
+                return (
+                  <motion.button
+                    key={item.value}
+                    onClick={() => setGranularity(item.value)}
+                    whileHover={{ y: -1 }}
+                    whileTap={{ scale: 0.95 }}
+                    title={item.title}
+                    className="relative px-3.5 py-1.5 rounded-xl font-medium flex items-center justify-center transition-colors cursor-pointer select-none"
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="granularityPill"
+                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7A32] to-[#FF8A3D] shadow-[0_0_20px_rgba(255,107,43,0.55),inset_0_1px_1px_rgba(255,255,255,0.45)]"
+                        transition={{
+                          type: "spring",
+                          stiffness: 380,
+                          damping: 30,
+                          mass: 0.8,
+                        }}
+                      />
+                    )}
+                    <span className={`relative z-10 tracking-tight transition-colors ${isActive ? "text-black font-extrabold" : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"}`}>
+                      {item.label}
+                    </span>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </LayoutGroup>
         </div>
       </div>
 
