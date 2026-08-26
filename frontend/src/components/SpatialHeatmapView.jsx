@@ -16,6 +16,9 @@ import {
   Compass,
   Sun,
   X,
+  Grid,
+  Layers,
+  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 
@@ -531,6 +534,20 @@ export default function SpatialHeatmapView({
     }
   };
 
+  const handleScopeChange = (newScope) => {
+    setScope(newScope);
+    if (mapInstanceRef.current && currentView === "city") {
+      const targetCity = MONITORED_CITIES.find((c) => c.name === focusedCityName);
+      if (targetCity) {
+        const targetZoom = newScope === "metro" ? Math.max(10.5, targetCity.zoom - 1.5) : targetCity.zoom;
+        mapInstanceRef.current.flyTo([targetCity.lat, targetCity.lng], targetZoom, {
+          duration: 0.9,
+          easeLinearity: 0.25,
+        });
+      }
+    }
+  };
+
   const flyToNationalOverview = () => {
     if (mapInstanceRef.current) {
       setCurrentView("national");
@@ -589,8 +606,7 @@ export default function SpatialHeatmapView({
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
-    setIsLoading(true);
-
+    // Fast seamless in-memory update with zero flash
     const unifiedGeoData = generateAllCitiesThermalGrid(scope, granularity);
 
     if (geoJsonLayerRef.current) {
@@ -863,24 +879,30 @@ export default function SpatialHeatmapView({
                 return (
                   <motion.button
                     key={item.id}
-                    onClick={() => setScope(item.id)}
-                    whileHover={{ y: -1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="relative px-3.5 py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition-colors cursor-pointer select-none"
+                    onClick={() => handleScopeChange(item.id)}
+                    whileHover={{ scale: 1.04, y: -1 }}
+                    whileTap={{ scale: 0.94 }}
+                    className="relative px-3.5 py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition-all cursor-pointer select-none"
                   >
                     {isActive && (
                       <motion.div
                         layoutId="aoiScopePill"
-                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7A32] to-[#FF8A3D] shadow-[0_0_16px_rgba(255,107,43,0.5),inset_0_1px_1px_rgba(255,255,255,0.45)]"
+                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7832] to-[#FF8A3D] shadow-[0_0_20px_rgba(255,107,43,0.55),inset_0_1px_1px_rgba(255,255,255,0.45)]"
                         transition={{
                           type: "spring",
-                          stiffness: 380,
-                          damping: 30,
-                          mass: 0.8,
+                          stiffness: 400,
+                          damping: 28,
+                          mass: 0.6,
                         }}
                       />
                     )}
-                    <Icon className={`w-3.5 h-3.5 relative z-10 transition-colors ${isActive ? "text-black" : "text-orange-500"}`} />
+                    <motion.div
+                      animate={{ scale: isActive ? 1.15 : 1, rotate: isActive ? [0, -10, 0] : 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="relative z-10 flex items-center"
+                    >
+                      <Icon className={`w-3.5 h-3.5 ${isActive ? "text-black" : "text-orange-500"}`} />
+                    </motion.div>
                     <span className={`relative z-10 transition-colors ${isActive ? "text-black font-extrabold" : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"}`}>
                       {item.label}
                     </span>
@@ -901,23 +923,29 @@ export default function SpatialHeatmapView({
                   <motion.button
                     key={key}
                     onClick={() => setBaseMapStyle(key)}
-                    whileHover={{ y: -1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="relative px-3 py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition-colors cursor-pointer select-none"
+                    whileHover={{ scale: 1.04, y: -1 }}
+                    whileTap={{ scale: 0.94 }}
+                    className="relative px-3 py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition-all cursor-pointer select-none"
                   >
                     {isActive && (
                       <motion.div
                         layoutId="baseMapPill"
-                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7A32] to-[#FF8A3D] shadow-[0_0_16px_rgba(255,107,43,0.5),inset_0_1px_1px_rgba(255,255,255,0.45)]"
+                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7832] to-[#FF8A3D] shadow-[0_0_20px_rgba(255,107,43,0.55),inset_0_1px_1px_rgba(255,255,255,0.45)]"
                         transition={{
                           type: "spring",
-                          stiffness: 380,
-                          damping: 30,
-                          mass: 0.8,
+                          stiffness: 400,
+                          damping: 28,
+                          mass: 0.6,
                         }}
                       />
                     )}
-                    <Icon className={`w-3 h-3 relative z-10 transition-colors ${isActive ? "text-black" : "text-gray-500 dark:text-zinc-400"}`} />
+                    <motion.div
+                      animate={{ scale: isActive ? 1.15 : 1, rotate: isActive ? [0, 10, 0] : 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="relative z-10 flex items-center"
+                    >
+                      <Icon className={`w-3 h-3 ${isActive ? "text-black" : "text-gray-500 dark:text-zinc-400"}`} />
+                    </motion.div>
                     <span className={`relative z-10 transition-colors ${isActive ? "text-black font-extrabold" : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"}`}>
                       {item.label}
                     </span>
@@ -940,26 +968,30 @@ export default function SpatialHeatmapView({
                   <motion.button
                     key={item.value}
                     onClick={() => setGranularity(item.value)}
-                    whileHover={{ y: -1 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.05, y: -1 }}
+                    whileTap={{ scale: 0.94 }}
                     title={item.title}
-                    className="relative px-3.5 py-1.5 rounded-xl font-medium flex items-center justify-center transition-colors cursor-pointer select-none"
+                    className="relative px-3.5 py-1.5 rounded-xl font-medium flex items-center justify-center transition-all cursor-pointer select-none"
                   >
                     {isActive && (
                       <motion.div
                         layoutId="granularityPill"
-                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7A32] to-[#FF8A3D] shadow-[0_0_20px_rgba(255,107,43,0.55),inset_0_1px_1px_rgba(255,255,255,0.45)]"
+                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7832] to-[#FF8A3D] shadow-[0_0_20px_rgba(255,107,43,0.55),inset_0_1px_1px_rgba(255,255,255,0.45)]"
                         transition={{
                           type: "spring",
-                          stiffness: 380,
-                          damping: 30,
-                          mass: 0.8,
+                          stiffness: 400,
+                          damping: 28,
+                          mass: 0.6,
                         }}
                       />
                     )}
-                    <span className={`relative z-10 tracking-tight transition-colors ${isActive ? "text-black font-extrabold" : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"}`}>
+                    <motion.span
+                      animate={{ scale: isActive ? 1.08 : 1 }}
+                      transition={{ duration: 0.2 }}
+                      className={`relative z-10 tracking-tight transition-colors ${isActive ? "text-black font-extrabold" : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"}`}
+                    >
                       {item.label}
-                    </span>
+                    </motion.span>
                   </motion.button>
                 );
               })}
