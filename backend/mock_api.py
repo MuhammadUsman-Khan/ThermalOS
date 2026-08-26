@@ -100,8 +100,9 @@ class HeatIntelligenceRequest(BaseModel):
 
 
 class AuditRequest(BaseModel):
-    location: str
-    temperature_f: Optional[int] = None
+    location: Optional[str] = None
+    city: Optional[str] = None
+    temperature_f: Optional[float] = None
 
 
 class InfrastructurePrecoolReport(BaseModel):
@@ -177,13 +178,14 @@ async def get_heat_intelligence(request: HeatIntelligenceRequest):
 @app.post("/v1/agents/audit", response_model=ComplianceReport)
 def audit_endpoint(request: AuditRequest):
     """Agent 1: ASHRAE 55 & IECC RAG Compliance Audit powered by FortyGuard."""
+    target_city = request.city or request.location or "Phoenix, AZ"
     if request.temperature_f is not None:
-        temp_f = request.temperature_f
+        temp_f = int(request.temperature_f)
     else:
-        temp_f = LAST_CITY_TEMPS.get(request.location, 95)
+        temp_f = LAST_CITY_TEMPS.get(target_city, 95)
 
     try:
-        return run_compliance_audit(city=request.location, temp_f=temp_f)
+        return run_compliance_audit(city=target_city, temp_f=temp_f)
     except Exception as e:
         logger.exception("Agent 1 compliance audit failed")
         raise HTTPException(status_code=502, detail=f"Compliance audit failed: {e}")
