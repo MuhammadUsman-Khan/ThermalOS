@@ -493,6 +493,7 @@ export default function SpatialHeatmapView({
   const [scope, setScope] = useState("core");
   const [currentView, setCurrentView] = useState("national");
   const [focusedCityName, setFocusedCityName] = useState(selectedCity);
+  const [baseMapStyle, setBaseMapStyle] = useState(darkMode ? "dark" : "voyager");
   const [opacity, setOpacity] = useState(0.7);
   const [granularity, setGranularity] = useState(80);
   const [selectedParcel, setSelectedParcel] = useState(null);
@@ -500,6 +501,10 @@ export default function SpatialHeatmapView({
   const [isLoading, setIsLoading] = useState(false);
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
   const [citySearchQuery, setCitySearchQuery] = useState("");
+
+  useEffect(() => {
+    setBaseMapStyle(darkMode ? "dark" : "voyager");
+  }, [darkMode]);
 
   // Close dropdown on click outside
   useEffect(() => {
