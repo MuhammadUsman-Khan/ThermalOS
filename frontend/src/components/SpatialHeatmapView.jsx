@@ -43,18 +43,21 @@ const BASEMAP_PRESETS = {
     icon: Moon,
     base: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
     labels: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
+    maxNativeZoom: 16,
   },
   voyager: {
     label: "Voyager",
     icon: Compass,
     base: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
     labels: null,
+    maxNativeZoom: 19,
   },
   positron: {
     label: "Light",
     icon: Sun,
     base: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
     labels: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
+    maxNativeZoom: 16,
   },
 };
 
@@ -330,6 +333,8 @@ export default function SpatialHeatmapView({
       preferCanvas: true,
       center: [38.0, -97.0],
       zoom: 4.2,
+      minZoom: 3,
+      maxZoom: 18,
       zoomControl: false,
       attributionControl: false,
     });
@@ -341,13 +346,15 @@ export default function SpatialHeatmapView({
     const preset = BASEMAP_PRESETS[baseMapStyle] || BASEMAP_PRESETS.dark;
 
     const baseLayer = L.tileLayer(preset.base, {
-      maxZoom: 19,
+      maxNativeZoom: preset.maxNativeZoom || 16,
+      maxZoom: 18,
     }).addTo(map);
     baseTileLayerRef.current = baseLayer;
 
     if (preset.labels) {
       const labelsLayer = L.tileLayer(preset.labels, {
-        maxZoom: 19,
+        maxNativeZoom: preset.maxNativeZoom || 16,
+        maxZoom: 18,
         pane: "topLabelsPane",
       }).addTo(map);
       labelsTileLayerRef.current = labelsLayer;
@@ -383,10 +390,12 @@ export default function SpatialHeatmapView({
     const preset = BASEMAP_PRESETS[baseMapStyle] || BASEMAP_PRESETS.dark;
     if (baseTileLayerRef.current) {
       baseTileLayerRef.current.setUrl(preset.base);
+      baseTileLayerRef.current.options.maxNativeZoom = preset.maxNativeZoom || 16;
     }
     if (labelsTileLayerRef.current) {
       if (preset.labels) {
         labelsTileLayerRef.current.setUrl(preset.labels);
+        labelsTileLayerRef.current.options.maxNativeZoom = preset.maxNativeZoom || 16;
         labelsTileLayerRef.current.setOpacity(1);
       } else {
         labelsTileLayerRef.current.setOpacity(0);
