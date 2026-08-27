@@ -40,20 +40,20 @@ const BASEMAP_PRESETS = {
   dark: {
     label: "Dark Matter",
     icon: Moon,
-    base: "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png",
-    labels: "https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png",
+    base: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+    labels: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
   },
   voyager: {
     label: "Voyager",
     icon: Compass,
-    base: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
-    labels: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png",
+    base: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+    labels: null,
   },
   positron: {
     label: "Light",
     icon: Sun,
-    base: "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",
-    labels: "https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png",
+    base: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+    labels: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
   },
 };
 
@@ -237,6 +237,7 @@ export default function SpatialHeatmapView({
     if (!mapContainerRef.current) return;
 
     const map = L.map(mapContainerRef.current, {
+      preferCanvas: true,
       center: [38.0, -97.0],
       zoom: 4.2,
       zoomControl: false,
@@ -251,16 +252,16 @@ export default function SpatialHeatmapView({
 
     const baseLayer = L.tileLayer(preset.base, {
       maxZoom: 19,
-      subdomains: "abcd",
     }).addTo(map);
     baseTileLayerRef.current = baseLayer;
 
-    const labelsLayer = L.tileLayer(preset.labels, {
-      maxZoom: 19,
-      subdomains: "abcd",
-      pane: "topLabelsPane",
-    }).addTo(map);
-    labelsTileLayerRef.current = labelsLayer;
+    if (preset.labels) {
+      const labelsLayer = L.tileLayer(preset.labels, {
+        maxZoom: 19,
+        pane: "topLabelsPane",
+      }).addTo(map);
+      labelsTileLayerRef.current = labelsLayer;
+    }
 
     mapInstanceRef.current = map;
 
@@ -277,7 +278,12 @@ export default function SpatialHeatmapView({
       baseTileLayerRef.current.setUrl(preset.base);
     }
     if (labelsTileLayerRef.current) {
-      labelsTileLayerRef.current.setUrl(preset.labels);
+      if (preset.labels) {
+        labelsTileLayerRef.current.setUrl(preset.labels);
+        labelsTileLayerRef.current.setOpacity(1);
+      } else {
+        labelsTileLayerRef.current.setOpacity(0);
+      }
     }
   }, [baseMapStyle]);
 
@@ -293,10 +299,7 @@ export default function SpatialHeatmapView({
       mapInstanceRef.current.removeLayer(markersLayerGroupRef.current);
     }
 
-    const canvasRenderer = L.canvas({ padding: 0.5 });
-
     const layer = L.geoJSON(unifiedGeoData, {
-      renderer: canvasRenderer,
       style: (feature) => {
         const hex = feature.properties?.color || "#ff6b2b";
         const isFilterActive = selectedClassHex !== null;
@@ -831,7 +834,7 @@ export default function SpatialHeatmapView({
 
         {/* Map Attribution */}
         <div className="absolute bottom-2 left-3.5 z-20 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-md text-[9px] font-mono text-zinc-400 pointer-events-none border border-zinc-800">
-          CartoDB · OpenStreetMap · FortyGuard Radiometric Model
+          Esri ArcGIS Canvas · FortyGuard Radiometric Model
         </div>
       </div>
     </div>
