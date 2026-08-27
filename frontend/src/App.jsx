@@ -41,10 +41,9 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import RadialGauge from "./components/RadialGauge";
-import AgentVisualization from "./components/AgentVisualization";
 import SurfaceSegmentationCard from "./components/SurfaceSegmentationCard";
-import SpatialHeatmapView, { MONITORED_CITIES } from "./components/SpatialHeatmapView";
+import SpatialHeatmapView from "./components/SpatialHeatmapView";
+import { MONITORED_CITIES } from "./data/cities";
 import DiurnalTimelineScrubber from "./components/DiurnalTimelineScrubber";
 import NationalThermalGridMatrix from "./components/NationalThermalGridMatrix";
 import AgentEventLog from "./components/AgentEventLog";

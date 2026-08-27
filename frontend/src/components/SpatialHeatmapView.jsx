@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { MONITORED_CITIES, REGIONS } from "../data/cities";
 
 // Exact 12 FortyGuard equal-interval classes from official Quickstart Notebook
 const FORTYGUARD_12_CLASSES = [
@@ -33,334 +34,6 @@ const FORTYGUARD_12_CLASSES = [
   { minC: 26.67, maxC: 26.84, hex: "#80bf9b", label: "26.67 – 26.84 °C", tempF: "80.0 – 80.3 °F" },
   { minC: 26.50, maxC: 26.67, hex: "#529bb2", label: "26.50 – 26.67 °C", tempF: "79.7 – 80.0 °F" },
   { minC: 26.33, maxC: 26.50, hex: "#2c72a5", label: "26.33 – 26.50 °C", tempF: "79.4 – 79.7 °F" },
-];
-
-export const MONITORED_CITIES = [
-  // Southwest & Desert Corridor
-  {
-    id: "phoenix",
-    name: "Phoenix, AZ",
-    shortName: "Phoenix",
-    region: "Southwest & Desert",
-    lat: 33.4484,
-    lng: -112.074,
-    zoom: 13,
-    baseTemp: 33.5,
-    tempF: "112.4°F",
-    status: "Critical",
-    dotClass: "bg-rose-500",
-  },
-  {
-    id: "las_vegas",
-    name: "Las Vegas, NV",
-    shortName: "Las Vegas",
-    region: "Southwest & Desert",
-    lat: 36.1699,
-    lng: -115.1398,
-    zoom: 13,
-    baseTemp: 31.8,
-    tempF: "106.8°F",
-    status: "High",
-    dotClass: "bg-orange-500",
-  },
-  {
-    id: "tucson",
-    name: "Tucson, AZ",
-    shortName: "Tucson",
-    region: "Southwest & Desert",
-    lat: 32.2226,
-    lng: -110.9747,
-    zoom: 13,
-    baseTemp: 32.2,
-    tempF: "104.2°F",
-    status: "High",
-    dotClass: "bg-orange-500",
-  },
-  // Texas & South Central
-  {
-    id: "houston",
-    name: "Houston, TX",
-    shortName: "Houston",
-    region: "Texas & South Central",
-    lat: 29.7604,
-    lng: -95.3698,
-    zoom: 13,
-    baseTemp: 29.2,
-    tempF: "94.2°F",
-    status: "Elevated",
-    dotClass: "bg-amber-500",
-  },
-  {
-    id: "dallas",
-    name: "Dallas, TX",
-    shortName: "Dallas",
-    region: "Texas & South Central",
-    lat: 32.7767,
-    lng: -96.797,
-    zoom: 13,
-    baseTemp: 30.1,
-    tempF: "98.6°F",
-    status: "High",
-    dotClass: "bg-orange-500",
-  },
-  {
-    id: "austin",
-    name: "Austin, TX",
-    shortName: "Austin",
-    region: "Texas & South Central",
-    lat: 30.2672,
-    lng: -97.7431,
-    zoom: 13,
-    baseTemp: 30.8,
-    tempF: "101.5°F",
-    status: "High",
-    dotClass: "bg-orange-500",
-  },
-  {
-    id: "san_antonio",
-    name: "San Antonio, TX",
-    shortName: "San Antonio",
-    region: "Texas & South Central",
-    lat: 29.4241,
-    lng: -98.4936,
-    zoom: 13,
-    baseTemp: 30.5,
-    tempF: "100.2°F",
-    status: "High",
-    dotClass: "bg-orange-500",
-  },
-  {
-    id: "new_orleans",
-    name: "New Orleans, LA",
-    shortName: "New Orleans",
-    region: "Texas & South Central",
-    lat: 29.9511,
-    lng: -90.0715,
-    zoom: 13,
-    baseTemp: 30.0,
-    tempF: "93.0°F",
-    status: "High",
-    dotClass: "bg-orange-500",
-  },
-  // West Coast & Pacific
-  {
-    id: "san_jose",
-    name: "San Jose, CA",
-    shortName: "San Jose",
-    region: "West Coast & Pacific",
-    lat: 37.3305,
-    lng: -121.8905,
-    zoom: 13,
-    baseTemp: 27.4,
-    tempF: "82.5°F",
-    status: "Nominal",
-    dotClass: "bg-emerald-500",
-  },
-  {
-    id: "los_angeles",
-    name: "Los Angeles, CA",
-    shortName: "Los Angeles",
-    region: "West Coast & Pacific",
-    lat: 34.0522,
-    lng: -118.2437,
-    zoom: 13,
-    baseTemp: 31.0,
-    tempF: "95.8°F",
-    status: "High",
-    dotClass: "bg-orange-500",
-  },
-  {
-    id: "san_francisco",
-    name: "San Francisco, CA",
-    shortName: "San Francisco",
-    region: "West Coast & Pacific",
-    lat: 37.7749,
-    lng: -122.4194,
-    zoom: 13,
-    baseTemp: 22.0,
-    tempF: "72.4°F",
-    status: "Nominal",
-    dotClass: "bg-emerald-500",
-  },
-  {
-    id: "seattle",
-    name: "Seattle, WA",
-    shortName: "Seattle",
-    region: "West Coast & Pacific",
-    lat: 47.6062,
-    lng: -122.3321,
-    zoom: 13,
-    baseTemp: 24.5,
-    tempF: "76.1°F",
-    status: "Nominal",
-    dotClass: "bg-emerald-500",
-  },
-  // Mountain & Midwest
-  {
-    id: "denver",
-    name: "Denver, CO",
-    shortName: "Denver",
-    region: "Mountain & Midwest",
-    lat: 39.7392,
-    lng: -104.9903,
-    zoom: 13,
-    baseTemp: 28.0,
-    tempF: "87.3°F",
-    status: "Elevated",
-    dotClass: "bg-amber-500",
-  },
-  {
-    id: "salt_lake_city",
-    name: "Salt Lake City, UT",
-    shortName: "Salt Lake City",
-    region: "Mountain & Midwest",
-    lat: 40.7608,
-    lng: -111.891,
-    zoom: 13,
-    baseTemp: 29.8,
-    tempF: "92.1°F",
-    status: "High",
-    dotClass: "bg-orange-500",
-  },
-  {
-    id: "chicago",
-    name: "Chicago, IL",
-    shortName: "Chicago",
-    region: "Mountain & Midwest",
-    lat: 41.8781,
-    lng: -87.6298,
-    zoom: 13,
-    baseTemp: 27.8,
-    tempF: "84.1°F",
-    status: "Nominal",
-    dotClass: "bg-emerald-500",
-  },
-  {
-    id: "minneapolis",
-    name: "Minneapolis, MN",
-    shortName: "Minneapolis",
-    region: "Mountain & Midwest",
-    lat: 44.9778,
-    lng: -93.265,
-    zoom: 13,
-    baseTemp: 26.5,
-    tempF: "81.0°F",
-    status: "Nominal",
-    dotClass: "bg-emerald-500",
-  },
-  {
-    id: "st_louis",
-    name: "St. Louis, MO",
-    shortName: "St. Louis",
-    region: "Mountain & Midwest",
-    lat: 38.627,
-    lng: -90.1994,
-    zoom: 13,
-    baseTemp: 29.4,
-    tempF: "90.5°F",
-    status: "Elevated",
-    dotClass: "bg-amber-500",
-  },
-  // East Coast & Southeast
-  {
-    id: "new_york",
-    name: "New York, NY",
-    shortName: "New York",
-    region: "East Coast & Southeast",
-    lat: 40.7128,
-    lng: -74.006,
-    zoom: 13,
-    baseTemp: 28.5,
-    tempF: "88.4°F",
-    status: "Elevated",
-    dotClass: "bg-amber-500",
-  },
-  {
-    id: "boston",
-    name: "Boston, MA",
-    shortName: "Boston",
-    region: "East Coast & Southeast",
-    lat: 42.3601,
-    lng: -71.0589,
-    zoom: 13,
-    baseTemp: 26.8,
-    tempF: "82.1°F",
-    status: "Nominal",
-    dotClass: "bg-emerald-500",
-  },
-  {
-    id: "philadelphia",
-    name: "Philadelphia, PA",
-    shortName: "Philadelphia",
-    region: "East Coast & Southeast",
-    lat: 39.9526,
-    lng: -75.1652,
-    zoom: 13,
-    baseTemp: 28.6,
-    tempF: "88.8°F",
-    status: "Elevated",
-    dotClass: "bg-amber-500",
-  },
-  {
-    id: "washington_dc",
-    name: "Washington, DC",
-    shortName: "Washington DC",
-    region: "East Coast & Southeast",
-    lat: 38.9072,
-    lng: -77.0369,
-    zoom: 13,
-    baseTemp: 29.0,
-    tempF: "89.5°F",
-    status: "Elevated",
-    dotClass: "bg-amber-500",
-  },
-  {
-    id: "miami",
-    name: "Miami, FL",
-    shortName: "Miami",
-    region: "East Coast & Southeast",
-    lat: 25.7617,
-    lng: -80.1918,
-    zoom: 13,
-    baseTemp: 30.2,
-    tempF: "92.6°F",
-    status: "High",
-    dotClass: "bg-rose-500",
-  },
-  {
-    id: "orlando",
-    name: "Orlando, FL",
-    shortName: "Orlando",
-    region: "East Coast & Southeast",
-    lat: 28.5383,
-    lng: -81.3792,
-    zoom: 13,
-    baseTemp: 30.0,
-    tempF: "91.8°F",
-    status: "High",
-    dotClass: "bg-orange-500",
-  },
-  {
-    id: "atlanta",
-    name: "Atlanta, GA",
-    shortName: "Atlanta",
-    region: "East Coast & Southeast",
-    lat: 33.749,
-    lng: -84.388,
-    zoom: 13,
-    baseTemp: 29.5,
-    tempF: "91.3°F",
-    status: "Elevated",
-    dotClass: "bg-amber-500",
-  },
-];
-
-const REGIONS = [
-  "Southwest & Desert",
-  "Texas & South Central",
-  "West Coast & Pacific",
-  "Mountain & Midwest",
-  "East Coast & Southeast",
 ];
 
 const BASEMAP_PRESETS = {
@@ -553,11 +226,6 @@ export default function SpatialHeatmapView({
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.remove();
-      mapInstanceRef.current = null;
-    }
-
     const map = L.map(mapContainerRef.current, {
       center: [38.0, -97.0],
       zoom: 4.2,
@@ -587,11 +255,20 @@ export default function SpatialHeatmapView({
     mapInstanceRef.current = map;
 
     return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
+      map.remove();
+      mapInstanceRef.current = null;
     };
+  }, []);
+
+  // Smoothly update map tiles without rebuilding the map instance
+  useEffect(() => {
+    const preset = BASEMAP_PRESETS[baseMapStyle] || BASEMAP_PRESETS.dark;
+    if (baseTileLayerRef.current) {
+      baseTileLayerRef.current.setUrl(preset.base);
+    }
+    if (labelsTileLayerRef.current) {
+      labelsTileLayerRef.current.setUrl(preset.labels);
+    }
   }, [baseMapStyle]);
 
   useEffect(() => {
@@ -861,120 +538,114 @@ export default function SpatialHeatmapView({
           </div>
 
           {/* 1. Animated AOI Scope Segmented Toggle */}
-          <LayoutGroup id="aoi-scope-group">
-            <div className="flex items-center gap-1 p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
-              {[
-                { id: "core", label: "Core AOI", icon: Scan },
-                { id: "metro", label: "Metro Valley", icon: Globe2 },
-              ].map((item) => {
-                const Icon = item.icon;
-                const isActive = scope === item.id;
+          <div className="flex items-center gap-1 p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
+            {[
+              { id: "core", label: "Core AOI", icon: Scan },
+              { id: "metro", label: "Metro Valley", icon: Globe2 },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive = scope === item.id;
 
-                return (
-                  <motion.button
-                    key={item.id}
-                    onClick={() => setScope(item.id)}
-                    whileHover={{ y: -1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="relative px-3 py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition-colors cursor-pointer select-none"
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="aoiScopePill"
-                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7A32] to-[#FF8A3D] shadow-[0_0_16px_rgba(255,107,43,0.5),inset_0_1px_1px_rgba(255,255,255,0.45)]"
-                        transition={{
-                          type: "spring",
-                          stiffness: 400,
-                          damping: 28,
-                          mass: 0.7,
-                        }}
-                      />
-                    )}
-                    <Icon className={`w-3 h-3 relative z-10 transition-colors ${isActive ? "text-black" : "text-gray-500 dark:text-zinc-400"}`} />
-                    <span className={`relative z-10 transition-colors ${isActive ? "text-black font-extrabold" : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"}`}>
-                      {item.label}
-                    </span>
-                  </motion.button>
-                );
-              })}
-            </div>
-          </LayoutGroup>
+              return (
+                <motion.button
+                  key={item.id}
+                  onClick={() => setScope(item.id)}
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.96 }}
+                  className={`relative px-3.5 py-1.5 rounded-xl font-medium flex items-center gap-1.5 cursor-pointer select-none group ${
+                    isActive ? "text-black font-extrabold" : "text-gray-400 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="aoiScopeIndicatorPill"
+                      className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7832] to-[#FF8A3D] shadow-[0_0_18px_rgba(255,107,43,0.55),inset_0_1px_1px_rgba(255,255,255,0.45)]"
+                      transition={{
+                        type: "spring",
+                        stiffness: 380,
+                        damping: 32,
+                        mass: 0.8,
+                      }}
+                    />
+                  )}
+                  <Icon className="w-3.5 h-3.5 relative z-10" />
+                  <span className="relative z-10">{item.label}</span>
+                </motion.button>
+              );
+            })}
+          </div>
 
           {/* 2. Animated Basemap Preset Toggle */}
-          <LayoutGroup id="basemap-style-group">
-            <div className="flex items-center gap-1 p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
-              {Object.entries(BASEMAP_PRESETS).map(([key, item]) => {
-                const Icon = item.icon;
-                const isActive = baseMapStyle === key;
+          <div className="flex items-center gap-1 p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
+            {Object.entries(BASEMAP_PRESETS).map(([key, item]) => {
+              const Icon = item.icon;
+              const isActive = baseMapStyle === key;
 
-                return (
-                  <motion.button
-                    key={key}
-                    onClick={() => setBaseMapStyle(key)}
-                    whileHover={{ y: -1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="relative px-3 py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition-colors cursor-pointer select-none"
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="baseMapPill"
-                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7A32] to-[#FF8A3D] shadow-[0_0_16px_rgba(255,107,43,0.5),inset_0_1px_1px_rgba(255,255,255,0.45)]"
-                        transition={{
-                          type: "spring",
-                          stiffness: 400,
-                          damping: 28,
-                          mass: 0.7,
-                        }}
-                      />
-                    )}
-                    <Icon className={`w-3 h-3 relative z-10 transition-colors ${isActive ? "text-black" : "text-gray-500 dark:text-zinc-400"}`} />
-                    <span className={`relative z-10 transition-colors ${isActive ? "text-black font-extrabold" : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"}`}>
-                      {item.label}
-                    </span>
-                  </motion.button>
-                );
-              })}
-            </div>
-          </LayoutGroup>
+              return (
+                <motion.button
+                  key={key}
+                  onClick={() => setBaseMapStyle(key)}
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.96 }}
+                  className={`relative px-3.5 py-1.5 rounded-xl font-medium flex items-center gap-1.5 cursor-pointer select-none group ${
+                    isActive ? "text-black font-extrabold" : "text-gray-400 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="baseMapIndicatorPill"
+                      className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7832] to-[#FF8A3D] shadow-[0_0_18px_rgba(255,107,43,0.55),inset_0_1px_1px_rgba(255,255,255,0.45)]"
+                      transition={{
+                        type: "spring",
+                        stiffness: 380,
+                        damping: 32,
+                        mass: 0.8,
+                      }}
+                    />
+                  )}
+                  <Icon className="w-3.5 h-3.5 relative z-10" />
+                  <span className="relative z-10">{item.label}</span>
+                </motion.button>
+              );
+            })}
+          </div>
 
           {/* 3. Spatial Resolution Selector: 60m / 80m / 100m */}
-          <LayoutGroup id="granularity-res-group">
-            <div className="flex items-center gap-1 p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
-              {[
-                { value: 60, label: "60m", title: "60m Micro-Block Resolution (High Density Mesh)" },
-                { value: 80, label: "80m", title: "80m Neighborhood Standard Resolution" },
-                { value: 100, label: "100m", title: "100m Macro-District Fast Resolution" },
-              ].map((item) => {
-                const isActive = granularity === item.value;
-                return (
-                  <motion.button
-                    key={item.value}
-                    onClick={() => setGranularity(item.value)}
-                    whileHover={{ y: -1 }}
-                    whileTap={{ scale: 0.95 }}
-                    title={item.title}
-                    className="relative px-3 py-1.5 rounded-xl font-medium flex items-center justify-center transition-colors cursor-pointer select-none min-w-[48px]"
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="granularityPill"
-                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7A32] to-[#FF8A3D] shadow-[0_0_16px_rgba(255,107,43,0.5),inset_0_1px_1px_rgba(255,255,255,0.45)]"
-                        transition={{
-                          type: "spring",
-                          stiffness: 400,
-                          damping: 28,
-                          mass: 0.7,
-                        }}
-                      />
-                    )}
-                    <span className={`relative z-10 tracking-tight transition-colors ${isActive ? "text-black font-extrabold" : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"}`}>
-                      {item.label}
-                    </span>
-                  </motion.button>
-                );
-              })}
-            </div>
-          </LayoutGroup>
+          <div className="flex items-center gap-1 p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
+            {[
+              { value: 60, label: "60m", title: "60m Micro-Block Resolution (High Density Mesh)" },
+              { value: 80, label: "80m", title: "80m Neighborhood Standard Resolution" },
+              { value: 100, label: "100m", title: "100m Macro-District Fast Resolution" },
+            ].map((item) => {
+              const isActive = granularity === item.value;
+              return (
+                <motion.button
+                  key={item.value}
+                  onClick={() => setGranularity(item.value)}
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.96 }}
+                  title={item.title}
+                  className={`relative px-3.5 py-1.5 rounded-xl font-medium flex items-center justify-center cursor-pointer select-none min-w-[48px] group ${
+                    isActive ? "text-black font-extrabold" : "text-gray-400 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="granularityIndicatorPill"
+                      className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7832] to-[#FF8A3D] shadow-[0_0_18px_rgba(255,107,43,0.55),inset_0_1px_1px_rgba(255,255,255,0.45)]"
+                      transition={{
+                        type: "spring",
+                        stiffness: 380,
+                        damping: 32,
+                        mass: 0.8,
+                      }}
+                    />
+                  )}
+                  <span className="relative z-10 tracking-tight">{item.label}</span>
+                </motion.button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
