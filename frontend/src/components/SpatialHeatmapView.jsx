@@ -16,6 +16,7 @@ import {
   Compass,
   Sun,
   X,
+  Zap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MONITORED_CITIES, REGIONS } from "../data/cities";
@@ -187,11 +188,50 @@ export default function SpatialHeatmapView({
   const [selectedParcel, setSelectedParcel] = useState(null);
   const [selectedClassHex, setSelectedClassHex] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLiveComputing, setIsLiveComputing] = useState(false);
+  const [liveComputeStatus, setLiveComputeStatus] = useState(null);
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
   const [citySearchQuery, setCitySearchQuery] = useState("");
 
   const deferredScope = useDeferredValue(scope);
   const deferredGranularity = useDeferredValue(granularity);
+
+  const handleLiveFortyGuardCompute = async () => {
+    setIsLiveComputing(true);
+    setLiveComputeStatus(null);
+    try {
+      const cityParam = currentView === "national" ? (focusedCityName || "Phoenix, AZ") : focusedCityName;
+      const res = await fetch(
+        `http://localhost:8000/v1/fortyguard/heatmap?city=${encodeURIComponent(cityParam)}&granularity=${granularity}&force_live=true`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const quotaInfo = data?.stats_data?.quota_info;
+        const remaining = quotaInfo?.heatmap_remaining_today ?? 29;
+        const used = quotaInfo?.heatmap_calls_today ?? 1;
+        setLiveComputeStatus({
+          type: "success",
+          msg: `✓ FortyGuard Live Radiometric Compute Executed! -1,000 Credits | Used: ${used}/30 | Remaining: ${remaining}/30 today`,
+        });
+        setTimeout(() => setLiveComputeStatus(null), 7000);
+      } else {
+        setLiveComputeStatus({
+          type: "error",
+          msg: `Live compute request returned status ${res.status}.`,
+        });
+        setTimeout(() => setLiveComputeStatus(null), 5000);
+      }
+    } catch (e) {
+      console.error("Live FortyGuard compute error:", e);
+      setLiveComputeStatus({
+        type: "error",
+        msg: "Failed to connect to FortyGuard backend server.",
+      });
+      setTimeout(() => setLiveComputeStatus(null), 5000);
+    } finally {
+      setIsLiveComputing(false);
+    }
+  };
 
   useEffect(() => {
     setBaseMapStyle(darkMode ? "dark" : "voyager");
@@ -732,12 +772,54 @@ export default function SpatialHeatmapView({
               );
             })}
           </div>
+
+          {/* 4. Explicit Live FortyGuard Cloud Radiometric Compute Button */}
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={handleLiveFortyGuardCompute}
+            disabled={isLiveComputing}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-gradient-to-r from-orange-500/20 via-amber-500/15 to-orange-500/10 hover:from-orange-500/30 hover:to-orange-500/20 border border-orange-500/40 text-orange-400 hover:text-orange-300 text-xs font-mono font-medium transition-all shadow-xs cursor-pointer disabled:opacity-50 select-none group"
+            title="Dispatch live cloud thermal radiometric compute request to FortyGuard (-1,000 credits, 30/day limit)"
+          >
+            {isLiveComputing ? (
+              <>
+                <RefreshCw className="w-3.5 h-3.5 animate-spin text-orange-500" />
+                <span className="font-bold">40G Computing...</span>
+              </>
+            ) : (
+              <>
+                <Zap className="w-3.5 h-3.5 text-orange-500 fill-orange-500 group-hover:scale-110 transition-transform" />
+                <span className="font-semibold">Live 40G Compute</span>
+                <span className="text-[10px] opacity-75 font-normal">(-1k cr)</span>
+              </>
+            )}
+          </motion.button>
         </div>
       </div>
 
       {/* Main Single GIS Map Canvas with Floating FortyGuard Legend */}
       <div className="relative w-full h-[540px] rounded-2xl overflow-hidden border border-gray-200/60 dark:border-white/[0.08] bg-black shadow-inner">
         <div ref={mapContainerRef} className="w-full h-full z-0" />
+
+        {/* Live Compute Toast Banner */}
+        <AnimatePresence>
+          {liveComputeStatus && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.96 }}
+              className={`absolute top-3.5 left-1/2 -translate-x-1/2 z-40 px-4 py-2 rounded-2xl backdrop-blur-md border text-xs font-mono shadow-2xl flex items-center gap-2 ${
+                liveComputeStatus.type === "success"
+                  ? "bg-emerald-950/90 text-emerald-300 border-emerald-500/50 shadow-emerald-950/50"
+                  : "bg-rose-950/90 text-rose-300 border-rose-500/50 shadow-rose-950/50"
+              }`}
+            >
+              <Zap className="w-4 h-4 text-orange-400 fill-orange-400 shrink-0" />
+              <span className="font-medium">{liveComputeStatus.msg}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {isLoading && (
           <div className="absolute inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-30 font-mono text-xs text-orange-400 gap-2">

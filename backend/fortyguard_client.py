@@ -518,16 +518,21 @@ class FortyGuardAdapter:
         analytic_type: str = "tcm",
         date_str: str = "2024-07-15",
         granularity: int = 100,
+        force_live: bool = False,
     ) -> Dict[str, Any]:
         """Fetch spatial thermal tile mesh with strict 30/day daily limit enforcement."""
         cache_key = f"heatmap_{city}_{analytic_type}_{date_str}_{granularity}"
-        cached = self._read_disk_cache("heatmaps", cache_key)
-        if cached:
-            st = cached.setdefault("stats_data", {})
-            st["granularity_meters"] = granularity
-            st["resolution_label"] = f"{granularity}m FortyGuard Spatial Mesh"
-            st["n_cells"] = len(cached.get("map_data", {}).get("features", [])) or 144
-            return cached
+        if not force_live:
+            cached = self._read_disk_cache("heatmaps", cache_key)
+            if cached:
+                self.quota_tracker.record_cache_hit(saved_credits=1000)
+                st = cached.setdefault("stats_data", {})
+                st["granularity_meters"] = granularity
+                st["resolution_label"] = f"{granularity}m FortyGuard Spatial Mesh"
+                st["n_cells"] = len(cached.get("map_data", {}).get("features", [])) or 144
+                st["served_from"] = "DISK_CACHE"
+                st["quota_info"] = self.quota_tracker.get_summary()
+                return cached
 
         # Check Quota before making live API call
         if self.is_live and self.sdk_client:
@@ -551,13 +556,20 @@ class FortyGuardAdapter:
                         st["granularity_meters"] = granularity
                         st["resolution_label"] = f"{granularity}m FortyGuard Spatial Mesh"
                         st["n_cells"] = len(payload.get("map_data", {}).get("features", [])) or 144
+                        st["served_from"] = "LIVE_API"
+                        st["quota_info"] = self.quota_tracker.get_summary()
                     self.quota_tracker.record_call(endpoint="heatmap", credits_cost=1000)
                     self._write_disk_cache("heatmaps", cache_key, payload)
                     return payload
                 except Exception as e:
                     logger.error(f"Live create_heatmap failed: {e}. Falling back to cached grid.")
+                    if self.quota_tracker.can_call_heatmap():
+                        self.quota_tracker.record_call(endpoint="heatmap", credits_cost=1000)
             else:
                 logger.warning("FortyGuard daily heatmap limit (30/day) reached. Serving cached microclimate grid.")
+        else:
+            if force_live and self.quota_tracker.can_call_heatmap():
+                self.quota_tracker.record_call(endpoint="heatmap", credits_cost=1000)
 
         # Quickstart Cache Match
         for hm in self._cached_heatmaps:

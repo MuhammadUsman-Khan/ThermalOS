@@ -304,13 +304,19 @@ def multi_agent_synthesis_endpoint(request: AgentRequest):
 
 
 @app.get("/v1/fortyguard/heatmap")
-def heatmap_endpoint(city: str = "Phoenix, AZ", analytic_type: str = "tcm", granularity: int = 100):
+def heatmap_endpoint(
+    city: str = "Phoenix, AZ",
+    analytic_type: str = "tcm",
+    granularity: int = 100,
+    force_live: bool = False,
+):
     """Fetch FortyGuard spatial thermal tile mesh at 60m, 80m, or 100m resolution."""
     try:
         return fortyguard_client.get_heatmap_analytics(
             city=city,
             analytic_type=analytic_type,
-            granularity=granularity
+            granularity=granularity,
+            force_live=force_live,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
