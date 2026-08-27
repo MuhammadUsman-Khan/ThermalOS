@@ -484,30 +484,31 @@ export default function SpatialHeatmapView({
   );
 
   return (
-    <div className="glass-panel rounded-2xl p-4 flex flex-col space-y-3.5 font-sans relative">
+    <div className="glass-panel rounded-3xl p-5 flex flex-col space-y-4 font-sans relative">
       {/* Top Header Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3.5 border-b border-gray-200/60 dark:border-white/[0.06]">
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.2)]">
-            <Radio className="w-4 h-4" />
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-4 border-b border-gray-200/60 dark:border-white/[0.06]">
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="h-10 w-10 shrink-0 rounded-2xl bg-gradient-to-br from-orange-500/20 to-amber-500/10 border border-orange-500/30 flex items-center justify-center text-orange-500 shadow-[0_0_16px_rgba(249,115,22,0.25)]">
+            <Radio className="w-5 h-5" />
           </div>
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h2 className="font-display text-sm font-bold tracking-tight text-black dark:text-white">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <h2 className="font-display text-base font-bold tracking-tight text-black dark:text-white leading-tight">
                 Spatial Microclimate Heatmap
               </h2>
-              <span className="px-2.5 py-0.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-[11px] font-mono font-medium text-orange-400">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-[11px] font-mono font-semibold text-orange-400 shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
                 {currentView === "national" ? "National Overview" : focusedCityName}
               </span>
             </div>
-            <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5 font-sans">
-              FortyGuard 100m² Radiometric Grid Overlaid on CartoDB / OpenStreetMap
+            <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1 font-mono">
+              FortyGuard {granularity}m Radiometric Grid · Esri ArcGIS High-Resolution Canvas
             </p>
           </div>
         </div>
 
         {/* Controls: Custom City Dropdown, AOI Scope, Basemap */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
           {/* Custom High-End City Selector Dropdown */}
           <div ref={dropdownRef} className="relative">
             <motion.button
