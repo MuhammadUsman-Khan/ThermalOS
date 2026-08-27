@@ -485,30 +485,38 @@ export default function SpatialHeatmapView({
 
   return (
     <div className="glass-panel rounded-3xl p-5 flex flex-col space-y-4 font-sans relative">
-      {/* Top Header Bar */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-4 border-b border-gray-200/60 dark:border-white/[0.06]">
+      {/* 1. Dedicated Header Title Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3.5 border-b border-gray-200/60 dark:border-white/[0.06]">
         <div className="flex items-center gap-3.5 min-w-0">
           <div className="h-10 w-10 shrink-0 rounded-2xl bg-gradient-to-br from-orange-500/20 to-amber-500/10 border border-orange-500/30 flex items-center justify-center text-orange-500 shadow-[0_0_16px_rgba(249,115,22,0.25)]">
             <Radio className="w-5 h-5" />
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-              <h2 className="font-display text-base font-bold tracking-tight text-black dark:text-white leading-tight">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h2 className="font-display text-base sm:text-lg font-bold tracking-tight text-black dark:text-white">
                 Spatial Microclimate Heatmap
               </h2>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-[11px] font-mono font-semibold text-orange-400 shrink-0">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-[11px] font-mono font-semibold text-orange-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
                 {currentView === "national" ? "National Overview" : focusedCityName}
               </span>
             </div>
-            <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1 font-mono">
+            <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5 font-mono">
               FortyGuard {granularity}m Radiometric Grid · Esri ArcGIS High-Resolution Canvas
             </p>
           </div>
         </div>
 
-        {/* Controls: Custom City Dropdown, AOI Scope, Basemap */}
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+        {/* Live Sensor Feed Status Pill */}
+        <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-gray-50 dark:bg-white/[0.03] border border-gray-200/60 dark:border-white/[0.06] text-xs font-mono text-gray-500 dark:text-zinc-400">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse" />
+          <span className="font-medium text-black dark:text-white">FortyGuard 24h Telemetry</span>
+        </div>
+      </div>
+
+      {/* 2. Dedicated Interactive Controls Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
           {/* Custom High-End City Selector Dropdown */}
           <div ref={dropdownRef} className="relative">
             <motion.button
