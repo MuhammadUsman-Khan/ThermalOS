@@ -197,6 +197,27 @@ export default function SpatialHeatmapView({
     setBaseMapStyle(darkMode ? "dark" : "voyager");
   }, [darkMode]);
 
+  // Sync with selectedCity prop from parent app header
+  useEffect(() => {
+    if (selectedCity && selectedCity !== focusedCityName) {
+      flyToCity(selectedCity);
+    }
+  }, [selectedCity]);
+
+  // Sync zoom level when switching between Core AOI and Metro Valley in city view
+  useEffect(() => {
+    if (currentView === "city" && focusedCityName && mapInstanceRef.current) {
+      const targetCity = MONITORED_CITIES.find((c) => c.name === focusedCityName);
+      if (targetCity) {
+        mapInstanceRef.current.flyTo(
+          [targetCity.lat, targetCity.lng],
+          scope === "metro" ? 11 : targetCity.zoom,
+          { duration: 0.8, easeLinearity: 0.25 }
+        );
+      }
+    }
+  }, [scope]);
+
   // Close dropdown on click outside
   useEffect(() => {
     function handleClickOutside(e) {
@@ -214,10 +235,11 @@ export default function SpatialHeatmapView({
       setCurrentView("city");
       setFocusedCityName(cityName);
       setIsCityDropdownOpen(false);
-      mapInstanceRef.current.flyTo([targetCity.lat, targetCity.lng], scope === "metro" ? 11 : targetCity.zoom, {
-        duration: 1.2,
-        easeLinearity: 0.25,
-      });
+      mapInstanceRef.current.flyTo(
+        [targetCity.lat, targetCity.lng],
+        scope === "metro" ? 11 : targetCity.zoom,
+        { duration: 1.2, easeLinearity: 0.25 }
+      );
       if (onSelectCity) onSelectCity(cityName);
     }
   };
@@ -233,6 +255,32 @@ export default function SpatialHeatmapView({
     }
   };
 
+  const getFeatureStyle = (feature, selectedHex, currentOpacity) => {
+    const hex = (feature.properties?.color || "#ff6b2b").toLowerCase();
+    const isFilterActive = Boolean(selectedHex);
+    const isMatched = isFilterActive && selectedHex.toLowerCase() === hex;
+
+    if (isFilterActive) {
+      return {
+        fillColor: hex,
+        fillOpacity: isMatched ? 1.0 : 0.05,
+        stroke: isMatched,
+        color: "#ffffff",
+        weight: isMatched ? 2 : 0,
+      };
+    }
+
+    return {
+      fillColor: hex,
+      fillOpacity: currentOpacity,
+      stroke: true,
+      color: hex,
+      weight: 0.5,
+      opacity: currentOpacity * 0.4,
+    };
+  };
+
+  // Initialize Map once on mount & handle resizing
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
@@ -265,7 +313,24 @@ export default function SpatialHeatmapView({
 
     mapInstanceRef.current = map;
 
+    // Invalidate map size so it never renders 0x0 during tab animations
+    const invalidate = () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    };
+    const t1 = setTimeout(invalidate, 80);
+    const t2 = setTimeout(invalidate, 300);
+
+    const ro = new ResizeObserver(() => {
+      invalidate();
+    });
+    ro.observe(mapContainerRef.current);
+
     return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      ro.disconnect();
       map.remove();
       mapInstanceRef.current = null;
     };
@@ -287,6 +352,16 @@ export default function SpatialHeatmapView({
     }
   }, [baseMapStyle]);
 
+  // Instantaneous style update when temperature filter or opacity slider changes
+  useEffect(() => {
+    if (geoJsonLayerRef.current) {
+      geoJsonLayerRef.current.setStyle((feature) =>
+        getFeatureStyle(feature, selectedClassHex, opacity)
+      );
+    }
+  }, [selectedClassHex, opacity]);
+
+  // Rebuild GeoJSON mesh and city markers on scope/granularity/focus changes
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
@@ -300,24 +375,13 @@ export default function SpatialHeatmapView({
     }
 
     const layer = L.geoJSON(unifiedGeoData, {
-      style: (feature) => {
-        const hex = feature.properties?.color || "#ff6b2b";
-        const isFilterActive = selectedClassHex !== null;
-        const isMatched = selectedClassHex === hex;
-
-        return {
-          fillColor: hex,
-          fillOpacity: isFilterActive ? (isMatched ? 0.95 : 0.1) : opacity,
-          stroke: false,
-          weight: 0,
-        };
-      },
+      style: (feature) => getFeatureStyle(feature, selectedClassHex, opacity),
       onEachFeature: (feature, leafletLayer) => {
         leafletLayer.on({
           mouseover: () => {
             setSelectedParcel(feature.properties);
           },
-          click: (e) => {
+          click: () => {
             setSelectedParcel(feature.properties);
             if (feature.properties?.city_name) {
               setFocusedCityName(feature.properties.city_name);
@@ -332,44 +396,44 @@ export default function SpatialHeatmapView({
     layer.addTo(mapInstanceRef.current);
     geoJsonLayerRef.current = layer;
 
-      // Place Monitored Cities Markers with live heat badges
-      const markersGroup = L.layerGroup();
-      MONITORED_CITIES.forEach((city) => {
-        const isSelected = currentView === "city" && focusedCityName === city.name;
-        const markerHtml = `
-          <div class="relative flex flex-col items-center group cursor-pointer" style="transform: translate(-50%, -100%);">
-            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full shadow-lg border transition-all ${
-              isSelected
-                ? "bg-[#FF6B2B] text-black border-white font-bold scale-110 shadow-[0_0_16px_rgba(255,107,43,0.8)]"
-                : "bg-black/85 text-white border-white/20 hover:border-orange-400/60 hover:scale-105"
-            }">
-              <span class="w-2 h-2 rounded-full ${city.dotClass} ${isSelected ? "bg-black" : "animate-pulse"}"></span>
-              <span class="text-[10.5px] font-sans font-medium tracking-tight whitespace-nowrap">${city.shortName}</span>
-              <span class="text-[10px] font-mono opacity-85 ml-0.5">${city.tempF}</span>
-            </div>
-            <div class="w-2 h-2 ${
-              isSelected ? "bg-[#FF6B2B]" : "bg-black/85 border-r border-b border-white/20"
-            } rotate-45 -mt-1"></div>
+    // Place Monitored Cities Markers with live heat badges
+    const markersGroup = L.layerGroup();
+    MONITORED_CITIES.forEach((city) => {
+      const isSelected = currentView === "city" && focusedCityName === city.name;
+      const markerHtml = `
+        <div class="relative flex flex-col items-center group cursor-pointer" style="transform: translate(-50%, -100%);">
+          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full shadow-lg border transition-all ${
+            isSelected
+              ? "bg-[#FF6B2B] text-black border-white font-bold scale-110 shadow-[0_0_16px_rgba(255,107,43,0.8)]"
+              : "bg-black/85 text-white border-white/20 hover:border-orange-400/60 hover:scale-105"
+          }">
+            <span class="w-2 h-2 rounded-full ${city.dotClass} ${isSelected ? "bg-black" : "animate-pulse"}"></span>
+            <span class="text-[10.5px] font-sans font-medium tracking-tight whitespace-nowrap">${city.shortName}</span>
+            <span class="text-[10px] font-mono opacity-85 ml-0.5">${city.tempF}</span>
           </div>
-        `;
+          <div class="w-2 h-2 ${
+            isSelected ? "bg-[#FF6B2B]" : "bg-black/85 border-r border-b border-white/20"
+          } rotate-45 -mt-1"></div>
+        </div>
+      `;
 
-        const customIcon = L.divIcon({
-          className: "custom-city-marker-container",
-          html: markerHtml,
-          iconSize: [0, 0],
-          iconAnchor: [0, 0],
-        });
-
-        const marker = L.marker([city.lat, city.lng], { icon: customIcon });
-        marker.on("click", () => {
-          flyToCity(city.name);
-        });
-        markersGroup.addLayer(marker);
+      const customIcon = L.divIcon({
+        className: "custom-city-marker-container",
+        html: markerHtml,
+        iconSize: [0, 0],
+        iconAnchor: [0, 0],
       });
 
-      markersGroup.addTo(mapInstanceRef.current);
-      markersLayerGroupRef.current = markersGroup;
-  }, [opacity, selectedClassHex, deferredScope, focusedCityName, currentView, deferredGranularity]);
+      const marker = L.marker([city.lat, city.lng], { icon: customIcon });
+      marker.on("click", () => {
+        flyToCity(city.name);
+      });
+      markersGroup.addLayer(marker);
+    });
+
+    markersGroup.addTo(mapInstanceRef.current);
+    markersLayerGroupRef.current = markersGroup;
+  }, [deferredScope, focusedCityName, currentView, deferredGranularity]);
 
   const filteredCities = MONITORED_CITIES.filter(
     (c) =>
@@ -703,20 +767,27 @@ export default function SpatialHeatmapView({
                 <button
                   key={idx}
                   onClick={() => setSelectedClassHex(isSelected ? null : cls.hex)}
-                  title={`Filter ${cls.label}`}
-                  className={`w-full flex items-center gap-2 text-[9.5px] px-1.5 py-0.5 rounded-md transition-colors cursor-pointer text-left ${
+                  title={`Filter ${cls.label} (${cls.tempF})`}
+                  className={`w-full flex items-center justify-between text-[9.5px] px-2 py-0.5 rounded-lg transition-all cursor-pointer text-left ${
                     isSelected
-                      ? "bg-orange-500/25 text-orange-300 font-semibold ring-1 ring-orange-500/50"
+                      ? "bg-orange-500/25 text-orange-300 font-bold ring-1 ring-orange-500/60 shadow-[0_0_10px_rgba(249,115,22,0.25)]"
                       : "hover:bg-gray-100 dark:hover:bg-zinc-800/60 text-gray-700 dark:text-zinc-300"
                   }`}
                 >
-                  <span
-                    className="w-3.5 h-2.5 rounded-xs shrink-0 border border-black/20 shadow-xs"
-                    style={{ backgroundColor: cls.hex }}
-                  />
-                  <span className="tabular-nums">
-                    {cls.label}
-                  </span>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span
+                      className="w-3.5 h-2.5 rounded-xs shrink-0 border border-black/30 shadow-xs"
+                      style={{ backgroundColor: cls.hex }}
+                    />
+                    <span className="tabular-nums truncate font-mono">
+                      {cls.label}
+                    </span>
+                  </div>
+                  {isSelected && (
+                    <span className="px-1 py-0.2 rounded bg-orange-500 text-black font-extrabold text-[8px] tracking-tight shrink-0 ml-1">
+                      ACTIVE
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -725,9 +796,9 @@ export default function SpatialHeatmapView({
           {selectedClassHex && (
             <button
               onClick={() => setSelectedClassHex(null)}
-              className="mt-2 w-full text-center text-[10px] text-orange-500 hover:text-orange-400 font-mono font-semibold uppercase"
+              className="mt-2 w-full py-1 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-center text-[10px] text-orange-500 font-mono font-bold uppercase transition-all border border-orange-500/30 cursor-pointer shadow-xs"
             >
-              Reset Filter
+              Reset Filter ✕
             </button>
           )}
 
