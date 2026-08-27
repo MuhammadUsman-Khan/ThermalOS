@@ -86,49 +86,49 @@ export default function DiurnalTimelineScrubber({
   const isForecastZone = currentHour >= 12;
 
   return (
-    <div className="glass-panel rounded-2xl p-4 flex flex-col space-y-4 font-sans">
+    <div className="glass-panel rounded-3xl p-5 flex flex-col space-y-4 font-sans">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200/60 dark:border-white/[0.06]">
-        <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
-            <Clock className="w-4 h-4" />
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-3.5 border-b border-gray-200/60 dark:border-white/[0.06]">
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="h-10 w-10 shrink-0 rounded-2xl bg-gradient-to-br from-orange-500/20 to-amber-500/10 border border-orange-500/30 flex items-center justify-center text-orange-500 shadow-[0_0_16px_rgba(249,115,22,0.25)]">
+            <Clock className="w-5 h-5" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="font-display text-sm font-semibold tracking-tight text-black dark:text-white">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h2 className="font-display text-base sm:text-lg font-bold tracking-tight text-black dark:text-white whitespace-nowrap">
                 24-Hour Diurnal Thermal Forecaster
               </h2>
-              <span className="px-2 py-0.5 rounded-md bg-orange-500/10 border border-orange-500/20 text-xs font-mono text-orange-500">
+              <span className="px-2.5 py-0.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-[11px] font-mono font-semibold text-orange-400 shrink-0">
                 {selectedCity}
               </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-mono text-emerald-400">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10.5px] font-mono font-semibold text-emerald-400 shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 FortyGuard 12h AI Casting
               </span>
             </div>
-            <p className="text-xs text-gray-500 dark:text-zinc-400">
+            <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1 font-mono">
               Thermodynamic lag simulation: 00:00–12:00 Historical Baseline · 12:00–24:00 Real-Time AI Casting
             </p>
           </div>
         </div>
 
-        {/* Legend */}
-        <div className="flex items-center gap-3 font-mono text-xs">
+        {/* Legend Pills Bar */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 p-1.5 px-3 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-200/60 dark:border-white/[0.06] font-mono text-xs shrink-0">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-500/20 border border-blue-400" />
-            <span className="text-gray-600 dark:text-zinc-400 text-[11px]">Past 12h History</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-500/30 border border-blue-400 shadow-[0_0_6px_rgba(59,130,246,0.5)]" />
+            <span className="text-gray-600 dark:text-zinc-400 text-[10.5px] whitespace-nowrap">00:00–12:00 History</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/20 border border-emerald-400" />
-            <span className="text-gray-600 dark:text-zinc-400 text-[11px]">Next 12h AI Forecast</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/30 border border-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.5)] animate-pulse" />
+            <span className="text-gray-600 dark:text-zinc-400 text-[10.5px] whitespace-nowrap">12:00–24:00 Forecast</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-500/30 border border-cyan-500" />
-            <span className="text-gray-600 dark:text-zinc-400 text-[11px]">03:00–07:00 Pre-Cool</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-500/40 border border-cyan-400 shadow-[0_0_6px_rgba(6,182,212,0.5)]" />
+            <span className="text-gray-600 dark:text-zinc-400 text-[10.5px] whitespace-nowrap">03:00–07:00 Pre-Cool</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-500/30 border border-rose-500" />
-            <span className="text-gray-600 dark:text-zinc-400 text-[11px]">13:00–17:00 Peak Stress</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500/40 border border-rose-400 shadow-[0_0_6px_rgba(244,63,94,0.5)]" />
+            <span className="text-gray-600 dark:text-zinc-400 text-[10.5px] whitespace-nowrap">13:00–17:00 Peak Stress</span>
           </div>
         </div>
       </div>
