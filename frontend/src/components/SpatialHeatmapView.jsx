@@ -468,13 +468,21 @@ function generateCityThermalGrid(city, scope = "core", granularity = 80) {
   return features;
 }
 
+const GRID_CACHE = new Map();
+
 function generateAllCitiesThermalGrid(scope = "core", granularity = 80) {
+  const cacheKey = `${scope}_${granularity}`;
+  if (GRID_CACHE.has(cacheKey)) {
+    return GRID_CACHE.get(cacheKey);
+  }
   const allFeatures = [];
   MONITORED_CITIES.forEach((city) => {
     const cityFeatures = generateCityThermalGrid(city, scope, granularity);
     allFeatures.push(...cityFeatures);
   });
-  return { type: "FeatureCollection", features: allFeatures };
+  const fc = { type: "FeatureCollection", features: allFeatures };
+  GRID_CACHE.set(cacheKey, fc);
+  return fc;
 }
 
 export default function SpatialHeatmapView({
@@ -589,95 +597,97 @@ export default function SpatialHeatmapView({
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
-    setIsLoading(true);
+    const frameId = requestAnimationFrame(() => {
+      if (!mapInstanceRef.current) return;
 
-    const unifiedGeoData = generateAllCitiesThermalGrid(scope, granularity);
+      const unifiedGeoData = generateAllCitiesThermalGrid(scope, granularity);
 
-    if (geoJsonLayerRef.current) {
-      mapInstanceRef.current.removeLayer(geoJsonLayerRef.current);
-    }
-    if (markersLayerGroupRef.current) {
-      mapInstanceRef.current.removeLayer(markersLayerGroupRef.current);
-    }
+      if (geoJsonLayerRef.current) {
+        mapInstanceRef.current.removeLayer(geoJsonLayerRef.current);
+      }
+      if (markersLayerGroupRef.current) {
+        mapInstanceRef.current.removeLayer(markersLayerGroupRef.current);
+      }
 
-    const layer = L.geoJSON(unifiedGeoData, {
-      style: (feature) => {
-        const hex = feature.properties?.color || "#ff6b2b";
-        const isFilterActive = selectedClassHex !== null;
-        const isMatched = selectedClassHex === hex;
+      const layer = L.geoJSON(unifiedGeoData, {
+        style: (feature) => {
+          const hex = feature.properties?.color || "#ff6b2b";
+          const isFilterActive = selectedClassHex !== null;
+          const isMatched = selectedClassHex === hex;
 
-        return {
-          fillColor: hex,
-          fillOpacity: isFilterActive ? (isMatched ? 0.95 : 0.1) : opacity,
-          stroke: false,
-          weight: 0,
-        };
-      },
-      onEachFeature: (feature, leafletLayer) => {
-        leafletLayer.on({
-          mouseover: (e) => {
-            const target = e.target;
-            target.setStyle({
-              stroke: true,
-              color: "#ffffff",
-              weight: 2,
-              fillOpacity: 0.95,
-            });
-            target.bringToFront();
-          },
-          mouseout: (e) => {
-            const target = e.target;
-            layer.resetStyle(target);
-          },
-          click: () => {
-            setSelectedParcel(feature.properties);
-          },
-        });
-      },
-    });
+          return {
+            fillColor: hex,
+            fillOpacity: isFilterActive ? (isMatched ? 0.95 : 0.1) : opacity,
+            stroke: false,
+            weight: 0,
+          };
+        },
+        onEachFeature: (feature, leafletLayer) => {
+          leafletLayer.on({
+            mouseover: (e) => {
+              const target = e.target;
+              target.setStyle({
+                stroke: true,
+                color: "#ffffff",
+                weight: 2,
+                fillOpacity: 0.95,
+              });
+              target.bringToFront();
+            },
+            mouseout: (e) => {
+              const target = e.target;
+              layer.resetStyle(target);
+            },
+            click: () => {
+              setSelectedParcel(feature.properties);
+            },
+          });
+        },
+      });
 
-    layer.addTo(mapInstanceRef.current);
-    geoJsonLayerRef.current = layer;
+      layer.addTo(mapInstanceRef.current);
+      geoJsonLayerRef.current = layer;
 
-    // Place Monitored Cities Markers with live heat badges
-    const markersGroup = L.layerGroup();
-    MONITORED_CITIES.forEach((city) => {
-      const isSelected = currentView === "city" && focusedCityName === city.name;
-      const markerHtml = `
-        <div class="relative flex flex-col items-center group cursor-pointer" style="transform: translate(-50%, -100%);">
-          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full shadow-lg border transition-all ${
-            isSelected
-              ? "bg-[#FF6B2B] text-black border-white font-bold scale-110 shadow-[0_0_16px_rgba(255,107,43,0.8)]"
-              : "bg-black/85 text-white border-white/20 hover:border-orange-400/60 hover:scale-105"
-          }">
-            <span class="w-2 h-2 rounded-full ${city.dotClass} ${isSelected ? "bg-black" : "animate-pulse"}"></span>
-            <span class="text-[10.5px] font-sans font-medium tracking-tight whitespace-nowrap">${city.shortName}</span>
-            <span class="text-[10px] font-mono opacity-85 ml-0.5">${city.tempF}</span>
+      // Place Monitored Cities Markers with live heat badges
+      const markersGroup = L.layerGroup();
+      MONITORED_CITIES.forEach((city) => {
+        const isSelected = currentView === "city" && focusedCityName === city.name;
+        const markerHtml = `
+          <div class="relative flex flex-col items-center group cursor-pointer" style="transform: translate(-50%, -100%);">
+            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full shadow-lg border transition-all ${
+              isSelected
+                ? "bg-[#FF6B2B] text-black border-white font-bold scale-110 shadow-[0_0_16px_rgba(255,107,43,0.8)]"
+                : "bg-black/85 text-white border-white/20 hover:border-orange-400/60 hover:scale-105"
+            }">
+              <span class="w-2 h-2 rounded-full ${city.dotClass} ${isSelected ? "bg-black" : "animate-pulse"}"></span>
+              <span class="text-[10.5px] font-sans font-medium tracking-tight whitespace-nowrap">${city.shortName}</span>
+              <span class="text-[10px] font-mono opacity-85 ml-0.5">${city.tempF}</span>
+            </div>
+            <div class="w-2 h-2 ${
+              isSelected ? "bg-[#FF6B2B]" : "bg-black/85 border-r border-b border-white/20"
+            } rotate-45 -mt-1"></div>
           </div>
-          <div class="w-2 h-2 ${
-            isSelected ? "bg-[#FF6B2B]" : "bg-black/85 border-r border-b border-white/20"
-          } rotate-45 -mt-1"></div>
-        </div>
-      `;
+        `;
 
-      const customIcon = L.divIcon({
-        className: "custom-city-marker-container",
-        html: markerHtml,
-        iconSize: [0, 0],
-        iconAnchor: [0, 0],
+        const customIcon = L.divIcon({
+          className: "custom-city-marker-container",
+          html: markerHtml,
+          iconSize: [0, 0],
+          iconAnchor: [0, 0],
+        });
+
+        const marker = L.marker([city.lat, city.lng], { icon: customIcon });
+        marker.on("click", () => {
+          flyToCity(city.name);
+        });
+        markersGroup.addLayer(marker);
       });
 
-      const marker = L.marker([city.lat, city.lng], { icon: customIcon });
-      marker.on("click", () => {
-        flyToCity(city.name);
-      });
-      markersGroup.addLayer(marker);
+      markersGroup.addTo(mapInstanceRef.current);
+      markersLayerGroupRef.current = markersGroup;
     });
 
-    markersGroup.addTo(mapInstanceRef.current);
-    markersLayerGroupRef.current = markersGroup;
-
-    setIsLoading(false);
+    return () => cancelAnimationFrame(frameId);
   }, [opacity, selectedClassHex, scope, focusedCityName, currentView, granularity]);
 
   const filteredCities = MONITORED_CITIES.filter(
@@ -850,7 +860,7 @@ export default function SpatialHeatmapView({
               </AnimatePresence>
           </div>
 
-          {/* Animated AOI Scope Segmented Toggle */}
+          {/* 1. Animated AOI Scope Segmented Toggle */}
           <LayoutGroup id="aoi-scope-group">
             <div className="flex items-center gap-1 p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
               {[
@@ -866,7 +876,7 @@ export default function SpatialHeatmapView({
                     onClick={() => setScope(item.id)}
                     whileHover={{ y: -1 }}
                     whileTap={{ scale: 0.95 }}
-                    className="relative px-3.5 py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition-colors cursor-pointer select-none"
+                    className="relative px-3 py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition-colors cursor-pointer select-none"
                   >
                     {isActive && (
                       <motion.div
@@ -874,13 +884,13 @@ export default function SpatialHeatmapView({
                         className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7A32] to-[#FF8A3D] shadow-[0_0_16px_rgba(255,107,43,0.5),inset_0_1px_1px_rgba(255,255,255,0.45)]"
                         transition={{
                           type: "spring",
-                          stiffness: 380,
-                          damping: 30,
-                          mass: 0.8,
+                          stiffness: 400,
+                          damping: 28,
+                          mass: 0.7,
                         }}
                       />
                     )}
-                    <Icon className={`w-3.5 h-3.5 relative z-10 transition-colors ${isActive ? "text-black" : "text-orange-500"}`} />
+                    <Icon className={`w-3 h-3 relative z-10 transition-colors ${isActive ? "text-black" : "text-gray-500 dark:text-zinc-400"}`} />
                     <span className={`relative z-10 transition-colors ${isActive ? "text-black font-extrabold" : "text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"}`}>
                       {item.label}
                     </span>
@@ -890,7 +900,7 @@ export default function SpatialHeatmapView({
             </div>
           </LayoutGroup>
 
-          {/* Animated Basemap Preset Toggle */}
+          {/* 2. Animated Basemap Preset Toggle */}
           <LayoutGroup id="basemap-style-group">
             <div className="flex items-center gap-1 p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
               {Object.entries(BASEMAP_PRESETS).map(([key, item]) => {
@@ -911,9 +921,9 @@ export default function SpatialHeatmapView({
                         className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7A32] to-[#FF8A3D] shadow-[0_0_16px_rgba(255,107,43,0.5),inset_0_1px_1px_rgba(255,255,255,0.45)]"
                         transition={{
                           type: "spring",
-                          stiffness: 380,
-                          damping: 30,
-                          mass: 0.8,
+                          stiffness: 400,
+                          damping: 28,
+                          mass: 0.7,
                         }}
                       />
                     )}
@@ -927,7 +937,7 @@ export default function SpatialHeatmapView({
             </div>
           </LayoutGroup>
 
-          {/* Spatial Resolution Selector: 60m / 80m / 100m */}
+          {/* 3. Spatial Resolution Selector: 60m / 80m / 100m */}
           <LayoutGroup id="granularity-res-group">
             <div className="flex items-center gap-1 p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
               {[
@@ -943,17 +953,17 @@ export default function SpatialHeatmapView({
                     whileHover={{ y: -1 }}
                     whileTap={{ scale: 0.95 }}
                     title={item.title}
-                    className="relative px-3.5 py-1.5 rounded-xl font-medium flex items-center justify-center transition-colors cursor-pointer select-none"
+                    className="relative px-3 py-1.5 rounded-xl font-medium flex items-center justify-center transition-colors cursor-pointer select-none min-w-[48px]"
                   >
                     {isActive && (
                       <motion.div
                         layoutId="granularityPill"
-                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7A32] to-[#FF8A3D] shadow-[0_0_20px_rgba(255,107,43,0.55),inset_0_1px_1px_rgba(255,255,255,0.45)]"
+                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7A32] to-[#FF8A3D] shadow-[0_0_16px_rgba(255,107,43,0.5),inset_0_1px_1px_rgba(255,255,255,0.45)]"
                         transition={{
                           type: "spring",
-                          stiffness: 380,
-                          damping: 30,
-                          mass: 0.8,
+                          stiffness: 400,
+                          damping: 28,
+                          mass: 0.7,
                         }}
                       />
                     )}
