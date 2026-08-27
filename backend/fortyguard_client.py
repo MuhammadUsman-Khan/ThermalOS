@@ -372,18 +372,24 @@ class FortyGuardAdapter:
                 logger.warning(f"Error loading {fpath.name}: {e}")
 
     # -------------------------------------------------------------------------
-    # Disk Cache Helpers
+    # Disk Cache Helpers (Strict 1-Hour TTL)
     # -------------------------------------------------------------------------
-    def _read_disk_cache(self, category: str, cache_key: str) -> Optional[Dict[str, Any]]:
+    def _read_disk_cache(self, category: str, cache_key: str, max_age_seconds: int = 3600) -> Optional[Dict[str, Any]]:
+        """Serve from disk cache ONLY if user asked within the last 1 hour (3600 seconds)."""
         safe_name = "".join([c if c.isalnum() or c in "._-" else "_" for c in cache_key]) + ".json"
         cfile = CACHE_DIR / category / safe_name
         if cfile.exists():
             try:
-                with open(cfile, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    self.quota_tracker.record_cache_hit(saved_credits=500)
-                    logger.info(f"Served {category} from persistent disk cache: {safe_name}")
-                    return data
+                file_age = time.time() - cfile.stat().st_mtime
+                if file_age <= max_age_seconds:
+                    with open(cfile, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        data["_cached_within_1h"] = True
+                        data["_cache_age_seconds"] = int(file_age)
+                        logger.info(f"Served {category} from 1-hour cache (age: {int(file_age)}s): {safe_name}")
+                        return data
+                else:
+                    logger.info(f"Cache expired ({int(file_age)}s > {max_age_seconds}s) for {safe_name}. Making live FortyGuard API request.")
             except Exception as e:
                 logger.warning(f"Error reading disk cache {safe_name}: {e}")
         return None
@@ -520,56 +526,51 @@ class FortyGuardAdapter:
         granularity: int = 100,
         force_live: bool = False,
     ) -> Dict[str, Any]:
-        """Fetch spatial thermal tile mesh with strict 30/day daily limit enforcement."""
+        """Fetch spatial thermal tile mesh from FortyGuard Live API, with strict 1-hour cache reuse."""
         cache_key = f"heatmap_{city}_{analytic_type}_{date_str}_{granularity}"
+        
+        # 1. Use cache ONLY if user is requesting again within 1 hour (< 3600s)
         if not force_live:
-            cached = self._read_disk_cache("heatmaps", cache_key)
+            cached = self._read_disk_cache("heatmaps", cache_key, max_age_seconds=3600)
             if cached:
-                self.quota_tracker.record_cache_hit(saved_credits=1000)
                 st = cached.setdefault("stats_data", {})
                 st["granularity_meters"] = granularity
                 st["resolution_label"] = f"{granularity}m FortyGuard Spatial Mesh"
                 st["n_cells"] = len(cached.get("map_data", {}).get("features", [])) or 144
-                st["served_from"] = "DISK_CACHE"
-                st["quota_info"] = self.quota_tracker.get_summary()
+                st["served_from"] = "1H_CACHE"
+                st["cache_age_seconds"] = cached.get("_cache_age_seconds", 0)
                 return cached
 
-        # Check Quota before making live API call
+        # 2. Otherwise (>1h or first time or force_live), execute LIVE API call to FortyGuard
         if self.is_live and self.sdk_client:
-            if self.quota_tracker.can_call_heatmap():
-                try:
-                    target_aoi = get_city_aoi(city) if city in CITY_COORDINATES else SAN_JOSE_POLYGON
-                    res = self.sdk_client.create_heatmap(
-                        polygon_aoi=target_aoi,
-                        start_date=date_str,
-                        filter_type=3,
-                        granularity=granularity,
-                        analytic_type=analytic_type,
-                        threshold=32.0 if analytic_type in ("exceedance", "persistence") else None,
-                        direction="above" if analytic_type in ("exceedance", "persistence") else None,
-                        wait=True,
-                        verbose=False,
-                    )
-                    payload = res.get("result", res) if isinstance(res, dict) else res
-                    if isinstance(payload, dict):
-                        st = payload.setdefault("stats_data", {})
-                        st["granularity_meters"] = granularity
-                        st["resolution_label"] = f"{granularity}m FortyGuard Spatial Mesh"
-                        st["n_cells"] = len(payload.get("map_data", {}).get("features", [])) or 144
-                        st["served_from"] = "LIVE_API"
-                        st["quota_info"] = self.quota_tracker.get_summary()
-                    self.quota_tracker.record_call(endpoint="heatmap", credits_cost=1000)
-                    self._write_disk_cache("heatmaps", cache_key, payload)
-                    return payload
-                except Exception as e:
-                    logger.error(f"Live create_heatmap failed: {e}. Falling back to cached grid.")
-                    if self.quota_tracker.can_call_heatmap():
-                        self.quota_tracker.record_call(endpoint="heatmap", credits_cost=1000)
-            else:
-                logger.warning("FortyGuard daily heatmap limit (30/day) reached. Serving cached microclimate grid.")
-        else:
-            if force_live and self.quota_tracker.can_call_heatmap():
+            try:
+                target_aoi = get_city_aoi(city) if city in CITY_COORDINATES else SAN_JOSE_POLYGON
+                logger.info(f"Dispatching Live FortyGuard create_heatmap for {city} (AOI: {granularity}m, {analytic_type})...")
+                res = self.sdk_client.create_heatmap(
+                    polygon_aoi=target_aoi,
+                    start_date=date_str,
+                    filter_type=3,
+                    granularity=granularity,
+                    analytic_type=analytic_type,
+                    threshold=32.0 if analytic_type in ("exceedance", "persistence") else None,
+                    direction="above" if analytic_type in ("exceedance", "persistence") else None,
+                    wait=True,
+                    verbose=False,
+                )
+                payload = res.get("result", res) if isinstance(res, dict) else res
+                if isinstance(payload, dict):
+                    st = payload.setdefault("stats_data", {})
+                    st["granularity_meters"] = granularity
+                    st["resolution_label"] = f"{granularity}m FortyGuard Spatial Mesh"
+                    st["n_cells"] = len(payload.get("map_data", {}).get("features", [])) or 144
+                    st["served_from"] = "LIVE_API"
                 self.quota_tracker.record_call(endpoint="heatmap", credits_cost=1000)
+                self._write_disk_cache("heatmaps", cache_key, payload)
+                return payload
+            except Exception as e:
+                logger.error(f"Live FortyGuard create_heatmap failed: {e}. Falling back to cached grid.")
+                if self.quota_tracker.can_call_heatmap():
+                    self.quota_tracker.record_call(endpoint="heatmap", credits_cost=1000)
 
         # Quickstart Cache Match
         for hm in self._cached_heatmaps:

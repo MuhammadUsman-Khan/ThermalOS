@@ -206,18 +206,20 @@ export default function SpatialHeatmapView({
       );
       if (res.ok) {
         const data = await res.json();
-        const quotaInfo = data?.stats_data?.quota_info;
-        const remaining = quotaInfo?.heatmap_remaining_today ?? 29;
-        const used = quotaInfo?.heatmap_calls_today ?? 1;
+        const servedFrom = data?.stats_data?.served_from;
+        const msg =
+          servedFrom === "1H_CACHE"
+            ? `✓ FortyGuard Heatmap Loaded (Cached within last 1 hour)`
+            : `✓ Live FortyGuard Heatmap Generated (Real-time Cloud Compute)`;
         setLiveComputeStatus({
           type: "success",
-          msg: `✓ FortyGuard Live Radiometric Compute Executed! -1,000 Credits | Used: ${used}/30 | Remaining: ${remaining}/30 today`,
+          msg,
         });
-        setTimeout(() => setLiveComputeStatus(null), 7000);
+        setTimeout(() => setLiveComputeStatus(null), 6000);
       } else {
         setLiveComputeStatus({
           type: "error",
-          msg: `Live compute request returned status ${res.status}.`,
+          msg: `Live compute request failed (status ${res.status}).`,
         });
         setTimeout(() => setLiveComputeStatus(null), 5000);
       }
@@ -225,7 +227,7 @@ export default function SpatialHeatmapView({
       console.error("Live FortyGuard compute error:", e);
       setLiveComputeStatus({
         type: "error",
-        msg: "Failed to connect to FortyGuard backend server.",
+        msg: "Failed to connect to FortyGuard API server.",
       });
       setTimeout(() => setLiveComputeStatus(null), 5000);
     } finally {
@@ -779,19 +781,18 @@ export default function SpatialHeatmapView({
             whileTap={{ scale: 0.97 }}
             onClick={handleLiveFortyGuardCompute}
             disabled={isLiveComputing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-gradient-to-r from-orange-500/20 via-amber-500/15 to-orange-500/10 hover:from-orange-500/30 hover:to-orange-500/20 border border-orange-500/40 text-orange-400 hover:text-orange-300 text-xs font-mono font-medium transition-all shadow-xs cursor-pointer disabled:opacity-50 select-none group"
-            title="Dispatch live cloud thermal radiometric compute request to FortyGuard (-1,000 credits, 30/day limit)"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-orange-500/20 via-amber-500/15 to-orange-500/10 hover:from-orange-500/30 hover:to-orange-500/20 border border-orange-500/40 text-orange-400 hover:text-orange-300 text-xs font-mono font-medium transition-all shadow-xs cursor-pointer disabled:opacity-50 select-none group"
+            title="Generate live FortyGuard cloud radiometric heatmap (uses 1-hour cache if requested within last hour)"
           >
             {isLiveComputing ? (
               <>
                 <RefreshCw className="w-3.5 h-3.5 animate-spin text-orange-500" />
-                <span className="font-bold">40G Computing...</span>
+                <span className="font-bold">Generating Heatmap...</span>
               </>
             ) : (
               <>
                 <Zap className="w-3.5 h-3.5 text-orange-500 fill-orange-500 group-hover:scale-110 transition-transform" />
-                <span className="font-semibold">Live 40G Compute</span>
-                <span className="text-[10px] opacity-75 font-normal">(-1k cr)</span>
+                <span className="font-semibold">Generate Live Heatmap</span>
               </>
             )}
           </motion.button>
