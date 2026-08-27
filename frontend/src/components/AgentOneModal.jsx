@@ -42,9 +42,21 @@ export default function AgentOneModal({ isOpen, onClose, city, loading, error, r
       subtitle={`ASHRAE 55-2023 & IECC RAG Vector Knowledge Core · ${city}`}
     >
       {loading ? (
-        <div className="py-14 flex flex-col items-center justify-center gap-3 font-mono text-xs text-gray-500 dark:text-zinc-400">
-          <RefreshCw className="w-6 h-6 animate-spin text-amber-500" />
-          <span>Querying ChromaDB vector embeddings & FortyGuard radiometric telemetry...</span>
+        <div className="py-16 flex flex-col items-center justify-center gap-4 font-mono text-xs text-gray-500 dark:text-zinc-400">
+          <div className="relative flex items-center justify-center">
+            <div className="w-14 h-14 rounded-full border-2 border-amber-500/25 animate-ping absolute" />
+            <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.35)]">
+              <RefreshCw className="w-5 h-5 animate-spin" />
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-1 text-center max-w-sm">
+            <span className="font-bold text-black dark:text-white text-sm font-display">
+              Querying ChromaDB & Radiometry
+            </span>
+            <span className="text-gray-500 dark:text-zinc-400 text-xs">
+              Embedding ASHRAE 55-2023 vectors & calculating sol-air degradation...
+            </span>
+          </div>
         </div>
       ) : error ? (
         <div className="p-4 rounded-2xl glass-panel-subtle border-rose-500/30 text-rose-400 font-mono text-xs space-y-2">

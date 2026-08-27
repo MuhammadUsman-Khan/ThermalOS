@@ -1246,22 +1246,39 @@ export default function AgentVisualization({
           }
 
           case "alert": {
+            // STEP 1: Door confirms emergency broadcast and closes
+            this.doors[agentId].isOpen = false;
             this.drawDoor(agentId, false, "alert");
-            this.drawCharacter(agentId, "walking", 0);
 
-            agent.container.x = agent.baseX + 18;
-            agent.container.y = agent.baseY - 10;
+            // STEP 2: Agent walks briskly back to command desk
+            this.drawCharacter(agentId, "walking_down_victory", 0.3);
 
-            const alertJitter = this.tweens.add({
+            const walkBackTween = this.tweens.add({
               targets: agent.container,
-              x: { from: agent.baseX + 16, to: agent.baseX + 20 },
-              duration: 110,
-              yoyo: true,
-              repeat: -1,
-              ease: "Sine.easeInOut",
+              x: agent.baseX,
+              y: agent.baseY,
+              duration: 900,
+              ease: "Power2.easeInOut",
+              onComplete: () => {
+                // STEP 3: Sits and monitors active emergency alert
+                this.drawCharacter(agentId, "sitting");
+              },
             });
 
-            agent.tweens.push(alertJitter);
+            const walkObj = { angle: -0.35 };
+            const legTween = this.tweens.add({
+              targets: walkObj,
+              angle: 0.35,
+              duration: 220,
+              yoyo: true,
+              repeat: 4,
+              ease: "Sine.easeInOut",
+              onUpdate: () => {
+                this.drawCharacter(agentId, "walking_down_victory", walkObj.angle);
+              },
+            });
+
+            agent.tweens.push(walkBackTween, legTween);
             break;
           }
 

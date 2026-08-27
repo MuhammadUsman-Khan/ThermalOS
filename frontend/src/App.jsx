@@ -283,19 +283,23 @@ export default function App() {
   const handleRunAudit = async () => {
     setIsAuditModalOpen(true);
     setIsAuditLoading(true);
+    setAuditData(null);
     setAuditError(null);
     setAgentStates((prev) => ({ ...prev, agent1: "working" }));
     addLog(`Agent 1: ASHRAE 55 & Building Envelope Audit initiated for ${selectedCity}`, "audit", "Agent 1");
 
     try {
-      const res = await fetch(`${API_BASE}/v1/agents/audit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          location: selectedCity,
-          temperature_f: currentTemp,
+      const [res] = await Promise.all([
+        fetch(`${API_BASE}/v1/agents/audit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            location: selectedCity,
+            temperature_f: currentTemp,
+          }),
         }),
-      });
+        new Promise((resolve) => setTimeout(resolve, 1600)),
+      ]);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setAuditData(data);
@@ -318,20 +322,24 @@ export default function App() {
   const handleRunInfrastructure = async () => {
     setIsInfraModalOpen(true);
     setIsInfraLoading(true);
+    setInfraData(null);
     setInfraError(null);
     setAgentStates((prev) => ({ ...prev, agent2: "working" }));
     addLog(`Agent 2: HVAC Chiller Plant Pre-Cool load shift dispatched for ${selectedCity}`, "dispatch", "Agent 2");
 
     try {
-      const res = await fetch(`${API_BASE}/v1/agents/infrastructure`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          city: selectedCity,
-          temperature_f: currentTemp,
-          risk_level: currentTemp >= 105 ? "extreme" : currentTemp >= 95 ? "high" : "nominal",
+      const [res] = await Promise.all([
+        fetch(`${API_BASE}/v1/agents/infrastructure`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            city: selectedCity,
+            temperature_f: currentTemp,
+            risk_level: currentTemp >= 105 ? "extreme" : currentTemp >= 95 ? "high" : "nominal",
+          }),
         }),
-      });
+        new Promise((resolve) => setTimeout(resolve, 1600)),
+      ]);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setInfraData(data);
@@ -355,20 +363,24 @@ export default function App() {
   const handleRunCivic = async () => {
     setIsCivicModalOpen(true);
     setIsCivicLoading(true);
+    setCivicData(null);
     setCivicError(null);
     setAgentStates((prev) => ({ ...prev, agent3: "working" }));
     addLog(`Agent 3: WBGT Thermodynamic Public Health Override triggered for ${selectedCity}`, "extreme", "Agent 3");
 
     try {
-      const res = await fetch(`${API_BASE}/v1/agents/civic`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          city: selectedCity,
-          temperature_f: currentTemp,
-          risk_level: currentTemp >= 105 ? "extreme" : currentTemp >= 95 ? "high" : "nominal",
+      const [res] = await Promise.all([
+        fetch(`${API_BASE}/v1/agents/civic`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            city: selectedCity,
+            temperature_f: currentTemp,
+            risk_level: currentTemp >= 105 ? "extreme" : currentTemp >= 95 ? "high" : "nominal",
+          }),
         }),
-      });
+        new Promise((resolve) => setTimeout(resolve, 1600)),
+      ]);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setCivicData(data);
