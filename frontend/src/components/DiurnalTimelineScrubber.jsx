@@ -112,23 +112,23 @@ export default function DiurnalTimelineScrubber({
           </div>
         </div>
 
-        {/* Legend Pills Bar */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 p-1.5 px-3 rounded-xl bg-gray-50 dark:bg-white/[0.02] border border-gray-200/60 dark:border-white/[0.06] font-mono text-xs shrink-0">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-blue-500/30 border border-blue-400 shadow-[0_0_6px_rgba(59,130,246,0.5)]" />
-            <span className="text-gray-600 dark:text-zinc-400 text-[10.5px] whitespace-nowrap">00:00–12:00 Hist</span>
+        {/* Modern Color-Coded Phase Legend Badges */}
+        <div className="flex flex-wrap items-center gap-2 font-mono text-xs shrink-0">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-blue-500/10 dark:bg-blue-500/15 border border-blue-500/25 text-blue-600 dark:text-blue-400 shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.6)]" />
+            <span className="text-[10.5px] font-medium whitespace-nowrap">00:00–12:00 Baseline</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500/30 border border-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.5)] animate-pulse" />
-            <span className="text-gray-600 dark:text-zinc-400 text-[10.5px] whitespace-nowrap">12:00–24:00 Cast</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)] animate-pulse" />
+            <span className="text-[10.5px] font-medium whitespace-nowrap">12:00–24:00 AI Forecast</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-cyan-500/40 border border-cyan-400 shadow-[0_0_6px_rgba(6,182,212,0.5)]" />
-            <span className="text-gray-600 dark:text-zinc-400 text-[10.5px] whitespace-nowrap">03:00–07:00 Pre-Cool</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-cyan-500/10 dark:bg-cyan-500/15 border border-cyan-500/25 text-cyan-600 dark:text-cyan-400 shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_6px_rgba(6,182,212,0.6)]" />
+            <span className="text-[10.5px] font-medium whitespace-nowrap">03:00–07:00 Pre-Cool</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-rose-500/40 border border-rose-400 shadow-[0_0_6px_rgba(244,63,94,0.5)]" />
-            <span className="text-gray-600 dark:text-zinc-400 text-[10.5px] whitespace-nowrap">13:00–17:00 Peak Stress</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-rose-500/10 dark:bg-rose-500/15 border border-rose-500/25 text-rose-600 dark:text-rose-400 shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.6)]" />
+            <span className="text-[10.5px] font-medium whitespace-nowrap">13:00–17:00 Peak Stress</span>
           </div>
         </div>
       </div>
