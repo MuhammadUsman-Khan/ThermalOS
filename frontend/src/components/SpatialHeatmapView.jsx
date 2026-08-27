@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useDeferredValue } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import {
@@ -17,7 +17,7 @@ import {
   Sun,
   X,
 } from "lucide-react";
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { MONITORED_CITIES, REGIONS } from "../data/cities";
 
 // Exact 12 FortyGuard equal-interval classes from official Quickstart Notebook
@@ -63,21 +63,21 @@ function generateCityThermalGrid(city, scope = "core", granularity = 80) {
   
   let rows, cols, stepLat, stepLng;
   if (granularity === 60) {
-    rows = isMetro ? 36 : 28;
-    cols = isMetro ? 42 : 32;
-    stepLat = isMetro ? 0.0038 : 0.0018;
-    stepLng = isMetro ? 0.0048 : 0.0022;
-  } else if (granularity === 100) {
     rows = isMetro ? 20 : 14;
-    cols = isMetro ? 24 : 18;
-    stepLat = isMetro ? 0.0072 : 0.0036;
-    stepLng = isMetro ? 0.0088 : 0.0044;
+    cols = isMetro ? 24 : 16;
+    stepLat = isMetro ? 0.0042 : 0.0024;
+    stepLng = isMetro ? 0.0052 : 0.0028;
+  } else if (granularity === 100) {
+    rows = isMetro ? 12 : 8;
+    cols = isMetro ? 14 : 10;
+    stepLat = isMetro ? 0.0072 : 0.0042;
+    stepLng = isMetro ? 0.0088 : 0.0052;
   } else {
     // 80m standard default
-    rows = isMetro ? 28 : 20;
-    cols = isMetro ? 32 : 24;
-    stepLat = isMetro ? 0.0055 : 0.0026;
-    stepLng = isMetro ? 0.0068 : 0.0032;
+    rows = isMetro ? 16 : 10;
+    cols = isMetro ? 18 : 12;
+    stepLat = isMetro ? 0.0055 : 0.0032;
+    stepLng = isMetro ? 0.0068 : 0.0038;
   }
 
   const minLat = city.lat - (rows / 2) * stepLat;
@@ -158,6 +158,13 @@ function generateAllCitiesThermalGrid(scope = "core", granularity = 80) {
   return fc;
 }
 
+// Pre-warm the cache for ultra-smooth instantaneous switching
+["core", "metro"].forEach((s) => {
+  [60, 80, 100].forEach((g) => {
+    generateAllCitiesThermalGrid(s, g);
+  });
+});
+
 export default function SpatialHeatmapView({
   selectedCity = "Phoenix, AZ",
   onSelectCity,
@@ -182,6 +189,9 @@ export default function SpatialHeatmapView({
   const [isLoading, setIsLoading] = useState(false);
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
   const [citySearchQuery, setCitySearchQuery] = useState("");
+
+  const deferredScope = useDeferredValue(scope);
+  const deferredGranularity = useDeferredValue(granularity);
 
   useEffect(() => {
     setBaseMapStyle(darkMode ? "dark" : "voyager");
@@ -274,56 +284,50 @@ export default function SpatialHeatmapView({
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
-    const frameId = requestAnimationFrame(() => {
-      if (!mapInstanceRef.current) return;
+    const unifiedGeoData = generateAllCitiesThermalGrid(deferredScope, deferredGranularity);
 
-      const unifiedGeoData = generateAllCitiesThermalGrid(scope, granularity);
+    if (geoJsonLayerRef.current) {
+      mapInstanceRef.current.removeLayer(geoJsonLayerRef.current);
+    }
+    if (markersLayerGroupRef.current) {
+      mapInstanceRef.current.removeLayer(markersLayerGroupRef.current);
+    }
 
-      if (geoJsonLayerRef.current) {
-        mapInstanceRef.current.removeLayer(geoJsonLayerRef.current);
-      }
-      if (markersLayerGroupRef.current) {
-        mapInstanceRef.current.removeLayer(markersLayerGroupRef.current);
-      }
+    const canvasRenderer = L.canvas({ padding: 0.5 });
 
-      const layer = L.geoJSON(unifiedGeoData, {
-        style: (feature) => {
-          const hex = feature.properties?.color || "#ff6b2b";
-          const isFilterActive = selectedClassHex !== null;
-          const isMatched = selectedClassHex === hex;
+    const layer = L.geoJSON(unifiedGeoData, {
+      renderer: canvasRenderer,
+      style: (feature) => {
+        const hex = feature.properties?.color || "#ff6b2b";
+        const isFilterActive = selectedClassHex !== null;
+        const isMatched = selectedClassHex === hex;
 
-          return {
-            fillColor: hex,
-            fillOpacity: isFilterActive ? (isMatched ? 0.95 : 0.1) : opacity,
-            stroke: false,
-            weight: 0,
-          };
-        },
-        onEachFeature: (feature, leafletLayer) => {
-          leafletLayer.on({
-            mouseover: (e) => {
-              const target = e.target;
-              target.setStyle({
-                stroke: true,
-                color: "#ffffff",
-                weight: 2,
-                fillOpacity: 0.95,
-              });
-              target.bringToFront();
-            },
-            mouseout: (e) => {
-              const target = e.target;
-              layer.resetStyle(target);
-            },
-            click: () => {
-              setSelectedParcel(feature.properties);
-            },
-          });
-        },
-      });
+        return {
+          fillColor: hex,
+          fillOpacity: isFilterActive ? (isMatched ? 0.95 : 0.1) : opacity,
+          stroke: false,
+          weight: 0,
+        };
+      },
+      onEachFeature: (feature, leafletLayer) => {
+        leafletLayer.on({
+          mouseover: () => {
+            setSelectedParcel(feature.properties);
+          },
+          click: (e) => {
+            setSelectedParcel(feature.properties);
+            if (feature.properties?.city_name) {
+              setFocusedCityName(feature.properties.city_name);
+              setCurrentView("city");
+              if (onSelectCity) onSelectCity(feature.properties.city_name);
+            }
+          },
+        });
+      },
+    });
 
-      layer.addTo(mapInstanceRef.current);
-      geoJsonLayerRef.current = layer;
+    layer.addTo(mapInstanceRef.current);
+    geoJsonLayerRef.current = layer;
 
       // Place Monitored Cities Markers with live heat badges
       const markersGroup = L.layerGroup();
@@ -362,10 +366,7 @@ export default function SpatialHeatmapView({
 
       markersGroup.addTo(mapInstanceRef.current);
       markersLayerGroupRef.current = markersGroup;
-    });
-
-    return () => cancelAnimationFrame(frameId);
-  }, [opacity, selectedClassHex, scope, focusedCityName, currentView, granularity]);
+  }, [opacity, selectedClassHex, deferredScope, focusedCityName, currentView, deferredGranularity]);
 
   const filteredCities = MONITORED_CITIES.filter(
     (c) =>
@@ -552,9 +553,7 @@ export default function SpatialHeatmapView({
                   onClick={() => setScope(item.id)}
                   whileHover={{ y: -1 }}
                   whileTap={{ scale: 0.96 }}
-                  className={`relative px-3.5 py-1.5 rounded-xl font-medium flex items-center gap-1.5 cursor-pointer select-none group ${
-                    isActive ? "text-black font-extrabold" : "text-gray-400 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-                  }`}
+                  className="relative px-3.5 py-1.5 rounded-xl font-medium flex items-center justify-center cursor-pointer select-none group"
                 >
                   {isActive && (
                     <motion.div
@@ -562,14 +561,22 @@ export default function SpatialHeatmapView({
                       className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7832] to-[#FF8A3D] shadow-[0_0_18px_rgba(255,107,43,0.55),inset_0_1px_1px_rgba(255,255,255,0.45)]"
                       transition={{
                         type: "spring",
-                        stiffness: 380,
-                        damping: 32,
+                        stiffness: 400,
+                        damping: 30,
                         mass: 0.8,
                       }}
                     />
                   )}
-                  <Icon className="w-3.5 h-3.5 relative z-10" />
-                  <span className="relative z-10">{item.label}</span>
+                  <span
+                    className={`relative z-10 flex items-center gap-1.5 transition-colors duration-150 ${
+                      isActive
+                        ? "text-black font-extrabold"
+                        : "text-gray-400 dark:text-zinc-400 group-hover:text-black dark:group-hover:text-white"
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{item.label}</span>
+                  </span>
                 </motion.button>
               );
             })}
@@ -587,9 +594,7 @@ export default function SpatialHeatmapView({
                   onClick={() => setBaseMapStyle(key)}
                   whileHover={{ y: -1 }}
                   whileTap={{ scale: 0.96 }}
-                  className={`relative px-3.5 py-1.5 rounded-xl font-medium flex items-center gap-1.5 cursor-pointer select-none group ${
-                    isActive ? "text-black font-extrabold" : "text-gray-400 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-                  }`}
+                  className="relative px-3.5 py-1.5 rounded-xl font-medium flex items-center justify-center cursor-pointer select-none group"
                 >
                   {isActive && (
                     <motion.div
@@ -597,14 +602,22 @@ export default function SpatialHeatmapView({
                       className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7832] to-[#FF8A3D] shadow-[0_0_18px_rgba(255,107,43,0.55),inset_0_1px_1px_rgba(255,255,255,0.45)]"
                       transition={{
                         type: "spring",
-                        stiffness: 380,
-                        damping: 32,
+                        stiffness: 400,
+                        damping: 30,
                         mass: 0.8,
                       }}
                     />
                   )}
-                  <Icon className="w-3.5 h-3.5 relative z-10" />
-                  <span className="relative z-10">{item.label}</span>
+                  <span
+                    className={`relative z-10 flex items-center gap-1.5 transition-colors duration-150 ${
+                      isActive
+                        ? "text-black font-extrabold"
+                        : "text-gray-400 dark:text-zinc-400 group-hover:text-black dark:group-hover:text-white"
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{item.label}</span>
+                  </span>
                 </motion.button>
               );
             })}
@@ -625,9 +638,7 @@ export default function SpatialHeatmapView({
                   whileHover={{ y: -1 }}
                   whileTap={{ scale: 0.96 }}
                   title={item.title}
-                  className={`relative px-3.5 py-1.5 rounded-xl font-medium flex items-center justify-center cursor-pointer select-none min-w-[48px] group ${
-                    isActive ? "text-black font-extrabold" : "text-gray-400 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-                  }`}
+                  className="relative px-3.5 py-1.5 rounded-xl font-medium flex items-center justify-center cursor-pointer select-none min-w-[48px] group"
                 >
                   {isActive && (
                     <motion.div
@@ -635,13 +646,21 @@ export default function SpatialHeatmapView({
                       className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF6B2B] via-[#FF7832] to-[#FF8A3D] shadow-[0_0_18px_rgba(255,107,43,0.55),inset_0_1px_1px_rgba(255,255,255,0.45)]"
                       transition={{
                         type: "spring",
-                        stiffness: 380,
-                        damping: 32,
+                        stiffness: 400,
+                        damping: 30,
                         mass: 0.8,
                       }}
                     />
                   )}
-                  <span className="relative z-10 tracking-tight">{item.label}</span>
+                  <span
+                    className={`relative z-10 tracking-tight transition-colors duration-150 ${
+                      isActive
+                        ? "text-black font-extrabold"
+                        : "text-gray-400 dark:text-zinc-400 group-hover:text-black dark:group-hover:text-white"
+                    }`}
+                  >
+                    {item.label}
+                  </span>
                 </motion.button>
               );
             })}
