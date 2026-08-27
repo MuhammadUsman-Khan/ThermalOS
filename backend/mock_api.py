@@ -175,6 +175,21 @@ async def get_heat_intelligence(request: HeatIntelligenceRequest):
         raise HTTPException(status_code=500, detail=f"Telemetry generation failed: {e}")
 
 
+@app.get("/api/telemetry")
+@app.get("/v1/telemetry")
+async def get_city_telemetry(city: str = "Phoenix, AZ"):
+    """Returns live FortyGuard telemetry for a given city."""
+    try:
+        temp = LAST_CITY_TEMPS.get(city, 104)
+        snapshot = fortyguard_client.get_live_telemetry_snapshot(city=city, temp_f=float(temp))
+        snapshot["server_uptime_seconds"] = int(time.time() - SERVER_START_TIME)
+        return snapshot
+    except Exception as e:
+        logger.exception("Telemetry fetch failed")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
 @app.post("/v1/agents/audit", response_model=ComplianceReport)
 def audit_endpoint(request: AuditRequest):
     """Agent 1: ASHRAE 55 & IECC RAG Compliance Audit powered by FortyGuard."""
