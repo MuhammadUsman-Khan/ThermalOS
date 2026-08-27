@@ -41,6 +41,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+import RadialGauge from "./components/RadialGauge";
+import AgentVisualization from "./components/AgentVisualization";
 import SurfaceSegmentationCard from "./components/SurfaceSegmentationCard";
 import SpatialHeatmapView from "./components/SpatialHeatmapView";
 import { MONITORED_CITIES } from "./data/cities";
