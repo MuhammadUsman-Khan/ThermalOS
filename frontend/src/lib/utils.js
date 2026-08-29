@@ -1,6 +1,6 @@
 // Shared constants and pure helpers for the ThermalOS Mission Control dashboard.
 
-export const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
+export const API_BASE = import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL || "https://thermal-os-api.vercel.app";
 
 export const CITIES = [
   "Phoenix, AZ",

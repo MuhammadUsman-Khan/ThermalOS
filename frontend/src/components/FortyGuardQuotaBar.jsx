@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL || "https://thermal-os-api.vercel.app";
 
 const ENDPOINT_SPECS = [
   {

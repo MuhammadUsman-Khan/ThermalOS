@@ -204,8 +204,9 @@ export default function SpatialHeatmapView({
     setLiveComputeStatus(null);
     try {
       const cityParam = currentView === "national" ? (focusedCityName || "Phoenix, AZ") : focusedCityName;
+      const apiBase = import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL || "https://thermal-os-api.vercel.app";
       const res = await fetch(
-        `http://localhost:8000/v1/fortyguard/heatmap?city=${encodeURIComponent(cityParam)}&granularity=${granularity}&force_live=true`
+        `${apiBase}/v1/fortyguard/heatmap?city=${encodeURIComponent(cityParam)}&granularity=${granularity}&force_live=true`
       );
       if (res.ok) {
         const data = await res.json();
