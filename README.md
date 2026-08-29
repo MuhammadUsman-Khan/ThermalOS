@@ -4,13 +4,22 @@
 ### **Autonomous Multi-Agent Urban Thermal Operating System**
 *Powered by FortyGuard's Enterprise Microclimate API*
 
-[![FortyGuard Hackathon](https://img.shields.io/badge/FortyGuard%20Hackathon-2026%20Track%206%3A%20Agentic-orange.svg?style=flat-square)](https://fortyguard.com)
-[![React](https://img.shields.io/badge/Frontend-React%2019%20%2B%20Vite%20%2B%20Tailwind-blue.svg?style=flat-square)](https://react.dev)
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI%20%2B%20Python%203.11-009688.svg?style=flat-square)](https://fastapi.tiangolo.com)
-[![ChromaDB](https://img.shields.io/badge/Vector%20Store-ChromaDB%20RAG-red.svg?style=flat-square)](https://www.trychroma.com)
-[![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
+<br/>
 
-[Live Demo](https://thermalos.vercel.app) • [API Documentation](FORTYGUARD_API_DOCUMENTATION.md) • [Backend Tests](backend/test_suite.py)
+[![FortyGuard Hackathon](https://img.shields.io/badge/FortyGuard%20Hackathon-2026%20Track%206%3A%20Agentic-FF5722.svg?style=for-the-badge&logo=target&logoColor=white)](https://fortyguard.com)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![React 19](https://img.shields.io/badge/React%2019-20232A.svg?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev)
+[![Vite](https://img.shields.io/badge/Vite%206-646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+[![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector_RAG-FF4F00.svg?style=for-the-badge&logo=databricks&logoColor=white)](https://www.trychroma.com)
+[![Phaser 3](https://img.shields.io/badge/Phaser_3-Game_Engine-E0234E.svg?style=for-the-badge&logo=html5&logoColor=white)](https://phaser.io)
+[![Leaflet GIS](https://img.shields.io/badge/Leaflet-Spatial_GIS-199900.svg?style=for-the-badge&logo=leaflet&logoColor=white)](https://leafletjs.com)
+[![Tests](https://img.shields.io/badge/Tests-100%25_Passing-brightgreen.svg?style=for-the-badge&logo=pytest&logoColor=white)](backend/test_suite.py)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+
+<br/>
+
+[API Integration Guide](FORTYGUARD_API_DOCUMENTATION.md) • [Backend Test Suite](backend/test_suite.py) • [Architecture Overview](#-system-architecture)
 
 ---
 
@@ -22,33 +31,56 @@ Extreme urban heat is the deadliest and fastest-growing climate risk, causing ov
 
 **ThermalOS** is an autonomous multi-agent operating system that fuses **FortyGuard's street-level radiometric microclimate API** ($60\text{m}–100\text{m}$ resolution) with thermodynamic physics modeling and autonomous AI agents. ThermalOS transforms passive weather telemetry into predictive, automated municipal and infrastructure interventions.
 
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                              FortyGuard Enterprise API                                 │
-│          - POST /v1/heatmap (Street-Level Radiometry: Ts, Ta, GHI, RH, Albedo)         │
-│          - GET  /v1/quota   (Real-Time Cloud Telemetry & Credit Balances)              │
-└───────────────────────────────────────────┬────────────────────────────────────────────┘
-                                            │
-                                            ▼
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│               ThermalOS Telemetry Core & Smart Disk Caching Layer                      │
-│                    `backend/fortyguard_client.py` (1-Hour TTL)                         │
-└───────────────┬───────────────────────────┬────────────────────────────┬───────────────┘
-                │                           │                            │
-                ▼                           ▼                            ▼
-┌───────────────────────────────┐ ┌──────────────────────────┐ ┌─────────────────────────┐
-│  Agent 1: Compliance Auditor  │ │ Agent 2: Pre-Cool System │ │ Agent 3: Civic Dispatch │
-│ • Sol-Air Heat Flux Physics   │ │ • Thermal Inertia (2-3h) │ │ • Liljegren WBGT Index  │
-│ • ASHRAE 55-2023 ChromaDB RAG │ │ • 450–780 kW Peak Shave  │ │ • Automated n8n Webhook │
-│ • Insulation R-Value Derating │ │ • Chiller MPC Protocol   │ │ • OSHA Work/Rest Alert  │
-└───────────────┬───────────────┘ └─────────────┬────────────┘ └────────────┬────────────┘
-                │                               │                           │
-                └───────────────────────┬───────┴───────────────────────────┘
-                                        ▼
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                        Executive Municipal Synthesis Consensus                         │
-│                    Unified Strategic Directive for City Leadership                     │
-└────────────────────────────────────────────────────────────────────────────────────────┘
+---
+
+## 🏛️ System Architecture
+
+```mermaid
+graph TD
+    classDef cloud fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
+    classDef client fill:#1e293b,stroke:#818cf8,stroke-width:2px,color:#f8fafc;
+    classDef agent fill:#0f172a,stroke:#f59e0b,stroke-width:2px,color:#f8fafc;
+    classDef engine fill:#0f172a,stroke:#10b981,stroke-width:2px,color:#f8fafc;
+    classDef ui fill:#1e1b4b,stroke:#ec4899,stroke-width:2px,color:#f8fafc;
+
+    subgraph FortyGuard_Cloud["☁️ FortyGuard Enterprise Microclimate Platform"]
+        FG_Heat["<b>POST /v1/heatmap</b><br/>(60m-100m Radiometry: Ts, Ta, GHI, RH)"]:::cloud
+        FG_Quota["<b>GET /v1/quota</b><br/>(Real-Time Credit Telemetry & Balances)"]:::cloud
+    end
+
+    subgraph Core_Bridge["🛡️ ThermalOS Ingestion & Resilient Cache"]
+        ClientCore["<b>FortyGuard Client Core</b><br/>`backend/fortyguard_client.py`"]:::client
+        DiskCache[("💾 <b>1-Hour Disk Cache</b><br/>`backend/cache/` (TTL: 3600s)")]:::client
+    end
+
+    subgraph Autonomous_Agents["🤖 Autonomous Tri-Agent Consensus Suite (Track 6: Agentic)"]
+        A1["<b>Agent 1: Compliance Auditor</b><br/>• Sol-Air Envelope Heat Flux<br/>• ChromaDB RAG Vector Store<br/>• ASHRAE 55-2023 & IECC 2024"]:::agent
+        A2["<b>Agent 2: Pre-Cool Controller</b><br/>• Structural Concrete Thermal Inertia (2-3.5h)<br/>• Off-Peak Chiller Load Shifting<br/>• 450–780 kW Peak Demand Shaved"]:::agent
+        A3["<b>Agent 3: Civic Heat Dispatcher</b><br/>• Thermodynamic Liljegren WBGT Calculation<br/>• Automated n8n Webhook Alerts<br/>• OSHA Work/Rest & Shelter Dispatch"]:::agent
+        A_Syn["<b>Executive Consensus Synthesis</b><br/>Unified Municipal Strategic Directive"]:::engine
+    end
+
+    subgraph UI_Suite["🖥️ Executive Command Deck & Spatial Analytics"]
+        GIS["<b>Leaflet Spatial GIS</b><br/>60m / 80m / 100m Heatmap Tiles"]:::ui
+        Diurnal["<b>24H Diurnal Forecaster</b><br/>Physics Pre-Cool & Peak Lag"]:::ui
+        PhaserCanvas["<b>Phaser 3 Office Engine</b><br/>Autonomous Agent Telemetry"]:::ui
+    end
+
+    FG_Heat --> ClientCore
+    FG_Quota --> ClientCore
+    ClientCore <--> DiskCache
+
+    ClientCore --> A1
+    ClientCore --> A2
+    ClientCore --> A3
+
+    A1 --> A_Syn
+    A2 --> A_Syn
+    A3 --> A_Syn
+
+    A_Syn --> GIS
+    A_Syn --> Diurnal
+    A_Syn --> PhaserCanvas
 ```
 
 ---
@@ -78,12 +110,12 @@ ThermalOS deploys three specialized autonomous agents coordinated by an Executiv
 
 ## 🖥️ Executive Interface & Visualization Suite
 
-| Component | Description |
-| :--- | :--- |
-| **Spatial GIS Heatmap** | Interactive Leaflet GIS map displaying street-level radiometric tiles with **60m, 80m, and 100m resolution** toggles and dual satellite basemaps. |
-| **24H Diurnal Forecaster** | Physics-based 24-hour timeline scrubber modeling **00:00–12:00 historical baseline** and **12:00–24:00 predictive AI forecast**, highlighting thermal pre-cooling and peak stress windows. |
-| **Phaser 3 Office Simulation** | Real-time 2D simulation visualizing autonomous agent workflows, door badge access, and command desk interactions. |
-| **Dual-Mode Fluid UI** | Apple-grade Glassmorphic interface supporting both high-contrast Dark Mode and sleek Light Mode with monospace number stabilization. |
+| Component | Technology | Description |
+| :--- | :--- | :--- |
+| **Spatial GIS Heatmap** | Leaflet + GeoJSON | Interactive GIS map displaying street-level radiometric tiles with **60m, 80m, and 100m resolution** toggles and dual satellite basemaps. |
+| **24H Diurnal Forecaster** | Chart.js + Tailwind | Physics-based 24-hour timeline scrubber modeling **00:00–12:00 historical baseline** and **12:00–24:00 predictive AI forecast**, highlighting thermal pre-cooling and peak stress windows. |
+| **Phaser 3 Office Simulation** | Phaser 3 Canvas | Real-time 2D simulation visualizing autonomous agent workflows, door badge access, and command desk interactions. |
+| **Dual-Mode Fluid UI** | Tailwind + Glassmorphism | Apple-grade Glassmorphic interface supporting both high-contrast Dark Mode and sleek Light Mode with monospace number stabilization. |
 
 ---
 
@@ -147,7 +179,7 @@ npm install
 npm run dev
 ```
 
-### 4. Running the Test Suite
+### 4. Running the Backend Test Suite
 ```bash
 cd backend
 python test_suite.py
@@ -183,19 +215,9 @@ ThermalOS/
 │   ├── package.json
 │   └── vite.config.js
 ├── FORTYGUARD_API_DOCUMENTATION.md # Detailed FortyGuard API Technical Guide
-├── README.md                       # Project Master Documentation
+├── README.md                       # Master Architecture & Project Documentation
 └── LICENSE                         # MIT License
 ```
-
----
-
-## 🏆 FortyGuard Hackathon Submission Deliverables
-
-1. **Live Demo Link**: [https://thermalos.vercel.app](https://thermalos.vercel.app)
-2. **Code Repository**: [https://github.com/MuhammadUsman-Khan/ThermalOS](https://github.com/MuhammadUsman-Khan/ThermalOS)
-3. **Video Presentation (3 Minutes)**: [YouTube / Presentation Link](https://youtube.com)
-4. **FortyGuard API Documentation**: [`FORTYGUARD_API_DOCUMENTATION.md`](FORTYGUARD_API_DOCUMENTATION.md)
-5. **Collaborator Access**: Added `Hackathon-FG` (`hackathon@fortyguard.com`) as repo collaborator.
 
 ---
 
