@@ -46,7 +46,7 @@ x-api-key: YOUR_FORTYGUARD_API_KEY
 
 Environment variable configuration in `backend/.env`:
 ```bash
-FORTYGUARD_API_KEY=bfd568994536517dc247779d43132677
+FORTYGUARD_API_KEY=your_fortyguard_api_key_here
 ```
 
 ---
@@ -98,8 +98,8 @@ FORTYGUARD_API_KEY=bfd568994536517dc247779d43132677
 * **Response Model**:
 ```json
 {
-  "account_id": "acc#XsE6ZfwaxK",
-  "subscription_id": "sub_bhfduddapk",
+  "account_id": "acc#XXXXXXXXXX",
+  "subscription_id": "sub_XXXXXXXXXX",
   "plan_type": "Hackathon",
   "total_credits_allowance": 2000000,
   "credits_used_today": 21100,
