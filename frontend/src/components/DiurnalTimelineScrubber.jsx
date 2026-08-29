@@ -22,6 +22,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { CITY_BASELINES } from "../App";
 
 const generateDiurnalProfile = (baseTempF = 104) => {
   const profile = [];
@@ -64,12 +65,16 @@ export default function DiurnalTimelineScrubber({
   selectedCity = "Phoenix, AZ",
   darkMode = true,
 }) {
-  const [curveData, setCurveData] = useState(() => generateDiurnalProfile(104));
+  const [curveData, setCurveData] = useState(() => {
+    const base = CITY_BASELINES?.[selectedCity] || { ambient: 104 };
+    return generateDiurnalProfile(base.ambient);
+  });
   const [currentHour, setCurrentHour] = useState(14);
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
-    setCurveData(generateDiurnalProfile(selectedCity.includes("Phoenix") ? 106 : 98));
+    const base = CITY_BASELINES?.[selectedCity] || { ambient: 95 };
+    setCurveData(generateDiurnalProfile(base.ambient));
   }, [selectedCity]);
 
   useEffect(() => {
