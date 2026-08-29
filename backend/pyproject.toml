@@ -1,0 +1,16 @@
+[project]
+name = "thermalos-backend"
+version = "1.0.0"
+description = "ThermalOS Multi-Agent Autonomous Urban Thermal Backend"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn>=0.30.0",
+    "pydantic>=2.7.0",
+    "requests>=2.28.0",
+    "python-dotenv>=1.0.0"
+]
+
+[tool.vercel]
+entrypoint = "mock_api.py"
