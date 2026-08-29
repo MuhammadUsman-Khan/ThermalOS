@@ -11,9 +11,9 @@ from fastapi.testclient import TestClient
 
 from mock_api import app
 from fortyguard_client import fortyguard_client, f_to_c, c_to_f
-from agent1_rag_auditor import run_compliance_audit
-from agent2_precool_controller import agent2_process_reading
-from agent3_dispatcher import evaluate_civic_dispatch, calculate_wbgt_thermodynamic
+from agent1_rag import run_compliance_audit
+from agent2_controller import process_reading as agent2_process_reading
+from agent3_dispatcher import evaluate_civic_dispatch, calculate_wbgt
 
 
 class TestFortyGuardClient(unittest.TestCase):
@@ -26,11 +26,10 @@ class TestFortyGuardClient(unittest.TestCase):
     def test_live_telemetry_snapshot(self):
         snapshot = fortyguard_client.get_live_telemetry_snapshot("Phoenix, AZ", 104.0)
         self.assertIn("temperature_f", snapshot)
-        self.assertIn("surface_temp_f", snapshot)
-        self.assertIn("humidity_pct", snapshot)
-        self.assertIn("ghi_w_m2", snapshot)
-        self.assertIn("wbgt_f", snapshot)
-        self.assertIn("surface_segmentation", snapshot)
+        self.assertIn("surface_temperature_f", snapshot)
+        self.assertIn("relative_humidity", snapshot)
+        self.assertIn("solar_irradiance_ghi", snapshot)
+        self.assertIn("wet_bulb_f", snapshot)
 
 
 class TestAgent1Compliance(unittest.TestCase):
@@ -39,7 +38,7 @@ class TestAgent1Compliance(unittest.TestCase):
         self.assertIsNotNone(report)
         self.assertGreater(report.effective_u_factor, 0)
         self.assertGreater(report.r_value_degradation_pct, 0)
-        self.assertIn(report.compliance_risk_tier, ["CRITICAL_EXCEEDANCE", "ELEVATED_DRIFT", "COMPLIANT_OPTIMAL"])
+        self.assertIn(report.compliance_risk_tier, ["CRITICAL_EXCEEDANCE", "ELEVATED_DRIFT", "NOMINAL_COMPLIANT"])
 
 
 class TestAgent2PrecoolController(unittest.TestCase):
@@ -58,7 +57,7 @@ class TestAgent2PrecoolController(unittest.TestCase):
 
 class TestAgent3CivicDispatcher(unittest.TestCase):
     def test_wbgt_calculation(self):
-        wbgt = calculate_wbgt_thermodynamic(ta_f=100.0, rh_pct=50.0, s_w_m2=600.0)
+        wbgt = calculate_wbgt(temp_f=100.0, relative_humidity=50.0)
         self.assertGreater(wbgt, 70.0)
         self.assertLess(wbgt, 130.0)
 
@@ -85,13 +84,14 @@ class TestFastAPIEndpoints(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIn("temperature_f", data)
-        self.assertIn("surface_temp_f", data)
+        self.assertIn("surface_temperature_f", data)
 
     def test_fortyguard_quota_endpoint(self):
         response = self.client.get("/v1/fortyguard/quota")
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertIn("heatmaps_generated_today", data)
+        self.assertIn("credit_allowance", data)
+        self.assertIn("credits_remaining", data)
 
     def test_agent1_endpoint(self):
         response = self.client.post("/v1/agents/audit", json={
@@ -110,7 +110,7 @@ class TestFastAPIEndpoints(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertIn("estimated_power_shift_kw", data)
+        self.assertIn("hvac_action_plan", data)
 
     def test_agent3_endpoint(self):
         response = self.client.post("/v1/agents/civic", json={
