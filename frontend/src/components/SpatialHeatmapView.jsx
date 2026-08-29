@@ -44,6 +44,8 @@ function getFortyGuard12Classes(centerTempC = 27.5) {
   });
 }
 
+export const FORTYGUARD_12_CLASSES = getFortyGuard12Classes(27.5);
+
 const BASEMAP_PRESETS = {
   dark: {
     label: "Dark Matter",
@@ -71,6 +73,9 @@ const BASEMAP_PRESETS = {
 function generateCityThermalGrid(city, scope = "core", granularity = 80) {
   const features = [];
   const isMetro = scope === "metro";
+  const cityClasses = getFortyGuard12Classes(city?.baseTemp || 27.5);
+  const minBound = cityClasses[cityClasses.length - 1].minC;
+  const maxBound = cityClasses[0].maxC;
   
   let rows, cols, stepLat, stepLng;
   if (granularity === 60) {
@@ -108,14 +113,14 @@ function generateCityThermalGrid(city, scope = "core", granularity = 80) {
         Math.sin(r * 0.24 + c * 0.17) * 0.18 +
         Math.cos(r * 0.15 - c * 0.28) * 0.12;
 
-      let tempC = 28.35 - (r / rows) * 1.35 + (c > 16 ? 0.25 : -0.1) - coolIsland + noise;
-      tempC = Math.max(26.33, Math.min(28.37, tempC));
+      let tempC = (city?.baseTemp || 27.5) + 0.85 - (r / rows) * 1.35 + (c > 16 ? 0.25 : -0.1) - coolIsland + noise;
+      tempC = Math.max(minBound, Math.min(maxBound, tempC));
       tempC = +tempC.toFixed(2);
       const tempF = +((tempC * 1.8) + 32).toFixed(1);
 
-      let assignedClass = FORTYGUARD_12_CLASSES.find((cls) => tempC >= cls.minC && tempC <= cls.maxC);
+      let assignedClass = cityClasses.find((cls) => tempC >= cls.minC && tempC <= cls.maxC);
       if (!assignedClass) {
-        assignedClass = tempC > 28.37 ? FORTYGUARD_12_CLASSES[0] : FORTYGUARD_12_CLASSES[FORTYGUARD_12_CLASSES.length - 1];
+        assignedClass = tempC >= maxBound ? cityClasses[0] : cityClasses[cityClasses.length - 1];
       }
 
       features.push({
