@@ -272,6 +272,7 @@ def multi_agent_synthesis_endpoint(request: AgentRequest):
 
             audit_rep = future_audit.result()
             infra_res = future_infra.result()
+            infra_rep = infra_res["report"]
             civic_rep = future_civic.result()
 
         # Composite overall risk tier
