@@ -35,47 +35,9 @@ Extreme urban heat is the deadliest and fastest-growing climate risk, causing ov
 
 ## 🏛️ System Architecture
 
-```mermaid
-flowchart TD
-    subgraph FG["FortyGuard Enterprise Microclimate Platform"]
-        FG_Heat["POST /v1/heatmap<br/>(60m-100m Radiometric Tiles: Ts, Ta, GHI, RH)"]
-        FG_Quota["GET /v1/quota<br/>(Real-Time Credit Telemetry & Balances)"]
-    end
-
-    subgraph Core["ThermalOS Ingestion Core"]
-        ClientCore["FortyGuard Client Core<br/>backend/fortyguard_client.py"]
-        DiskCache[("1-Hour Disk Cache<br/>backend/cache/ (TTL: 3600s)")]
-    end
-
-    subgraph Agents["Autonomous Tri-Agent Suite (Track 6: Agentic AI)"]
-        A1["Agent 1: Compliance Auditor<br/>• Sol-Air Envelope Heat Flux<br/>• ASHRAE 55 / IECC ChromaDB RAG"]
-        A2["Agent 2: Pre-Cool Controller<br/>• Structural Thermal Inertia (2-3.5h)<br/>• 450-780 kW Peak Demand Shaved"]
-        A3["Agent 3: Civic Heat Dispatcher<br/>• Liljegren WBGT Calculation<br/>• Automated n8n Webhook Alerts"]
-        A_Syn["Executive Consensus Synthesis<br/>Unified Municipal Strategic Directive"]
-    end
-
-    subgraph Deck["Executive Command Deck & UI Suite"]
-        GIS["Leaflet Spatial GIS<br/>(60m, 80m, 100m Resolution Layers)"]
-        Diurnal["24H Diurnal Forecaster<br/>(00:00-12:00 Baseline / 12:00-24:00 AI Forecast)"]
-        PhaserCanvas["Phaser 3 Office Engine<br/>(Autonomous Agent Workflow Simulation)"]
-    end
-
-    FG_Heat --> ClientCore
-    FG_Quota --> ClientCore
-    ClientCore <--> DiskCache
-
-    ClientCore --> A1
-    ClientCore --> A2
-    ClientCore --> A3
-
-    A1 --> A_Syn
-    A2 --> A_Syn
-    A3 --> A_Syn
-
-    A_Syn --> GIS
-    A_Syn --> Diurnal
-    A_Syn --> PhaserCanvas
-```
+<div align="center">
+  <img src="assets/architecture.svg" alt="ThermalOS System Architecture" width="100%" />
+</div>
 
 ---
 
