@@ -72,6 +72,33 @@ const REGIONS = [
   "East Coast & Southeast",
 ];
 
+export const CITY_BASELINES = {
+  "Phoenix, AZ": { ambient: 104.0, surface: 117.3, ghi: 604.5, humidity: 13.0, wbgt: 86.7, risk: "extreme" },
+  "Las Vegas, NV": { ambient: 101.0, surface: 114.2, ghi: 588.0, humidity: 15.5, wbgt: 84.8, risk: "high" },
+  "Tucson, AZ": { ambient: 99.0, surface: 111.5, ghi: 570.0, humidity: 18.0, wbgt: 83.1, risk: "high" },
+  "Houston, TX": { ambient: 93.0, surface: 102.5, ghi: 495.0, humidity: 62.0, wbgt: 88.2, risk: "extreme" },
+  "Dallas, TX": { ambient: 96.0, surface: 107.1, ghi: 535.0, humidity: 48.0, wbgt: 85.6, risk: "high" },
+  "Austin, TX": { ambient: 97.0, surface: 108.4, ghi: 540.0, humidity: 45.0, wbgt: 85.1, risk: "high" },
+  "San Antonio, TX": { ambient: 95.0, surface: 106.8, ghi: 530.0, humidity: 47.0, wbgt: 84.7, risk: "high" },
+  "New Orleans, LA": { ambient: 89.0, surface: 98.2, ghi: 480.0, humidity: 72.0, wbgt: 87.5, risk: "extreme" },
+  "San Jose, CA": { ambient: 82.0, surface: 91.4, ghi: 510.0, humidity: 38.0, wbgt: 74.2, risk: "nominal" },
+  "Los Angeles, CA": { ambient: 88.0, surface: 99.6, ghi: 545.0, humidity: 42.0, wbgt: 79.1, risk: "nominal" },
+  "San Francisco, CA": { ambient: 68.0, surface: 74.5, ghi: 460.0, humidity: 65.0, wbgt: 63.8, risk: "nominal" },
+  "Seattle, WA": { ambient: 74.0, surface: 82.1, ghi: 430.0, humidity: 52.0, wbgt: 68.5, risk: "nominal" },
+  "Denver, CO": { ambient: 84.0, surface: 95.2, ghi: 560.0, humidity: 22.0, wbgt: 72.4, risk: "nominal" },
+  "Salt Lake City, UT": { ambient: 91.0, surface: 103.5, ghi: 575.0, humidity: 19.0, wbgt: 76.8, risk: "nominal" },
+  "Chicago, IL": { ambient: 82.0, surface: 90.8, ghi: 470.0, humidity: 55.0, wbgt: 75.3, risk: "nominal" },
+  "Minneapolis, MN": { ambient: 79.0, surface: 87.4, ghi: 450.0, humidity: 58.0, wbgt: 73.1, risk: "nominal" },
+  "St. Louis, MO": { ambient: 88.0, surface: 98.6, ghi: 490.0, humidity: 52.0, wbgt: 80.2, risk: "nominal" },
+  "New York, NY": { ambient: 85.0, surface: 96.2, ghi: 480.0, humidity: 58.0, wbgt: 78.6, risk: "nominal" },
+  "Boston, MA": { ambient: 81.0, surface: 89.5, ghi: 460.0, humidity: 60.0, wbgt: 75.0, risk: "nominal" },
+  "Philadelphia, PA": { ambient: 86.0, surface: 97.8, ghi: 485.0, humidity: 56.0, wbgt: 79.4, risk: "nominal" },
+  "Washington, DC": { ambient: 88.0, surface: 100.2, ghi: 500.0, humidity: 54.0, wbgt: 81.5, risk: "high" },
+  "Miami, FL": { ambient: 91.0, surface: 103.2, ghi: 520.0, humidity: 68.0, wbgt: 89.4, risk: "extreme" },
+  "Orlando, FL": { ambient: 92.0, surface: 104.5, ghi: 530.0, humidity: 64.0, wbgt: 88.6, risk: "extreme" },
+  "Atlanta, GA": { ambient: 89.0, surface: 101.4, ghi: 510.0, humidity: 56.0, wbgt: 82.8, risk: "high" }
+};
+
 export default function App() {
   const [activeTab, setActiveTab] = useState("operations");
   const [selectedCity, setSelectedCity] = useState("Phoenix, AZ");
@@ -191,12 +218,46 @@ export default function App() {
     setLogs((prev) => [{ id: Date.now() + Math.random(), time, message, type, source }, ...prev]);
   };
 
+  // Helper to build rolling telemetry points around a city baseline
+  const generateTelemetryPoints = (ambientBase, surfaceBase) => {
+    const points = [];
+    const baseTime = Date.now() - 30 * 4000;
+    for (let i = 0; i < 30; i++) {
+      const t = new Date(baseTime + i * 4000).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+      const amb = ambientBase + Math.sin(i * 0.2) * 1.2;
+      const surf = surfaceBase + Math.sin(i * 0.25) * 2.0;
+      points.push({
+        time: t,
+        ambient: +amb.toFixed(1),
+        surface: +surf.toFixed(1),
+      });
+    }
+    return points;
+  };
+
   // Switch City Handler
   const handleSelectCity = (city) => {
     setSelectedCity(city);
     setIsDropdownOpen(false);
     showToast(`Switched telemetry focus to ${city}`, "info");
     addLog(`Target AOI updated to ${city}`, "city_change", "Grid Focus");
+
+    const base = CITY_BASELINES[city] || { ambient: 95.0, surface: 105.0, ghi: 500.0, humidity: 40.0, wbgt: 78.0, risk: "nominal" };
+    setCurrentTemp(base.ambient);
+    setSurfaceTemp(base.surface);
+    setSolarGhi(base.ghi);
+    setHumidity(base.humidity);
+    setWbgt(base.wbgt);
+    setIsEmergencyMode(base.risk === "extreme" || base.risk === "high");
+
+    // Immediately re-seed rolling telemetry chart to match new city readings
+    const newPoints = generateTelemetryPoints(base.ambient, base.surface);
+    setTelemetryData(newPoints);
+
     fetchTelemetry(city);
   };
 
@@ -207,15 +268,20 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         setCurrentReading(data);
-        if (data.temperature_f) setCurrentTemp(data.temperature_f);
-        if (data.surface_temperature_f) setSurfaceTemp(data.surface_temperature_f);
-        if (data.solar_irradiance_ghi) setSolarGhi(data.solar_irradiance_ghi);
-        if (data.relative_humidity != null) setHumidity(data.relative_humidity);
-        if (data.wbgt_f) setWbgt(data.wbgt_f);
-        if (data.risk_level === "extreme" || data.risk_level === "high") {
-          setIsEmergencyMode(true);
-        } else {
-          setIsEmergencyMode(false);
+        const amb = data.temperature_f ?? data.temperature ?? data.ambient_temp_f;
+        const surf = data.surface_temperature_f ?? data.surface_temp_f;
+        const ghi = data.solar_irradiance_ghi ?? data.ghi_w_m2 ?? data.solar_ghi;
+        const hum = data.relative_humidity ?? data.humidity_pct ?? data.humidity;
+        const wb = data.wbgt_f ?? data.wbgt;
+        const risk = data.risk_level ?? data.alert_level;
+
+        if (amb != null) setCurrentTemp(+amb);
+        if (surf != null) setSurfaceTemp(+surf);
+        if (ghi != null) setSolarGhi(+ghi);
+        if (hum != null) setHumidity(+hum);
+        if (wb != null) setWbgt(+wb);
+        if (risk != null) {
+          setIsEmergencyMode(risk === "extreme" || risk === "high" || risk === "CRITICAL" || risk === "EXTREME");
         }
       }
     } catch (e) {
@@ -225,27 +291,13 @@ export default function App() {
 
   // Seed initial rolling chart telemetry
   useEffect(() => {
-    const initialPoints = [];
-    const baseTime = Date.now() - 30 * 4000;
-    for (let i = 0; i < 30; i++) {
-      const t = new Date(baseTime + i * 4000).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
-      const ambient = 104 + Math.sin(i * 0.2) * 2;
-      const surface = 117 + Math.sin(i * 0.25) * 3.5;
-      initialPoints.push({
-        time: t,
-        ambient: +ambient.toFixed(1),
-        surface: +surface.toFixed(1),
-      });
-    }
+    const base = CITY_BASELINES[selectedCity] || { ambient: 104.0, surface: 117.3 };
+    const initialPoints = generateTelemetryPoints(base.ambient, base.surface);
     setTelemetryData(initialPoints);
     fetchTelemetry(selectedCity);
   }, []);
 
-  // Rolling Telemetry Interval (Every 3.5 seconds)
+  // Rolling Telemetry Micro-fluctuations Interval (Every 3.5 seconds)
   useEffect(() => {
     const interval = setInterval(() => {
       const timeStr = new Date().toLocaleTimeString([], {
@@ -255,9 +307,10 @@ export default function App() {
       });
 
       setTelemetryData((prev) => {
-        const last = prev[prev.length - 1] || { ambient: 104, surface: 117 };
-        const ambientNoise = (Math.random() - 0.5) * 0.8;
-        const surfaceNoise = (Math.random() - 0.5) * 1.4;
+        if (!prev || prev.length === 0) return prev;
+        const last = prev[prev.length - 1];
+        const ambientNoise = (Math.random() - 0.5) * 0.4;
+        const surfaceNoise = (Math.random() - 0.5) * 0.8;
 
         const nextAmbient = +(last.ambient + ambientNoise).toFixed(1);
         const nextSurface = +(last.surface + surfaceNoise).toFixed(1);
@@ -271,13 +324,12 @@ export default function App() {
           surface: nextSurface,
         };
 
-        const updated = [...prev.slice(1), newPoint];
-        return updated;
+        return [...prev.slice(1), newPoint];
       });
     }, 3500);
 
     return () => clearInterval(interval);
-  }, [selectedCity]);
+  }, []);
 
   // Agent 1: Thermal Audit Action
   const handleRunAudit = async () => {
