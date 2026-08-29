@@ -2,7 +2,6 @@
 
 **Track**: Track 6 — Agentic Track (API + Agentic)  
 **Live Application**: [https://thermal-os.vercel.app](https://thermal-os.vercel.app)  
-**Live Backend API**: [https://thermal-os-api.vercel.app](https://thermal-os-api.vercel.app)  
 **Codebase**: [https://github.com/MuhammadUsman-Khan/ThermalOS](https://github.com/MuhammadUsman-Khan/ThermalOS)  
 **API Documentation**: [FORTYGUARD_API_DOCUMENTATION.md](FORTYGUARD_API_DOCUMENTATION.md)  
 
