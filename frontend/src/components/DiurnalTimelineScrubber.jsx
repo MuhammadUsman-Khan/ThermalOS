@@ -22,38 +22,37 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { CITY_BASELINES } from "../App";
 
-const generateDiurnalProfile = (baseTempF = 104) => {
+const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  import.meta.env.VITE_API_URL ||
+  "https://thermal-os-api.vercel.app";
+
+const cToF = (c) => (c * 9) / 5 + 32;
+
+// Build the 24h diurnal profile from REAL FortyGuard env_params arrays.
+// Air = apparent temperature, Heat = heat-index, Wet-bulb = wet-bulb temperature
+// (all hourly, from the API). Hourly GHI is scaled from the API's real daily peak
+// by a standard solar-elevation shape (the API returns a single daily GHI, not 24 values).
+const buildCurveFromEnv = (env) => {
+  const app = env?.apparent_temperature_celsius || [];
+  const hi = env?.heat_index_celsius || [];
+  const wb = env?.wet_bulb_temperature_celsius || [];
+  const hum = env?.relative_humidity_percent || [];
+  const peakGhi = env?.solar_irradiance?.ghi || 0;
+  if (!Array.isArray(app) || app.length < 24) return [];
+
   const profile = [];
   for (let h = 0; h < 24; h++) {
-    const rad = ((h - 6) / 24) * 2 * Math.PI;
     const solarFactor = Math.max(0, Math.sin(((h - 6) / 12) * Math.PI));
-    const surfaceNoise = Math.sin(h * 0.8) * 1.2;
-    const ambientNoise = Math.cos(h * 0.6) * 0.8;
-
-    const surface = +(
-      baseTempF +
-      14 * solarFactor -
-      (1 - solarFactor) * 8 +
-      surfaceNoise
-    ).toFixed(1);
-
-    const ambientRad = ((h - 8.5) / 24) * 2 * Math.PI;
-    const ambient = +(
-      baseTempF - 3 +
-      7 * Math.sin(ambientRad) +
-      ambientNoise
-    ).toFixed(1);
-
-    const ghi = +(Math.max(0, Math.sin(((h - 6) / 12) * Math.PI)) * 920).toFixed(0);
-
     profile.push({
       hour: `${h.toString().padStart(2, "0")}:00`,
       hourIndex: h,
-      surface,
-      ambient,
-      ghi,
+      ambient: app[h] != null ? +cToF(app[h]).toFixed(1) : null,
+      surface: hi[h] != null ? +cToF(hi[h]).toFixed(1) : null,
+      wetBulb: wb[h] != null ? +cToF(wb[h]).toFixed(1) : null,
+      humidity: hum[h] != null ? +(+hum[h]).toFixed(0) : null,
+      ghi: +(peakGhi * solarFactor).toFixed(0),
       precoolWindow: h >= 3 && h <= 7,
       peakStressWindow: h >= 13 && h <= 17,
     });
@@ -65,30 +64,69 @@ export default function DiurnalTimelineScrubber({
   selectedCity = "Phoenix, AZ",
   darkMode = true,
 }) {
-  const [curveData, setCurveData] = useState(() => {
-    const base = CITY_BASELINES?.[selectedCity] || { ambient: 104 };
-    return generateDiurnalProfile(base.ambient);
-  });
+  const [curveData, setCurveData] = useState([]);
   const [currentHour, setCurrentHour] = useState(14);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [dataSource, setDataSource] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const base = CITY_BASELINES?.[selectedCity] || { ambient: 95 };
-    setCurveData(generateDiurnalProfile(base.ambient));
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      try {
+        const res = await fetch(
+          `${API_BASE}/v1/fortyguard/environment?city=${encodeURIComponent(selectedCity)}`
+        );
+        if (res.ok) {
+          const env = await res.json();
+          const profile = buildCurveFromEnv(env);
+          if (!cancelled) {
+            setCurveData(profile);
+            setDataSource(env.data_source || (env.is_modeled ? "MODELED" : null));
+          }
+        } else if (!cancelled) {
+          setCurveData([]);
+        }
+      } catch (e) {
+        if (!cancelled) setCurveData([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [selectedCity]);
 
   useEffect(() => {
     let timer;
-    if (isPlaying) {
+    if (isPlaying && curveData.length === 24) {
       timer = setInterval(() => {
         setCurrentHour((prev) => (prev + 1) % 24);
       }, 1200);
     }
     return () => clearInterval(timer);
-  }, [isPlaying]);
+  }, [isPlaying, curveData.length]);
 
   const activePoint = curveData[currentHour] || curveData[0];
   const isForecastZone = currentHour >= 12;
+
+  // Real 24h data not yet available — never render a synthetic curve in its place.
+  if (loading || !activePoint) {
+    return (
+      <div className="glass-panel rounded-3xl p-5 flex items-center justify-center min-h-[280px] font-sans">
+        <div className="flex items-center gap-3 text-gray-500 dark:text-zinc-400">
+          <Clock className="w-4 h-4 animate-pulse" />
+          <span className="text-sm font-mono">
+            {loading
+              ? `Loading real FortyGuard 24h profile for ${selectedCity}…`
+              : `24h environmental profile unavailable for ${selectedCity}.`}
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="glass-panel rounded-3xl p-5 flex flex-col space-y-4 font-sans">
@@ -185,7 +223,7 @@ export default function DiurnalTimelineScrubber({
           </span>
           <span className="text-gray-300 dark:text-zinc-700">|</span>
           <span>
-            Surf: <strong className="text-orange-400">{activePoint.surface}°F</strong>
+            Heat Idx: <strong className="text-orange-400">{activePoint.surface}°F</strong>
           </span>
           <span>
             Air: <strong className="text-cyan-400">{activePoint.ambient}°F</strong>
@@ -304,7 +342,7 @@ export default function DiurnalTimelineScrubber({
             <Area
               type="monotone"
               dataKey="surface"
-              name="Surface Temp (°F)"
+              name="Heat Index (°F)"
               stroke="#FF6B2B"
               strokeWidth={2.5}
               fill="url(#diurnalSurfaceFill)"
@@ -313,7 +351,7 @@ export default function DiurnalTimelineScrubber({
             <Line
               type="monotone"
               dataKey="ambient"
-              name="Ambient Air (°F)"
+              name="Air Temp — apparent (°F)"
               stroke="#38BDF8"
               strokeWidth={1.5}
               strokeDasharray="3 3"

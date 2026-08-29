@@ -1,7 +1,6 @@
 import sys
 import os
 import time
-import random
 import logging
 from typing import Optional
 
@@ -33,66 +32,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# City temperature configuration: normal active range and rare spike ceiling across 24 monitored cities
-CITY_CONFIGS = {
-    # Southwest & Desert
-    "Phoenix, AZ": {"min": 95, "max": 114, "spike_chance": 0.04, "spike_val": 118},
-    "Las Vegas, NV": {"min": 90, "max": 108, "spike_chance": 0.03, "spike_val": 112},
-    "Tucson, AZ": {"min": 89, "max": 106, "spike_chance": 0.03, "spike_val": 110},
-    # Texas & South Central
-    "Houston, TX": {"min": 84, "max": 97, "spike_chance": 0.02, "spike_val": 102},
-    "Dallas, TX": {"min": 85, "max": 102, "spike_chance": 0.02, "spike_val": 105},
-    "Austin, TX": {"min": 86, "max": 103, "spike_chance": 0.02, "spike_val": 106},
-    "San Antonio, TX": {"min": 85, "max": 102, "spike_chance": 0.02, "spike_val": 105},
-    "New Orleans, LA": {"min": 82, "max": 94, "spike_chance": 0.02, "spike_val": 98},
-    # West Coast & Pacific
-    "San Jose, CA": {"min": 74, "max": 88, "spike_chance": 0.02, "spike_val": 94},
-    "Los Angeles, CA": {"min": 78, "max": 96, "spike_chance": 0.03, "spike_val": 102},
-    "San Francisco, CA": {"min": 64, "max": 76, "spike_chance": 0.02, "spike_val": 82},
-    "Seattle, WA": {"min": 68, "max": 80, "spike_chance": 0.02, "spike_val": 86},
-    # Mountain & Midwest
-    "Denver, CO": {"min": 76, "max": 92, "spike_chance": 0.02, "spike_val": 96},
-    "Salt Lake City, UT": {"min": 80, "max": 96, "spike_chance": 0.02, "spike_val": 100},
-    "Chicago, IL": {"min": 72, "max": 88, "spike_chance": 0.02, "spike_val": 94},
-    "Minneapolis, MN": {"min": 70, "max": 85, "spike_chance": 0.02, "spike_val": 90},
-    "St. Louis, MO": {"min": 78, "max": 94, "spike_chance": 0.02, "spike_val": 98},
-    # East Coast & Southeast
-    "New York, NY": {"min": 76, "max": 91, "spike_chance": 0.02, "spike_val": 96},
-    "Boston, MA": {"min": 72, "max": 86, "spike_chance": 0.02, "spike_val": 92},
-    "Philadelphia, PA": {"min": 76, "max": 92, "spike_chance": 0.02, "spike_val": 96},
-    "Washington, DC": {"min": 78, "max": 94, "spike_chance": 0.02, "spike_val": 98},
-    "Miami, FL": {"min": 84, "max": 94, "spike_chance": 0.03, "spike_val": 98},
-    "Orlando, FL": {"min": 83, "max": 94, "spike_chance": 0.02, "spike_val": 97},
-    "Atlanta, GA": {"min": 79, "max": 93, "spike_chance": 0.02, "spike_val": 97},
-}
 
-# In-memory last temperature tracking per city
-LAST_CITY_TEMPS = {
-    "Phoenix, AZ": 104,
-    "Las Vegas, NV": 98,
-    "Tucson, AZ": 97,
-    "Houston, TX": 88,
-    "Dallas, TX": 92,
-    "Austin, TX": 94,
-    "San Antonio, TX": 93,
-    "New Orleans, LA": 86,
-    "San Jose, CA": 82,
-    "Los Angeles, CA": 88,
-    "San Francisco, CA": 70,
-    "Seattle, WA": 74,
-    "Denver, CO": 84,
-    "Salt Lake City, UT": 88,
-    "Chicago, IL": 80,
-    "Minneapolis, MN": 78,
-    "St. Louis, MO": 86,
-    "New York, NY": 84,
-    "Boston, MA": 78,
-    "Philadelphia, PA": 84,
-    "Washington, DC": 86,
-    "Miami, FL": 89,
-    "Orlando, FL": 88,
-    "Atlanta, GA": 85,
-}
+def _current_temp_f(city: str) -> float:
+    """Resolve the current ambient temperature for a city from real FortyGuard data.
+
+    Sources the value from the heatmap-derived telemetry snapshot (no hardcoded seeds
+    or random walks). Falls back to the snapshot's own modeled estimate only when the
+    API is unavailable — that estimate is already flagged ``is_modeled`` upstream.
+    """
+    snap = fortyguard_client.get_live_telemetry_snapshot(city=city)
+    return float(snap.get("temperature_f", 95.0))
+
 
 
 class HeatIntelligenceRequest(BaseModel):
@@ -148,34 +98,12 @@ async def health():
 @app.post("/v1/heat-intelligence")
 async def get_heat_intelligence(request: HeatIntelligenceRequest):
     """
-    Real-time continuous telemetry stream powered by FortyGuard Microclimate Engine.
-    Fuses ground-truth ambient air, surface temperature, wet-bulb, solar GHI, and air quality.
+    Real-time microclimate telemetry powered by the FortyGuard Microclimate Engine.
+    Ambient/surface temperature is derived from the FortyGuard tcm heatmap; wet-bulb,
+    heat index, solar GHI, humidity, and air quality come from the env_params endpoint.
     """
     try:
-        city = request.location
-        cfg = CITY_CONFIGS.get(
-            city,
-            {"min": 85, "max": 100, "spike_chance": 0.03, "spike_val": 105},
-        )
-        last_temp = LAST_CITY_TEMPS.get(city, 95)
-
-        if random.random() < cfg["spike_chance"]:
-            spike_low = min(cfg["max"] + 1, cfg["spike_val"])
-            new_temp = random.randint(spike_low, cfg["spike_val"])
-        else:
-            step = random.choice([-3, -2, -1, 1, 2, 3])
-            new_temp = last_temp + step
-
-            if new_temp < cfg["min"]:
-                new_temp = cfg["min"] + random.randint(0, 2)
-            elif new_temp > cfg["max"]:
-                new_temp = cfg["max"] - random.randint(0, 2)
-
-        LAST_CITY_TEMPS[city] = new_temp
-
-        # Ingest FortyGuard real-time microclimate packet
-        snapshot = fortyguard_client.get_live_telemetry_snapshot(city=city, temp_f=float(new_temp))
-
+        snapshot = fortyguard_client.get_live_telemetry_snapshot(city=request.location)
         snapshot["server_uptime_seconds"] = int(time.time() - SERVER_START_TIME)
         return snapshot
     except Exception as e:
@@ -186,14 +114,46 @@ async def get_heat_intelligence(request: HeatIntelligenceRequest):
 @app.get("/api/telemetry")
 @app.get("/v1/telemetry")
 async def get_city_telemetry(city: str = "Phoenix, AZ"):
-    """Returns live FortyGuard telemetry for a given city."""
+    """Returns real FortyGuard-derived telemetry for a given city."""
     try:
-        temp = LAST_CITY_TEMPS.get(city, 104)
-        snapshot = fortyguard_client.get_live_telemetry_snapshot(city=city, temp_f=float(temp))
+        snapshot = fortyguard_client.get_live_telemetry_snapshot(city=city)
         snapshot["server_uptime_seconds"] = int(time.time() - SERVER_START_TIME)
         return snapshot
     except Exception as e:
         logger.exception("Telemetry fetch failed")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/v1/fortyguard/environment")
+def environment_endpoint(city: str = "Phoenix, AZ"):
+    """Return the real 24-hour FortyGuard env_params curves for the diurnal timeline.
+
+    Exposes the hourly heat-index, apparent-temperature, wet-bulb, humidity, and solar
+    arrays (plus timestamps and provenance) so the frontend can plot genuine data
+    instead of a client-side synthetic sine wave.
+    """
+    try:
+        # Anchor the curves to the city's real heatmap-derived baseline temperature.
+        baseline_f = _current_temp_f(city)
+        env = fortyguard_client.get_environmental_parameters(city=city, temp_f=baseline_f)
+        loc = (env.get("locations", [{}]) or [{}])[0] if isinstance(env, dict) else {}
+        params = loc.get("parameters", {})
+        solar = loc.get("solar_irradiance", {}).get("clear_sky", {})
+        return {
+            "city": city,
+            "baseline_temperature_f": round(baseline_f, 1),
+            "timestamps": env.get("metadata", {}).get("timestamps", []),
+            "heat_index_celsius": params.get("heat_index_celsius", []),
+            "apparent_temperature_celsius": params.get("apparent_temperature_celsius", []),
+            "wet_bulb_temperature_celsius": params.get("wet_bulb_temperature_celsius", []),
+            "relative_humidity_percent": params.get("relative_humidity_percent", []),
+            "air_quality_pm2p5": params.get("air_quality_pm2p5:idx", []),
+            "solar_irradiance": solar,
+            "data_source": env.get("data_source", "MODELED") if isinstance(env, dict) else "MODELED",
+            "is_modeled": (env.get("data_source") == "MODELED") if isinstance(env, dict) else True,
+        }
+    except Exception as e:
+        logger.exception("Environment curve fetch failed")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -205,7 +165,7 @@ def audit_endpoint(request: AuditRequest):
     if request.temperature_f is not None:
         temp_f = int(request.temperature_f)
     else:
-        temp_f = LAST_CITY_TEMPS.get(target_city, 95)
+        temp_f = int(_current_temp_f(target_city))
 
     try:
         return run_compliance_audit(city=target_city, temp_f=temp_f)
@@ -376,6 +336,48 @@ def quota_endpoint():
         return fortyguard_client.quota_tracker.get_summary()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/v1/fortyguard/grid")
+def national_grid_endpoint():
+    """Return real FortyGuard-derived telemetry for every monitored city (cache-only).
+
+    Uses ``allow_live=False`` so rendering the 24-city national grid never fans out
+    dozens of async cloud calls or burns the 30/day heatmap quota. Each row is real
+    where the cache/quickstart data exists and flagged ``is_modeled`` otherwise.
+    """
+    from fortyguard_client import CITY_COORDINATES
+    rows = []
+    for city in CITY_COORDINATES.keys():
+        try:
+            snap = fortyguard_client.get_live_telemetry_snapshot(city=city, allow_live=False)
+            amb = snap.get("temperature_f", 0.0)
+            surf = snap.get("surface_temperature_f", amb)
+            risk = snap.get("risk_level", "nominal")
+            status_map = {
+                "extreme": ("Critical Heat Alert", "critical"),
+                "high": ("High Heat Risk", "critical"),
+                "elevated": ("Elevated Heat", "elevated"),
+                "nominal": ("Nominal", "precool"),
+            }
+            status, status_type = status_map.get(risk, ("Nominal", "precool"))
+            rows.append({
+                "city": city,
+                "ambient": round(amb, 1),
+                "surface": round(surf, 1),
+                "delta": round(surf - amb, 1),
+                "ghi": snap.get("solar_irradiance_ghi", 0.0),
+                "humidity": snap.get("relative_humidity", 0.0),
+                "wetBulb": snap.get("wet_bulb_f", 0.0),
+                "wbgt": snap.get("heat_index_f", 0.0),
+                "status": status,
+                "statusType": status_type,
+                "data_source": snap.get("data_source", "MODELED"),
+                "is_modeled": snap.get("is_modeled", True),
+            })
+        except Exception as e:
+            logger.warning("Grid row failed for %s: %s", city, e)
+    return {"cities": rows, "count": len(rows), "quota": fortyguard_client.quota_tracker.get_summary()}
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Globe,
   MapPin,
@@ -9,331 +9,39 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-const CITY_METRICS = [
-  // Southwest & Desert
-  {
-    city: "Phoenix, AZ",
-    ambient: 104,
-    surface: 117.3,
-    delta: 13.3,
-    ghi: 604.5,
-    humidity: 13.0,
-    wetBulb: 78.4,
-    wbgt: 86.7,
-    buildingPct: 42.5,
-    status: "Critical Heat Alert",
-    statusType: "critical",
-  },
-  {
-    city: "Las Vegas, NV",
-    ambient: 101,
-    surface: 114.2,
-    delta: 13.2,
-    ghi: 588.0,
-    humidity: 15.5,
-    wetBulb: 76.8,
-    wbgt: 84.8,
-    buildingPct: 38.0,
-    status: "Pre-Cool Active",
-    statusType: "precool",
-  },
-  {
-    city: "Tucson, AZ",
-    ambient: 99,
-    surface: 111.5,
-    delta: 12.5,
-    ghi: 570.0,
-    humidity: 18.0,
-    wetBulb: 74.2,
-    wbgt: 83.1,
-    buildingPct: 36.2,
-    status: "Elevated Heat",
-    statusType: "elevated",
-  },
-  // Texas & South Central
-  {
-    city: "Houston, TX",
-    ambient: 93,
-    surface: 102.5,
-    delta: 9.5,
-    ghi: 495.0,
-    humidity: 62.0,
-    wetBulb: 82.1,
-    wbgt: 88.2,
-    buildingPct: 46.2,
-    status: "High Humidity Risk",
-    statusType: "critical",
-  },
-  {
-    city: "Dallas, TX",
-    ambient: 96,
-    surface: 107.1,
-    delta: 11.1,
-    ghi: 535.0,
-    humidity: 48.0,
-    wetBulb: 79.5,
-    wbgt: 85.6,
-    buildingPct: 41.8,
-    status: "Elevated WBGT",
-    statusType: "elevated",
-  },
-  {
-    city: "Austin, TX",
-    ambient: 97,
-    surface: 108.4,
-    delta: 11.4,
-    ghi: 540.0,
-    humidity: 45.0,
-    wetBulb: 79.0,
-    wbgt: 85.1,
-    buildingPct: 39.4,
-    status: "Elevated WBGT",
-    statusType: "elevated",
-  },
-  {
-    city: "San Antonio, TX",
-    ambient: 95,
-    surface: 106.8,
-    delta: 11.8,
-    ghi: 530.0,
-    humidity: 47.0,
-    wetBulb: 78.5,
-    wbgt: 84.6,
-    buildingPct: 40.1,
-    status: "Elevated WBGT",
-    statusType: "elevated",
-  },
-  {
-    city: "New Orleans, LA",
-    ambient: 91,
-    surface: 100.2,
-    delta: 9.2,
-    ghi: 480.0,
-    humidity: 68.0,
-    wetBulb: 83.2,
-    wbgt: 87.9,
-    buildingPct: 44.0,
-    status: "High Humidity Risk",
-    statusType: "critical",
-  },
-  // West Coast & Pacific
-  {
-    city: "San Jose, CA",
-    ambient: 82,
-    surface: 91.4,
-    delta: 9.4,
-    ghi: 440.0,
-    humidity: 38.5,
-    wetBulb: 65.2,
-    wbgt: 73.5,
-    buildingPct: 35.4,
-    status: "Nominal Baseline",
-    statusType: "nominal",
-  },
-  {
-    city: "Los Angeles, CA",
-    ambient: 95,
-    surface: 108.3,
-    delta: 13.3,
-    ghi: 575.0,
-    humidity: 32.0,
-    wetBulb: 74.8,
-    wbgt: 83.9,
-    buildingPct: 48.0,
-    status: "Pre-Cool Active",
-    statusType: "precool",
-  },
-  {
-    city: "San Francisco, CA",
-    ambient: 72,
-    surface: 80.1,
-    delta: 8.1,
-    ghi: 390.0,
-    humidity: 58.0,
-    wetBulb: 61.5,
-    wbgt: 68.2,
-    buildingPct: 54.0,
-    status: "Nominal Baseline",
-    statusType: "nominal",
-  },
-  {
-    city: "Seattle, WA",
-    ambient: 76,
-    surface: 84.5,
-    delta: 8.5,
-    ghi: 410.0,
-    humidity: 52.0,
-    wetBulb: 63.8,
-    wbgt: 70.4,
-    buildingPct: 44.1,
-    status: "Nominal Baseline",
-    statusType: "nominal",
-  },
-  // Mountain & Midwest
-  {
-    city: "Denver, CO",
-    ambient: 87,
-    surface: 98.2,
-    delta: 11.2,
-    ghi: 520.0,
-    humidity: 24.0,
-    wetBulb: 66.4,
-    wbgt: 76.8,
-    buildingPct: 40.5,
-    status: "Nominal Baseline",
-    statusType: "nominal",
-  },
-  {
-    city: "Salt Lake City, UT",
-    ambient: 90,
-    surface: 102.4,
-    delta: 12.4,
-    ghi: 535.0,
-    humidity: 22.0,
-    wetBulb: 68.0,
-    wbgt: 78.5,
-    buildingPct: 37.8,
-    status: "Elevated Heat",
-    statusType: "elevated",
-  },
-  {
-    city: "Chicago, IL",
-    ambient: 84,
-    surface: 94.2,
-    delta: 10.2,
-    ghi: 455.0,
-    humidity: 46.0,
-    wetBulb: 70.4,
-    wbgt: 77.2,
-    buildingPct: 52.8,
-    status: "Nominal Baseline",
-    statusType: "nominal",
-  },
-  {
-    city: "Minneapolis, MN",
-    ambient: 80,
-    surface: 89.6,
-    delta: 9.6,
-    ghi: 430.0,
-    humidity: 48.0,
-    wetBulb: 67.5,
-    wbgt: 74.0,
-    buildingPct: 41.2,
-    status: "Nominal Baseline",
-    statusType: "nominal",
-  },
-  {
-    city: "St. Louis, MO",
-    ambient: 88,
-    surface: 99.4,
-    delta: 11.4,
-    ghi: 485.0,
-    humidity: 50.0,
-    wetBulb: 73.8,
-    wbgt: 80.6,
-    buildingPct: 43.5,
-    status: "Elevated Heat",
-    statusType: "elevated",
-  },
-  // East Coast & Southeast
-  {
-    city: "New York, NY",
-    ambient: 88,
-    surface: 99.8,
-    delta: 11.8,
-    ghi: 470.0,
-    humidity: 54.0,
-    wetBulb: 75.1,
-    wbgt: 81.9,
-    buildingPct: 62.1,
-    status: "Urban Canyon Heat",
-    statusType: "elevated",
-  },
-  {
-    city: "Boston, MA",
-    ambient: 82,
-    surface: 92.1,
-    delta: 10.1,
-    ghi: 440.0,
-    humidity: 50.0,
-    wetBulb: 69.2,
-    wbgt: 75.0,
-    buildingPct: 56.4,
-    status: "Nominal Baseline",
-    statusType: "nominal",
-  },
-  {
-    city: "Philadelphia, PA",
-    ambient: 86,
-    surface: 97.5,
-    delta: 11.5,
-    ghi: 460.0,
-    humidity: 52.0,
-    wetBulb: 73.0,
-    wbgt: 79.8,
-    buildingPct: 58.2,
-    status: "Elevated Heat",
-    statusType: "elevated",
-  },
-  {
-    city: "Washington, DC",
-    ambient: 88,
-    surface: 100.1,
-    delta: 12.1,
-    ghi: 475.0,
-    humidity: 55.0,
-    wetBulb: 75.6,
-    wbgt: 82.3,
-    buildingPct: 50.4,
-    status: "Elevated Heat",
-    statusType: "elevated",
-  },
-  {
-    city: "Miami, FL",
-    ambient: 92,
-    surface: 104.6,
-    delta: 12.6,
-    ghi: 560.0,
-    humidity: 71.0,
-    wetBulb: 84.6,
-    wbgt: 90.4,
-    buildingPct: 39.5,
-    status: "Extreme WBGT Hazard",
-    statusType: "critical",
-  },
-  {
-    city: "Orlando, FL",
-    ambient: 91,
-    surface: 103.2,
-    delta: 12.2,
-    ghi: 545.0,
-    humidity: 66.0,
-    wetBulb: 82.5,
-    wbgt: 88.6,
-    buildingPct: 37.0,
-    status: "High Humidity Risk",
-    statusType: "critical",
-  },
-  {
-    city: "Atlanta, GA",
-    ambient: 91,
-    surface: 101.9,
-    delta: 10.9,
-    ghi: 490.0,
-    humidity: 58.0,
-    wetBulb: 78.9,
-    wbgt: 84.7,
-    buildingPct: 36.7,
-    status: "Elevated Humidity",
-    statusType: "elevated",
-  },
-];
+const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  import.meta.env.VITE_API_URL ||
+  "https://thermal-os-api.vercel.app";
 
 export default function NationalThermalGridMatrix({ selectedCity, onSelectCity }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [metrics, setMetrics] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredMetrics = CITY_METRICS.filter((row) => {
+  // Real FortyGuard-derived telemetry for every monitored city (cache-only batch).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/v1/fortyguard/grid`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled) setMetrics(Array.isArray(data.cities) ? data.cities : []);
+        }
+      } catch (e) {
+        if (!cancelled) setMetrics([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const filteredMetrics = metrics.filter((row) => {
     const matchesSearch = row.city.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "all" || row.statusType === statusFilter;
     return matchesSearch && matchesStatus;
@@ -456,7 +164,7 @@ export default function NationalThermalGridMatrix({ selectedCity, onSelectCity }
                       {row.wbgt}°F
                     </span>
                   </td>
-                  <td className="py-3 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.buildingPct}%</td>
+                  <td className="py-3 px-2 tabular-nums text-gray-600 dark:text-zinc-400">{row.buildingPct != null ? `${row.buildingPct}%` : "—"}</td>
                   <td className="py-3 px-3">
                     <span
                       className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] ${

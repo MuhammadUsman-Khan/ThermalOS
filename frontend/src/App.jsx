@@ -72,32 +72,8 @@ const REGIONS = [
   "East Coast & Southeast",
 ];
 
-export const CITY_BASELINES = {
-  "Phoenix, AZ": { ambient: 104.0, surface: 117.3, ghi: 604.5, humidity: 13.0, wbgt: 86.7, risk: "extreme" },
-  "Las Vegas, NV": { ambient: 101.0, surface: 114.2, ghi: 588.0, humidity: 15.5, wbgt: 84.8, risk: "high" },
-  "Tucson, AZ": { ambient: 99.0, surface: 111.5, ghi: 570.0, humidity: 18.0, wbgt: 83.1, risk: "high" },
-  "Houston, TX": { ambient: 93.0, surface: 102.5, ghi: 495.0, humidity: 62.0, wbgt: 88.2, risk: "extreme" },
-  "Dallas, TX": { ambient: 96.0, surface: 107.1, ghi: 535.0, humidity: 48.0, wbgt: 85.6, risk: "high" },
-  "Austin, TX": { ambient: 97.0, surface: 108.4, ghi: 540.0, humidity: 45.0, wbgt: 85.1, risk: "high" },
-  "San Antonio, TX": { ambient: 95.0, surface: 106.8, ghi: 530.0, humidity: 47.0, wbgt: 84.7, risk: "high" },
-  "New Orleans, LA": { ambient: 89.0, surface: 98.2, ghi: 480.0, humidity: 72.0, wbgt: 87.5, risk: "extreme" },
-  "San Jose, CA": { ambient: 82.0, surface: 91.4, ghi: 510.0, humidity: 38.0, wbgt: 74.2, risk: "nominal" },
-  "Los Angeles, CA": { ambient: 88.0, surface: 99.6, ghi: 545.0, humidity: 42.0, wbgt: 79.1, risk: "nominal" },
-  "San Francisco, CA": { ambient: 68.0, surface: 74.5, ghi: 460.0, humidity: 65.0, wbgt: 63.8, risk: "nominal" },
-  "Seattle, WA": { ambient: 74.0, surface: 82.1, ghi: 430.0, humidity: 52.0, wbgt: 68.5, risk: "nominal" },
-  "Denver, CO": { ambient: 84.0, surface: 95.2, ghi: 560.0, humidity: 22.0, wbgt: 72.4, risk: "nominal" },
-  "Salt Lake City, UT": { ambient: 91.0, surface: 103.5, ghi: 575.0, humidity: 19.0, wbgt: 76.8, risk: "nominal" },
-  "Chicago, IL": { ambient: 82.0, surface: 90.8, ghi: 470.0, humidity: 55.0, wbgt: 75.3, risk: "nominal" },
-  "Minneapolis, MN": { ambient: 79.0, surface: 87.4, ghi: 450.0, humidity: 58.0, wbgt: 73.1, risk: "nominal" },
-  "St. Louis, MO": { ambient: 88.0, surface: 98.6, ghi: 490.0, humidity: 52.0, wbgt: 80.2, risk: "nominal" },
-  "New York, NY": { ambient: 85.0, surface: 96.2, ghi: 480.0, humidity: 58.0, wbgt: 78.6, risk: "nominal" },
-  "Boston, MA": { ambient: 81.0, surface: 89.5, ghi: 460.0, humidity: 60.0, wbgt: 75.0, risk: "nominal" },
-  "Philadelphia, PA": { ambient: 86.0, surface: 97.8, ghi: 485.0, humidity: 56.0, wbgt: 79.4, risk: "nominal" },
-  "Washington, DC": { ambient: 88.0, surface: 100.2, ghi: 500.0, humidity: 54.0, wbgt: 81.5, risk: "high" },
-  "Miami, FL": { ambient: 91.0, surface: 103.2, ghi: 520.0, humidity: 68.0, wbgt: 89.4, risk: "extreme" },
-  "Orlando, FL": { ambient: 92.0, surface: 104.5, ghi: 530.0, humidity: 64.0, wbgt: 88.6, risk: "extreme" },
-  "Atlanta, GA": { ambient: 89.0, surface: 101.4, ghi: 510.0, humidity: 56.0, wbgt: 82.8, risk: "high" }
-};
+// City readings are sourced live from the FortyGuard-backed API (/api/telemetry),
+// not from any hardcoded baseline table. See fetchTelemetry() below.
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("operations");
@@ -239,35 +215,27 @@ export default function App() {
     return points;
   };
 
+  // Latest REAL reading from the API — the rolling chart oscillates around this
+  // anchor (sub-degree sensor-style noise) instead of drifting on random values.
+  const telemetryAnchorRef = useRef({ ambient: null, surface: null });
+
   // Switch City Handler
   const handleSelectCity = (city) => {
     setSelectedCity(city);
     setIsDropdownOpen(false);
     showToast(`Switched telemetry focus to ${city}`, "info");
     addLog(`Target AOI updated to ${city}`, "city_change", "Grid Focus");
-
-    const base = CITY_BASELINES[city] || { ambient: 95.0, surface: 105.0, ghi: 500.0, humidity: 40.0, wbgt: 78.0, risk: "nominal" };
-    setCurrentTemp(base.ambient);
-    setSurfaceTemp(base.surface);
-    setSolarGhi(base.ghi);
-    setHumidity(base.humidity);
-    setWbgt(base.wbgt);
-    setIsEmergencyMode(base.risk === "extreme" || base.risk === "high");
-
-    // Immediately re-seed rolling telemetry chart to match new city readings
-    const newPoints = generateTelemetryPoints(base.ambient, base.surface);
-    setTelemetryData(newPoints);
-
-    fetchTelemetry(city);
+    // All readings come from the FortyGuard-backed API; re-anchor the chart on switch.
+    fetchTelemetry(city, { reseedChart: true });
   };
 
-  // Fetch telemetry for city
-  const fetchTelemetry = async (city) => {
+  // Fetch real FortyGuard-derived telemetry for a city
+  const fetchTelemetry = async (city, { reseedChart = false } = {}) => {
     try {
       const res = await fetch(`${API_BASE}/api/telemetry?city=${encodeURIComponent(city)}`);
       if (res.ok) {
         const data = await res.json();
-        setCurrentReading(data);
+        setCurrentReading((prev) => ({ ...(prev || {}), ...data }));
         const amb = data.temperature_f ?? data.temperature ?? data.ambient_temp_f;
         const surf = data.surface_temperature_f ?? data.surface_temp_f;
         const ghi = data.solar_irradiance_ghi ?? data.ghi_w_m2 ?? data.solar_ghi;
@@ -275,29 +243,57 @@ export default function App() {
         const wb = data.wbgt_f ?? data.wbgt;
         const risk = data.risk_level ?? data.alert_level;
 
-        if (amb != null) setCurrentTemp(+amb);
-        if (surf != null) setSurfaceTemp(+surf);
+        if (amb != null) { setCurrentTemp(+amb); telemetryAnchorRef.current.ambient = +amb; }
+        if (surf != null) { setSurfaceTemp(+surf); telemetryAnchorRef.current.surface = +surf; }
         if (ghi != null) setSolarGhi(+ghi);
         if (hum != null) setHumidity(+hum);
         if (wb != null) setWbgt(+wb);
         if (risk != null) {
           setIsEmergencyMode(risk === "extreme" || risk === "high" || risk === "CRITICAL" || risk === "EXTREME");
         }
+
+        // Re-anchor the rolling chart to the real values on first load / city switch.
+        if (reseedChart && amb != null && surf != null) {
+          setTelemetryData(generateTelemetryPoints(+amb, +surf));
+        }
+
+        // Pull real land-cover composition for the surface segmentation card.
+        fetchSegmentation(city);
       }
     } catch (e) {
-      console.warn("Using offline microclimate model for", city);
+      console.warn("Telemetry fetch failed for", city, e);
     }
   };
 
-  // Seed initial rolling chart telemetry
+  // Fetch real FortyGuard satellite land-cover composition
+  const fetchSegmentation = async (city) => {
+    try {
+      const res = await fetch(`${API_BASE}/v1/fortyguard/satellite?city=${encodeURIComponent(city)}`);
+      if (res.ok) {
+        const sat = await res.json();
+        if (sat?.surface_composition) {
+          setCurrentReading((prev) => ({ ...(prev || {}), surface_segmentation: sat.surface_composition }));
+        }
+      }
+    } catch (e) {
+      /* land-cover card falls back to its own placeholder if unavailable */
+    }
+  };
+
+  // Seed initial rolling chart telemetry from the API
   useEffect(() => {
-    const base = CITY_BASELINES[selectedCity] || { ambient: 104.0, surface: 117.3 };
-    const initialPoints = generateTelemetryPoints(base.ambient, base.surface);
-    setTelemetryData(initialPoints);
-    fetchTelemetry(selectedCity);
+    fetchTelemetry(selectedCity, { reseedChart: true });
   }, []);
 
-  // Rolling Telemetry Micro-fluctuations Interval (Every 3.5 seconds)
+  // Re-anchor to fresh real FortyGuard data every 30s
+  useEffect(() => {
+    const id = setInterval(() => fetchTelemetry(selectedCity, { reseedChart: false }), 30000);
+    return () => clearInterval(id);
+  }, [selectedCity]);
+
+  // Rolling Telemetry Micro-fluctuations Interval (Every 3.5 seconds).
+  // Oscillates within sub-degree noise around the last REAL API anchor so the chart
+  // animates like a live sensor without ever drifting away from the real value.
   useEffect(() => {
     const interval = setInterval(() => {
       const timeStr = new Date().toLocaleTimeString([], {
@@ -309,22 +305,16 @@ export default function App() {
       setTelemetryData((prev) => {
         if (!prev || prev.length === 0) return prev;
         const last = prev[prev.length - 1];
-        const ambientNoise = (Math.random() - 0.5) * 0.4;
-        const surfaceNoise = (Math.random() - 0.5) * 0.8;
+        const anchorAmbient = telemetryAnchorRef.current.ambient ?? last.ambient;
+        const anchorSurface = telemetryAnchorRef.current.surface ?? last.surface;
 
-        const nextAmbient = +(last.ambient + ambientNoise).toFixed(1);
-        const nextSurface = +(last.surface + surfaceNoise).toFixed(1);
+        const nextAmbient = +(anchorAmbient + (Math.random() - 0.5) * 0.4).toFixed(1);
+        const nextSurface = +(anchorSurface + (Math.random() - 0.5) * 0.8).toFixed(1);
 
         setCurrentTemp(nextAmbient);
         setSurfaceTemp(nextSurface);
 
-        const newPoint = {
-          time: timeStr,
-          ambient: nextAmbient,
-          surface: nextSurface,
-        };
-
-        return [...prev.slice(1), newPoint];
+        return [...prev.slice(1), { time: timeStr, ambient: nextAmbient, surface: nextSurface }];
       });
     }, 3500);
 
@@ -677,6 +667,34 @@ export default function App() {
                   : "Backend Offline"}
               </span>
             </div>
+
+            {/* Data provenance badge — proves whether the current readings are authentic
+                FortyGuard data or a clearly-labeled modeled estimate (API unavailable). */}
+            {currentReading?.data_source && (
+              <div
+                title={
+                  currentReading.data_label ||
+                  `Data source: ${currentReading.data_source}`
+                }
+                className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-2xl border text-xs font-mono h-9 select-none ${
+                  currentReading.is_modeled
+                    ? "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                    : "border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400"
+                }`}
+              >
+                <span className="font-semibold tracking-tight">
+                  {currentReading.is_modeled
+                    ? "⚠ Modeled Estimate"
+                    : `✓ FortyGuard ${
+                        currentReading.data_source === "LIVE_API"
+                          ? "Live"
+                          : currentReading.data_source === "1H_CACHE"
+                          ? "Cached"
+                          : "Data"
+                      }`}
+                </span>
+              </div>
+            )}
 
             {/* Theme Toggle */}
             <motion.button

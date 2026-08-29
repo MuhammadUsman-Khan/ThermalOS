@@ -170,6 +170,56 @@ def c_to_f(temp_c: float) -> float:
     return round((temp_c * 9.0 / 5.0) + 32.0, 2)
 
 
+# Provenance labels attached to every payload so the UI can prove where a value
+# came from and never present a modeled estimate as authentic FortyGuard data.
+SRC_LIVE = "LIVE_API"          # freshly returned by the FortyGuard cloud
+SRC_CACHE = "1H_CACHE"         # a real FortyGuard response reused within 1 hour
+SRC_QUICKSTART = "QUICKSTART_CACHE"  # authentic captured FortyGuard response on disk
+SRC_MODELED = "MODELED"        # last-resort physics model (API unavailable) — must be labeled
+
+
+def extract_heatmap_temperature_stats_c(hm: Dict[str, Any]) -> Dict[str, Optional[float]]:
+    """Pull min/max/mean tile temperature (°C) from ANY heatmap shape.
+
+    Handles the real FortyGuard schema (``stats_data.temperature_stats`` with
+    ``minimum``/``maximum``/``mean`` and tile ``properties.average_temperature``),
+    the legacy synthesized schema (``Temperature_stats`` with ``min``/``max``), and
+    falls back to computing directly from the GeoJSON tile features.
+    """
+    st = hm.get("stats_data", {}) if isinstance(hm, dict) else {}
+    ts = st.get("temperature_stats") or st.get("Temperature_stats") or {}
+    mean = ts.get("mean")
+    mn = ts.get("minimum", ts.get("min"))
+    mx = ts.get("maximum", ts.get("max"))
+
+    if mean is None or mn is None or mx is None:
+        # Derive from the actual tile mesh — the ground truth of the response.
+        feats = (hm.get("map_data", {}) or {}).get("features", []) if isinstance(hm, dict) else []
+        temps: List[float] = []
+        for feat in feats:
+            props = feat.get("properties", {}) if isinstance(feat, dict) else {}
+            val = props.get("average_temperature", props.get("temperature", props.get("value")))
+            if isinstance(val, (int, float)):
+                temps.append(float(val))
+        if temps:
+            mean = mean if mean is not None else round(sum(temps) / len(temps), 4)
+            mn = mn if mn is not None else round(min(temps), 4)
+            mx = mx if mx is not None else round(max(temps), 4)
+
+    # Hotspot = hottest per-tile maximum (real surface peak), preferred surface proxy.
+    hotspot: Optional[float] = None
+    feats = (hm.get("map_data", {}) or {}).get("features", []) if isinstance(hm, dict) else []
+    tile_maxes = [
+        float(f.get("properties", {}).get("max_temperature"))
+        for f in feats
+        if isinstance(f, dict) and isinstance(f.get("properties", {}).get("max_temperature"), (int, float))
+    ]
+    if tile_maxes:
+        hotspot = round(max(tile_maxes), 4)
+
+    return {"min": mn, "max": mx, "mean": mean, "hotspot": hotspot}
+
+
 class FortyGuardQuotaTracker:
     """Tracks FortyGuard credit allowance and daily rate limits."""
 
@@ -433,11 +483,17 @@ class FortyGuardAdapter:
         temp_f: Optional[float] = None,
         date_str: str = "2024-07-15",
         filter_type: int = 3,
+        allow_live: bool = True,
     ) -> Dict[str, Any]:
-        """Fetch 24h environmental and solar metrics with disk caching & quota protection."""
+        """Fetch 24h environmental and solar metrics with disk caching & quota protection.
+
+        ``allow_live=False`` serves only cached/modeled data (no network call) — used by
+        the multi-city grid so a single view never fans out 24 async cloud requests.
+        """
         cache_key = f"env_{city}_{date_str}_{filter_type}"
         cached = self._read_disk_cache("env_params", cache_key)
         if cached:
+            cached.setdefault("data_source", SRC_CACHE)
             return cached
 
         coords = CITY_COORDINATES.get(city, {"lat": 33.4484, "lon": -112.0740, "elevation": 331.0})
@@ -446,7 +502,7 @@ class FortyGuardAdapter:
         curr_temp_c = f_to_c(temp_f) if temp_f is not None else 35.0
 
         # Try Live API if configured
-        if self.is_live and self.sdk_client:
+        if self.is_live and self.sdk_client and allow_live:
             try:
                 res = self.sdk_client.environmental_parameters(
                     latitude=target_lat,
@@ -455,9 +511,13 @@ class FortyGuardAdapter:
                     start_date=date_str,
                     filter_type=filter_type,
                     wait=True,
+                    poll_interval=2.0,
+                    timeout=8.0,
                     verbose=False,
                 )
                 payload = res.get("result", res) if isinstance(res, dict) else res
+                if isinstance(payload, dict):
+                    payload["data_source"] = SRC_LIVE
                 self.quota_tracker.record_call(endpoint="env_params", credits_cost=200)
                 self._write_disk_cache("env_params", cache_key, payload)
                 return payload
@@ -530,6 +590,7 @@ class FortyGuardAdapter:
                     },
                 }
             ],
+            "data_source": SRC_MODELED,
         }
         self._write_disk_cache("env_params", cache_key, res)
         return res
@@ -544,24 +605,31 @@ class FortyGuardAdapter:
         date_str: str = "2024-07-15",
         granularity: int = 100,
         force_live: bool = False,
+        allow_live: bool = True,
     ) -> Dict[str, Any]:
-        """Fetch spatial thermal tile mesh from FortyGuard Live API, with strict 1-hour cache reuse."""
-        cache_key = f"heatmap_{city}_{analytic_type}_{date_str}_{granularity}"
-        
-        # 1. Use cache ONLY if user is requesting again within 1 hour (< 3600s)
-        if not force_live:
-            cached = self._read_disk_cache("heatmaps", cache_key, max_age_seconds=3600)
-            if cached:
-                st = cached.setdefault("stats_data", {})
-                st["granularity_meters"] = granularity
-                st["resolution_label"] = f"{granularity}m FortyGuard Spatial Mesh"
-                st["n_cells"] = len(cached.get("map_data", {}).get("features", [])) or 144
-                st["served_from"] = "1H_CACHE"
-                st["cache_age_seconds"] = cached.get("_cache_age_seconds", 0)
-                return cached
+        """Fetch spatial thermal tile mesh from FortyGuard Live API, with strict 1-hour cache reuse.
 
-        # 2. If force_live is requested, execute synchronous cloud poll
-        if force_live and self.is_live and self.sdk_client:
+        ``allow_live=False`` restricts to cached/quickstart/modeled data with no cloud
+        call — used by the multi-city grid to avoid burning the 30/day heatmap quota.
+        """
+        cache_key = f"heatmap_{city}_{analytic_type}_{date_str}_{granularity}"
+
+        # 1. Always reuse a real FortyGuard response captured within the last hour.
+        #    (Cache-first even for force_live: the daily heatmap quota is only 30, so
+        #    re-serving a <1h-old authentic response protects credits without faking data.)
+        cached = self._read_disk_cache("heatmaps", cache_key, max_age_seconds=3600)
+        if cached:
+            st = cached.setdefault("stats_data", {})
+            st["granularity_meters"] = granularity
+            st["resolution_label"] = f"{granularity}m FortyGuard Spatial Mesh"
+            st["n_cells"] = len(cached.get("map_data", {}).get("features", [])) or 144
+            st["served_from"] = "1H_CACHE"
+            st["cache_age_seconds"] = cached.get("_cache_age_seconds", 0)
+            cached.setdefault("data_source", SRC_CACHE)
+            return cached
+
+        # 2. On a cache miss, attempt a live cloud generation (short synchronous poll).
+        if allow_live and self.is_live and self.sdk_client and self.quota_tracker.can_call_heatmap():
             try:
                 target_aoi = get_city_aoi(city) if city in CITY_COORDINATES else SAN_JOSE_POLYGON
                 logger.info(f"Dispatching Live FortyGuard create_heatmap for {city} (AOI: {granularity}m, {analytic_type})...")
@@ -584,29 +652,40 @@ class FortyGuardAdapter:
                     st["resolution_label"] = f"{granularity}m FortyGuard Spatial Mesh"
                     st["n_cells"] = len(payload.get("map_data", {}).get("features", [])) or 144
                     st["served_from"] = "LIVE_API"
+                    payload["data_source"] = SRC_LIVE
                 self.quota_tracker.record_call(endpoint="heatmap", credits_cost=1000)
                 self._write_disk_cache("heatmaps", cache_key, payload)
                 return payload
             except Exception as e:
                 logger.warning(f"Live FortyGuard create_heatmap deferred ({e}). Serving calibrated spatial mesh.")
 
-        # Quickstart Cache Match
-        for hm in self._cached_heatmaps:
-            stats = hm.get("stats_data", {})
-            if (analytic_type == "tcm" and "Temperature_stats" in stats) or (stats.get("analytic_type") == analytic_type):
-                hm_res = json.loads(json.dumps(hm))
-                st = hm_res.setdefault("stats_data", {})
-                st["granularity_meters"] = granularity
-                st["resolution_label"] = f"{granularity}m FortyGuard Spatial Mesh"
-                st["n_cells"] = len(hm_res.get("map_data", {}).get("features", []))
-                st["quota_info"] = self.quota_tracker.get_summary()
-                self._write_disk_cache("heatmaps", cache_key, hm_res)
-                return hm_res
+        # Quickstart Cache Match — only for San Jose, CA (the city the authentic
+        # quickstart responses were actually captured for). Serving San Jose tiles
+        # for any other city would misreport both temperature and tile geography.
+        if city == "San Jose, CA":
+            for hm in self._cached_heatmaps:
+                stats = hm.get("stats_data", {})
+                if (analytic_type == "tcm" and ("temperature_stats" in stats or "Temperature_stats" in stats)) or (stats.get("analytic_type") == analytic_type):
+                    hm_res = json.loads(json.dumps(hm))
+                    st = hm_res.setdefault("stats_data", {})
+                    st["granularity_meters"] = granularity
+                    st["resolution_label"] = f"{granularity}m FortyGuard Spatial Mesh"
+                    st["n_cells"] = len(hm_res.get("map_data", {}).get("features", []))
+                    st["served_from"] = "QUICKSTART_CACHE"
+                    st["quota_info"] = self.quota_tracker.get_summary()
+                    hm_res["data_source"] = SRC_QUICKSTART
+                    self._write_disk_cache("heatmaps", cache_key, hm_res)
+                    return hm_res
 
-        # Synthesized Microclimate GeoJSON FeatureCollection based on FortyGuard Spatial Granularity
-        coords = CITY_COORDINATES.get(city, {"lat": 33.4484, "lon": -112.0740})
+        # Synthesized Microclimate GeoJSON FeatureCollection (MODELED last resort).
+        # City-differentiated base temperature from latitude + elevation so the modeled
+        # estimate is plausible per-city (never identical rows). Always flagged MODELED.
+        coords = CITY_COORDINATES.get(city, {"lat": 33.4484, "lon": -112.0740, "elevation": 331.0})
         base_lat, base_lon = coords["lat"], coords["lon"]
-        
+        elevation = coords.get("elevation", 300.0)
+        # Warmer at lower latitude / lower elevation; clamped to a realistic summer band.
+        base_c = max(16.0, min(44.0, 46.0 - 0.55 * (base_lat - 25.0) - 0.003 * elevation))
+
         granularity = int(granularity) if granularity in (60, 80, 100) else 100
         step_deg = 0.003 if granularity == 60 else (0.004 if granularity == 80 else 0.005)
         grid_dim = 14 if granularity == 60 else (12 if granularity == 80 else 10)
@@ -617,8 +696,8 @@ class FortyGuardAdapter:
             for j in range(grid_dim):
                 tile_lat = base_lat + (i - tile_offset) * step_deg
                 tile_lon = base_lon + (j - tile_offset) * step_deg
-                t_val = round(34.0 + math.sin(i * 0.45) * 3.5 + math.cos(j * 0.45) * 2.5, 2)
-                
+                t_val = round(base_c + math.sin(i * 0.45) * 3.5 + math.cos(j * 0.45) * 2.5, 2)
+
                 features.append({
                     "type": "Feature",
                     "properties": {
@@ -642,20 +721,27 @@ class FortyGuardAdapter:
                     },
                 })
 
+        tile_temps = [f["properties"]["average_temperature"] for f in features] or [35.0]
         res = {
             "stats_data": {
-                "Temperature_stats": {"min": 28.5, "max": 42.1, "mean": 35.8},
+                "temperature_stats": {
+                    "minimum": round(min(tile_temps), 2),
+                    "maximum": round(max(tile_temps), 2),
+                    "mean": round(sum(tile_temps) / len(tile_temps), 2),
+                },
                 "units": "°C" if analytic_type == "tcm" else "hour",
                 "analytic_type": analytic_type,
                 "granularity_meters": granularity,
                 "resolution_label": f"{granularity}m FortyGuard Spatial Mesh",
                 "n_cells": len(features),
+                "served_from": "MODELED",
                 "quota_info": self.quota_tracker.get_summary(),
             },
             "map_data": {
                 "type": "FeatureCollection",
                 "features": features,
             },
+            "data_source": SRC_MODELED,
         }
         self._write_disk_cache("heatmaps", cache_key, res)
         return res
@@ -670,38 +756,95 @@ class FortyGuardAdapter:
         lon: Optional[float] = None,
         date_str: str = "2024-07-15",
     ) -> Dict[str, Any]:
-        """Fetch 100m satellite land-cover material classification."""
+        """Fetch 100m satellite land-cover segmentation with real class fractions.
+
+        The FortyGuard satellite endpoint returns land-cover **percentages** directly in
+        ``segmentation.segments`` (e.g. ``{"building": 26.94, "tree": 1.63, ...}``), so we
+        surface those authentic fractions rather than fabricating any. Albedo is not
+        returned by the API and is derived from the real composition via a standard
+        surface-albedo weighting (flagged as derived).
+        """
+        coords = CITY_COORDINATES.get(city, {"lat": 33.4484, "lon": -112.0740, "elevation": 331.0})
+        target_lat = lat if lat is not None else coords["lat"]
+        target_lon = lon if lon is not None else coords["lon"]
+
         cache_key = f"satellite_{city}_{date_str}"
         cached = self._read_disk_cache("satellite", cache_key)
         if cached:
-            return cached
+            cached.setdefault("data_source", SRC_CACHE)
+            return self._augment_satellite(cached)
 
-        # Instantaneous retrieval: Check disk cache or cached dataset first
-        if self._cached_satellite:
-            return self._cached_satellite[0]
+        # Live FortyGuard satellite segmentation (short synchronous poll).
+        if self.is_live and self.sdk_client:
+            try:
+                res = self.sdk_client.satellite_segmentation(
+                    latitude=target_lat, longitude=target_lon,
+                    start_date=date_str, filter_type=3, granularity=100,
+                    wait=True, poll_interval=2.0, timeout=8.0, verbose=False,
+                )
+                payload = res.get("result", res) if isinstance(res, dict) else res
+                if isinstance(payload, dict):
+                    payload["data_source"] = SRC_LIVE
+                    self.quota_tracker.record_call(endpoint="satellite", credits_cost=300)
+                    self._write_disk_cache("satellite", cache_key, payload)
+                    return self._augment_satellite(payload)
+            except Exception as e:
+                logger.warning(f"Live satellite_segmentation deferred ({e}). Serving cached/modeled land cover.")
 
+        # Authentic quickstart capture — only for San Jose (the captured city).
+        if city == "San Jose, CA" and self._cached_satellite:
+            sat = json.loads(json.dumps(self._cached_satellite[0]))
+            sat["data_source"] = SRC_QUICKSTART
+            self._write_disk_cache("satellite", cache_key, sat)
+            return self._augment_satellite(sat)
+
+        # Modeled last resort — clearly labeled, never presented as authentic.
         res = {
-            "coordinates": {"latitude": lat or 33.4484, "longitude": lon or -112.0740},
+            "coordinates": {"latitude": target_lat, "longitude": target_lon},
             "image_year": 2024,
             "segmentation": {
-                "segments": ["building", "tree", "earth, ground", "plant", "others"],
+                "segments": {"building": 40.0, "tree": 12.0, "earth, ground": 22.0, "plant": 8.0, "others": 18.0},
                 "image_legend": {
-                    "building": [180, 120, 120],
-                    "tree": [4, 200, 3],
-                    "earth, ground": [120, 120, 70],
-                    "plant": [204, 255, 4],
-                    "others": [255, 255, 255],
-                },
-                "material_fractions": {
-                    "impervious_building_pct": 42.5,
-                    "tree_canopy_pct": 14.2,
-                    "bare_earth_pct": 28.1,
-                    "vegetation_pct": 15.2,
+                    "building": [180, 120, 120], "tree": [4, 200, 3],
+                    "earth, ground": [120, 120, 70], "plant": [204, 255, 4], "others": [255, 255, 255],
                 },
             },
+            "data_source": SRC_MODELED,
         }
         self._write_disk_cache("satellite", cache_key, res)
-        return res
+        return self._augment_satellite(res)
+
+    # Typical broadband albedo per land-cover class (used only to derive a
+    # composition-weighted albedo, since the API does not return albedo directly).
+    _CLASS_ALBEDO = {"building": 0.12, "tree": 0.15, "earth, ground": 0.17, "plant": 0.20, "others": 0.25}
+
+    def _augment_satellite(self, sat: Dict[str, Any]) -> Dict[str, Any]:
+        """Map the API's real ``segments`` percentages to the UI card fields and derive albedo."""
+        seg = sat.get("segmentation", {}) if isinstance(sat, dict) else {}
+        segments = seg.get("segments", {})
+        # Real responses use a {class: percent} dict; strip any non-numeric entries.
+        if isinstance(segments, dict):
+            pct = {k: float(v) for k, v in segments.items() if isinstance(v, (int, float))}
+        else:
+            pct = {}
+        albedo = round(sum(self._CLASS_ALBEDO.get(k, 0.2) * (v / 100.0) for k, v in pct.items()), 3) if pct else None
+        sat["surface_composition"] = {
+            "impervious_building_pct": round(pct.get("building", 0.0), 1),
+            "tree_canopy_pct": round(pct.get("tree", 0.0), 1),
+            "plant_cover_pct": round(pct.get("plant", 0.0), 1),
+            "ground_soil_pct": round(pct.get("earth, ground", 0.0), 1),
+            "other_pct": round(pct.get("others", 0.0), 1),
+            "albedo_mean": albedo,
+            "albedo_is_derived": True,
+            "data_source": sat.get("data_source", SRC_MODELED),
+        }
+        # Drop multi-hundred-KB base64 image blobs — the dashboard only needs the
+        # numeric composition, and shipping raw imagery bloats every response.
+        sat.pop("original_image", None)
+        sat.pop("orignal_image", None)
+        if isinstance(seg, dict):
+            seg.pop("image_content", None)
+        return sat
 
     # -------------------------------------------------------------------------
     # 4. Heat Intelligence Report (POST /v1/heat_intelligence)
@@ -713,95 +856,168 @@ class FortyGuardAdapter:
         date_str: str = "2024-07-15",
         analysis_types: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
-        """Generate comprehensive 5-pillar Heat Intelligence metadata."""
-        types = analysis_types or ["geographic", "environmental", "urban", "events", "anthropogenic"]
+        """Build a heat-intelligence report from REAL FortyGuard analytics.
+
+        Every metric is derived from the heatmap (spatial temperature statistics),
+        env_params (24h heat/humidity/solar curves), or satellite (land-cover
+        composition). Metrics the API cannot provide have been removed rather than
+        fabricated. Each pillar and the report as a whole carries a ``data_source``
+        label; if any input is modeled the report is flagged ``is_modeled``.
+        """
+        types = analysis_types or ["geographic", "environmental", "urban", "events"]
         coords = CITY_COORDINATES.get(city, {"lat": 33.4484, "lon": -112.0740, "elevation": 331.0})
-        curr_temp_c = f_to_c(temp_f) if temp_f is not None else 38.0
+
+        # --- Real inputs (cache-first; each carries its own provenance) ---
+        hm = self.get_heatmap_analytics(city=city, analytic_type="tcm", granularity=100)
+        hm_src = hm.get("data_source", SRC_MODELED)
+        stats_c = extract_heatmap_temperature_stats_c(hm)
+        mean_c = stats_c.get("mean")
+        min_c = stats_c.get("min")
+        max_c = stats_c.get("max")
+        hotspot_c = stats_c.get("hotspot") or max_c
+
+        baseline_c = float(mean_c) if mean_c is not None else (f_to_c(temp_f) if temp_f is not None else 38.0)
+
+        env = self.get_environmental_parameters(city=city, temp_f=c_to_f(baseline_c), date_str=date_str)
+        env_src = env.get("data_source", SRC_MODELED) if isinstance(env, dict) else SRC_MODELED
+        eloc = (env.get("locations", [{}]) or [{}])[0] if isinstance(env, dict) else {}
+        eparams = eloc.get("parameters", {})
+        apparent = [v for v in eparams.get("apparent_temperature_celsius", []) if isinstance(v, (int, float))]
+        wet_bulb = [v for v in eparams.get("wet_bulb_temperature_celsius", []) if isinstance(v, (int, float))]
+        solar_ghi = float((eloc.get("solar_irradiance", {}).get("clear_sky", {}) or {}).get("ghi", 0.0))
+
+        sat = self.get_satellite_segmentation(city=city, lat=coords["lat"], lon=coords["lon"], date_str=date_str)
+        comp = sat.get("surface_composition", {})
+        sat_src = comp.get("data_source", SRC_MODELED)
+
+        # --- Derived, real-data-backed pillar metrics ---
+        # Spatial urban-heat-island intensity = hottest area vs coolest area (°C).
+        uhi_delta_c = round(float(max_c) - float(min_c), 2) if (max_c is not None and min_c is not None) else None
+        # Diurnal cooling range from the 24h apparent-temperature curve.
+        nighttime_cooling_c = round(max(apparent) - min(apparent), 2) if apparent else None
+        peak_wbgt_c = round(max(wet_bulb), 2) if wet_bulb else None
+        impervious_frac = round(comp.get("impervious_building_pct", 0.0) / 100.0, 3)
+        tree_frac = round(comp.get("tree_canopy_pct", 0.0) / 100.0, 3)
+
+        if peak_wbgt_c is None:
+            health_tier = "Unavailable"
+        elif peak_wbgt_c >= 32.0:
+            health_tier = "Critical (WBGT ≥ 32°C)"
+        elif peak_wbgt_c >= 28.0:
+            health_tier = "High (WBGT ≥ 28°C)"
+        else:
+            health_tier = "Moderate"
+
+        elev = coords["elevation"]
+        terrain = "High-elevation plateau" if elev >= 1000 else ("Coastal / low-lying" if elev <= 50 else "Inland basin / valley")
+
+        rank = {SRC_LIVE: 3, SRC_CACHE: 2, SRC_QUICKSTART: 1, SRC_MODELED: 0}
+        overall_src = min([hm_src, env_src, sat_src], key=lambda s: rank.get(s, 0))
+        is_modeled = overall_src == SRC_MODELED
 
         return {
             "city": city,
             "coordinates": coords,
-            "baseline_temperature_c": curr_temp_c,
-            "baseline_temperature_f": c_to_f(curr_temp_c),
+            "baseline_temperature_c": round(baseline_c, 2),
+            "baseline_temperature_f": c_to_f(baseline_c),
             "date": date_str,
             "analysis_categories": types,
             "intelligence_pillars": {
                 "geographic": {
-                    "elevation_meters": coords["elevation"],
-                    "terrain_classification": "Urban Valley Basin",
-                    "urban_geometry_canyon_effect": "High aspect ratio (H/W > 1.8)",
-                    "shadow_coverage_daytime_pct": 22.4,
+                    "elevation_meters": elev,
+                    "terrain_classification": terrain,
+                    "source": "CITY_COORDINATES (geographic reference)",
                 },
                 "environmental": {
-                    "uhi_intensity_delta_c": 4.8,
-                    "soil_moisture_fraction": 0.08,
-                    "thermal_retention_capacity": "High (Asphalt/Concrete Albedo 0.12)",
-                    "nighttime_cooling_deficit_c": 3.4,
+                    "uhi_intensity_delta_c": uhi_delta_c,
+                    "spatial_temp_min_c": round(float(min_c), 2) if min_c is not None else None,
+                    "spatial_temp_max_c": round(float(max_c), 2) if max_c is not None else None,
+                    "surface_hotspot_c": round(float(hotspot_c), 2) if hotspot_c is not None else None,
+                    "diurnal_cooling_range_c": nighttime_cooling_c,
+                    "peak_solar_ghi_w_m2": round(solar_ghi, 1),
+                    "source": hm_src,
                 },
                 "urban": {
-                    "dominant_land_use": "Commercial & High-Density Mixed",
-                    "impervious_surface_fraction": 0.78,
-                    "thermal_equity_disparity_index": 7.2,
+                    "impervious_surface_fraction": impervious_frac,
+                    "tree_canopy_fraction": tree_frac,
+                    "derived_albedo": comp.get("albedo_mean"),
+                    "dominant_land_use": max(
+                        [("Built / impervious", impervious_frac), ("Vegetated", tree_frac + comp.get("plant_cover_pct", 0.0) / 100.0)],
+                        key=lambda kv: kv[1],
+                    )[0] if comp else "Unavailable",
+                    "source": sat_src,
                 },
                 "events": {
-                    "heatwave_consecutive_days": 18,
-                    "public_health_vulnerability_tier": "Critical Tier 1",
-                    "projected_peak_wbgt_c": 33.2,
-                },
-                "anthropogenic": {
-                    "hvac_waste_heat_flux_w_m2": 48.5,
-                    "transportation_emission_share_pct": 34.0,
-                    "cooling_inequality_delta_f": 6.8,
-                    "chiller_load_shift_potential_mwh": 12.4,
+                    "projected_peak_wbgt_c": peak_wbgt_c,
+                    "public_health_vulnerability_tier": health_tier,
+                    "source": env_src,
                 },
             },
             "status": "ready",
+            "data_source": overall_src,
+            "is_modeled": is_modeled,
+            "data_label": "Modeled estimate (FortyGuard API unavailable)" if is_modeled else "Derived from live FortyGuard analytics",
             "quota_summary": self.quota_tracker.get_summary(),
-            "report_source": "FortyGuard tOS Enterprise API" if self.is_live else "FortyGuard Quickstart Engine (Cached Safe)",
+            "report_source": "FortyGuard tOS Enterprise API" if self.is_live else "FortyGuard Cached/Modeled Engine",
         }
 
     # -------------------------------------------------------------------------
     # 5. Real-Time Telemetry Snapshot
     # -------------------------------------------------------------------------
-    def get_live_telemetry_snapshot(self, city: str = "Phoenix, AZ", temp_f: Optional[float] = None) -> Dict[str, Any]:
-        """Generate a complete, FortyGuard-aligned microclimate telemetry packet."""
-        env_data = self.get_environmental_parameters(city=city, temp_f=temp_f)
-        
-        # Safe extraction of locations list
+    def get_live_telemetry_snapshot(self, city: str = "Phoenix, AZ", temp_f: Optional[float] = None, allow_live: bool = True) -> Dict[str, Any]:
+        """Assemble a microclimate telemetry packet sourced from real FortyGuard data.
+
+        Temperature is derived from the FortyGuard **tcm heatmap** (mean tile = ambient,
+        hottest tile = surface hotspot) rather than any hardcoded seed. That real
+        temperature is then fed to the env_params endpoint so humidity, wet-bulb, heat
+        index, solar GHI, and AQI are the API's own derived values. Every packet carries
+        a ``data_source`` label; a modeled last-resort is always tagged MODELED so the UI
+        can flag it instead of presenting it as authentic.
+        """
+        # --- 1. Ground-truth temperature from the tcm heatmap (cached-first, live attempt) ---
+        heatmap_source = None
+        if temp_f is not None:
+            # Explicit reading supplied by an agent/caller — honor it.
+            ambient_f = float(temp_f)
+            ambient_c = f_to_c(ambient_f)
+            surface_c = round(ambient_c + 7.4, 2)
+            heatmap_source = "CALLER_SUPPLIED"
+        else:
+            hm = self.get_heatmap_analytics(city=city, analytic_type="tcm", granularity=100, allow_live=allow_live)
+            heatmap_source = hm.get("data_source", SRC_MODELED)
+            stats_c = extract_heatmap_temperature_stats_c(hm)
+            mean_c = stats_c.get("mean")
+            hotspot_c = stats_c.get("hotspot") or stats_c.get("max")
+            if mean_c is None:
+                ambient_c = 38.0
+                heatmap_source = SRC_MODELED
+            else:
+                ambient_c = float(mean_c)
+            ambient_f = c_to_f(ambient_c)
+            surface_c = round(float(hotspot_c) if hotspot_c is not None else ambient_c + 7.4, 2)
+        surface_f = c_to_f(surface_c)
+
+        # --- 2. Derived environmental parameters for the same real temperature ---
+        env_data = self.get_environmental_parameters(city=city, temp_f=ambient_f, allow_live=allow_live)
+        env_source = env_data.get("data_source", SRC_MODELED) if isinstance(env_data, dict) else SRC_MODELED
         locs = env_data.get("locations", []) if isinstance(env_data, dict) else []
         loc = locs[0] if locs and isinstance(locs[0], dict) else {}
         params = loc.get("parameters", {})
         solar = loc.get("solar_irradiance", {}).get("clear_sky", {})
 
-        hour_idx = 14
-        
-        # Temperature parsing
-        if temp_f is not None:
-            ambient_f = float(temp_f)
-            ambient_c = f_to_c(ambient_f)
-        else:
-            ambient_c = float(loc.get("temperature", 38.0))
-            ambient_f = c_to_f(ambient_c)
+        # Point-in-time = current local hour, clamped to the 24h array.
+        hour_idx = max(0, min(23, datetime.now().hour))
 
-        surface_c = round(ambient_c + 7.4, 2)
-        surface_f = c_to_f(surface_c)
+        def _at_hour(series: List[Any], fallback: float) -> float:
+            return float(series[hour_idx]) if isinstance(series, list) and len(series) > hour_idx and series[hour_idx] is not None else float(fallback)
 
-        # Parameter extractions with defaults
-        wet_bulb_series = params.get("wet_bulb_temperature_celsius", [])
-        wet_bulb_c = wet_bulb_series[hour_idx] if len(wet_bulb_series) > hour_idx else (ambient_c - 12.0)
+        wet_bulb_c = _at_hour(params.get("wet_bulb_temperature_celsius", []), ambient_c - 12.0)
         wet_bulb_f = c_to_f(wet_bulb_c)
-
-        heat_index_series = params.get("heat_index_celsius", [])
-        heat_index_c = heat_index_series[hour_idx] if len(heat_index_series) > hour_idx else (ambient_c + 4.0)
+        heat_index_c = _at_hour(params.get("heat_index_celsius", []), ambient_c + 4.0)
         heat_index_f = c_to_f(heat_index_c)
-
-        hum_series = params.get("relative_humidity_percent", [])
-        humidity = hum_series[hour_idx] if len(hum_series) > hour_idx else (18.0 if "Phoenix" in city else 45.0)
-
-        pm25_series = params.get("air_quality_pm2p5:idx", [])
-        aqi_pm25 = pm25_series[hour_idx] if len(pm25_series) > hour_idx else 42.0
-
-        solar_ghi = float(solar.get("ghi", 604.5))
+        humidity = _at_hour(params.get("relative_humidity_percent", []), 45.0)
+        aqi_pm25 = _at_hour(params.get("air_quality_pm2p5:idx", []), 42.0)
+        solar_ghi = float(solar.get("ghi", 0.0))
 
         if ambient_f >= 105.0 or wet_bulb_f >= 88.0:
             risk = "extreme"
@@ -812,22 +1028,34 @@ class FortyGuardAdapter:
         else:
             risk = "nominal"
 
+        # Overall provenance: the least-authentic contributing source wins, so a single
+        # modeled input downgrades (and thus flags) the whole packet.
+        rank = {SRC_LIVE: 3, SRC_CACHE: 2, SRC_QUICKSTART: 1, "CALLER_SUPPLIED": 1, SRC_MODELED: 0}
+        contributing = [heatmap_source, env_source]
+        overall_source = min(contributing, key=lambda s: rank.get(s, 0))
+        is_modeled = overall_source == SRC_MODELED
+
         quota_sum = self.quota_tracker.get_summary()
 
         return {
             "location": city,
-            "temperature_f": ambient_f,
-            "temperature_c": ambient_c,
-            "surface_temperature_f": surface_f,
-            "surface_temperature_c": surface_c,
-            "heat_index_f": heat_index_f,
-            "wet_bulb_f": wet_bulb_f,
-            "relative_humidity": humidity,
-            "solar_irradiance_ghi": solar_ghi,
-            "air_quality_pm25": aqi_pm25,
+            "temperature_f": round(ambient_f, 1),
+            "temperature_c": round(ambient_c, 2),
+            "surface_temperature_f": round(surface_f, 1),
+            "surface_temperature_c": round(surface_c, 2),
+            "heat_index_f": round(heat_index_f, 1),
+            "wet_bulb_f": round(wet_bulb_f, 1),
+            "relative_humidity": round(humidity, 1),
+            "solar_irradiance_ghi": round(solar_ghi, 1),
+            "air_quality_pm25": round(aqi_pm25, 1),
             "risk_level": risk,
-            "resolution": "100m² FortyGuard TCM",
+            "resolution": "100m FortyGuard TCM",
             "measured_at": "2m canopy & surface ground truth",
+            "data_source": overall_source,
+            "temperature_source": heatmap_source,
+            "environmental_source": env_source,
+            "is_modeled": is_modeled,
+            "data_label": "Modeled estimate (FortyGuard API unavailable)" if is_modeled else "Live FortyGuard microclimate data",
             "api_mode": "LIVE" if self.is_live else "CACHED_QUICKSTART",
             "quota": quota_sum,
             "credits_remaining": quota_sum["credits_remaining"],
