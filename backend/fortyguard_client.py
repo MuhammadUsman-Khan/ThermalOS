@@ -657,24 +657,7 @@ class FortyGuardAdapter:
         if cached:
             return cached
 
-        if self.is_live and self.sdk_client:
-            try:
-                coords = CITY_COORDINATES.get(city, {"lat": 33.4484, "lon": -112.0740})
-                res = self.sdk_client.satellite_segmentation(
-                    latitude=lat or coords["lat"],
-                    longitude=lon or coords["lon"],
-                    start_date=date_str,
-                    filter_type=3,
-                    wait=True,
-                    verbose=False,
-                )
-                payload = res.get("result", res) if isinstance(res, dict) else res
-                self.quota_tracker.record_call(endpoint="satellite", credits_cost=500)
-                self._write_disk_cache("satellite", cache_key, payload)
-                return payload
-            except Exception as e:
-                logger.error(f"Live satellite_segmentation failed: {e}. Using cached segmentation.")
-
+        # Instantaneous retrieval: Check disk cache or cached dataset first
         if self._cached_satellite:
             return self._cached_satellite[0]
 
