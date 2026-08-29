@@ -23,6 +23,7 @@ import time
 import math
 import random
 import logging
+import threading
 from datetime import datetime, date, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -198,6 +199,8 @@ def extract_heatmap_temperature_stats_c(hm: Dict[str, Any]) -> Dict[str, Optiona
         temps: List[float] = []
         for feat in feats:
             props = feat.get("properties", {}) if isinstance(feat, dict) else {}
+            if not isinstance(props, dict):
+                continue
             val = props.get("average_temperature", props.get("temperature", props.get("value")))
             if isinstance(val, (int, float)):
                 temps.append(float(val))
@@ -206,18 +209,25 @@ def extract_heatmap_temperature_stats_c(hm: Dict[str, Any]) -> Dict[str, Optiona
             mn = mn if mn is not None else round(min(temps), 4)
             mx = mx if mx is not None else round(max(temps), 4)
 
-    # Hotspot = hottest per-tile maximum (real surface peak), preferred surface proxy.
-    hotspot: Optional[float] = None
+    # Per-tile hotspot / coolest — the true intra-AOI spread (surface peak vs coolest),
+    # used for a meaningful spatial urban-heat-island delta. stats_data.min/max are only
+    # the spread of tile *averages* and understate the real range.
     feats = (hm.get("map_data", {}) or {}).get("features", []) if isinstance(hm, dict) else []
-    tile_maxes = [
-        float(f.get("properties", {}).get("max_temperature"))
-        for f in feats
-        if isinstance(f, dict) and isinstance(f.get("properties", {}).get("max_temperature"), (int, float))
-    ]
-    if tile_maxes:
-        hotspot = round(max(tile_maxes), 4)
+    tile_maxes, tile_mins = [], []
+    for f in feats:
+        if not isinstance(f, dict):
+            continue
+        props = f.get("properties", {})
+        if not isinstance(props, dict):
+            continue
+        if isinstance(props.get("max_temperature"), (int, float)):
+            tile_maxes.append(float(props["max_temperature"]))
+        if isinstance(props.get("min_temperature"), (int, float)):
+            tile_mins.append(float(props["min_temperature"]))
+    hotspot = round(max(tile_maxes), 4) if tile_maxes else None
+    coolest = round(min(tile_mins), 4) if tile_mins else None
 
-    return {"min": mn, "max": mx, "mean": mean, "hotspot": hotspot}
+    return {"min": mn, "max": mx, "mean": mean, "hotspot": hotspot, "coolest": coolest}
 
 
 class FortyGuardQuotaTracker:
@@ -229,6 +239,7 @@ class FortyGuardQuotaTracker:
 
     def __init__(self, filepath: Path = QUOTA_FILE):
         self.filepath = filepath
+        self._lock = threading.RLock()
         self.data = self._load_or_init()
 
     def _load_or_init(self) -> Dict[str, Any]:
