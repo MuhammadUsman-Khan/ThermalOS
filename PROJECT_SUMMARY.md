@@ -29,3 +29,8 @@ ThermalOS wraps FortyGuard endpoints in three specialized autonomous AI agents a
 2. **Agent 2 (Infrastructure Pre-Cool Controller)**: Simulates building structural concrete thermal inertia lag ($2.0–3.5\text{ hours}$) and executes Model Predictive Control (MPC) load-shifting on municipal chiller plants during off-peak morning hours ($03:00–07:00$), shaving **$450–780\text{ kW}$ (25–40%)** of peak electric demand.
 3. **Agent 3 (Civic & Public Health Dispatcher)**: Evaluates thermodynamic Liljegren Wet-Bulb Globe Temperature (WBGT) and dispatches automated **n8n emergency webhooks** to activate cooling shelters, deploy misting hubs, and enforce **OSHA/ACGIH 15 min/hr** outdoor work/rest rotations when $\text{WBGT} > 85.0^\circ\text{F}$.
 4. **Executive Synthesis Directive**: Merges all three agents into a single unified municipal heat mitigation brief for city mayors and emergency commanders.
+
+---
+
+### 5. AI Tool Usage Disclosure
+* **Google Antigravity**: Used as an AI pair-programming assistant for architecture design, thermodynamic physics model validation, ChromaDB RAG vector structuring, and frontend component scaffolding.

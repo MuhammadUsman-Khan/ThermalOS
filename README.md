@@ -148,8 +148,8 @@ python test_suite.py
 ```
 ThermalOS/
 ├── backend/
-│   ├── agent1_rag_auditor.py       # ASHRAE 55 Sol-Air RAG Vector Auditor
-│   ├── agent2_precool_controller.py# Building Thermal Inertia Chiller MPC
+│   ├── agent1_rag.py               # ASHRAE 55 Sol-Air RAG Vector Auditor
+│   ├── agent2_controller.py        # Building Thermal Inertia Chiller MPC
 │   ├── agent3_dispatcher.py        # Liljegren WBGT & n8n Emergency Dispatcher
 │   ├── fortyguard_client.py        # FortyGuard Enterprise SDK & 1-Hour Cache
 │   ├── mock_api.py                 # FastAPI Telemetry & Orchestration Engine
@@ -171,9 +171,16 @@ ThermalOS/
 │   ├── package.json
 │   └── vite.config.js
 ├── FORTYGUARD_API_DOCUMENTATION.md # Detailed FortyGuard API Technical Guide
+├── PROJECT_SUMMARY.md              # Official Submission Executive Summary
 ├── README.md                       # Master Architecture & Project Documentation
 └── LICENSE                         # MIT License
 ```
+
+---
+
+## 🤖 AI Tool Usage Disclosure
+In accordance with hackathon rules, we disclose the use of AI-assisted development tools:
+* **Google Antigravity**: Used as an AI pair-programming assistant for architecture design, physics model validation, ChromaDB RAG vector structuring, and frontend component scaffolding.
 
 ---
 
