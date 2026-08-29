@@ -21,6 +21,8 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { MONITORED_CITIES, REGIONS } from "../data/cities";
 
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
+
 // Exact 12 FortyGuard equal-interval classes from official Quickstart Notebook
 const FORTYGUARD_12_CLASSES = [
   { minC: 28.20, maxC: 28.37, hex: "#cd1719", label: "28.20 – 28.37 °C", tempF: "82.8 – 83.1 °F" },
@@ -205,7 +207,7 @@ export default function SpatialHeatmapView({
     try {
       const cityParam = currentView === "national" ? (focusedCityName || "Phoenix, AZ") : focusedCityName;
       const res = await fetch(
-        `http://localhost:8000/v1/fortyguard/heatmap?city=${encodeURIComponent(cityParam)}&granularity=${granularity}&force_live=true`
+        `${API_BASE}/v1/fortyguard/heatmap?city=${encodeURIComponent(cityParam)}&granularity=${granularity}&force_live=true`
       );
       if (res.ok) {
         const data = await res.json();

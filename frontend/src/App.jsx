@@ -55,7 +55,7 @@ import AgentThreeModal from "./components/AgentThreeModal";
 import ExecutiveSynthesisModal from "./components/ExecutiveSynthesisModal";
 import Toast from "./components/Toast";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
 
 const NAV_TABS = [
   { id: "operations", label: "Operations Console", icon: Activity, badge: "LIVE" },
