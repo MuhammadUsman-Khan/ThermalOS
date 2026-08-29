@@ -1459,7 +1459,7 @@ export default function AgentVisualization({
             <span className={`w-2.5 h-2.5 rounded-full ${
               agentStates.agent1 === "working"
                 ? "bg-amber-400 animate-ping"
-                : agentStates.agent1 === "done"
+                : agentStates.agent1 === "success"
                 ? "bg-emerald-400"
                 : "bg-gray-400 dark:bg-zinc-600"
             }`} />
@@ -1474,11 +1474,11 @@ export default function AgentVisualization({
               <span className={`font-bold ${
                 agentStates.agent1 === "working"
                   ? "text-amber-400 animate-pulse"
-                  : agentStates.agent1 === "done"
+                  : agentStates.agent1 === "success"
                   ? "text-emerald-400"
                   : "text-gray-400 dark:text-zinc-400"
               }`}>
-                {agentStates.agent1 === "working" ? "Auditing Standards..." : agentStates.agent1 === "done" ? "Audit Dispatched ✓" : "Standby"}
+                {agentStates.agent1 === "working" ? "Auditing Standards..." : agentStates.agent1 === "success" ? "Audit Dispatched ✓" : "Standby"}
               </span>
             </div>
           </div>
@@ -1513,7 +1513,7 @@ export default function AgentVisualization({
             <span className={`w-2.5 h-2.5 rounded-full ${
               agentStates.agent2 === "working"
                 ? "bg-cyan-400 animate-ping"
-                : agentStates.agent2 === "done"
+                : agentStates.agent2 === "success"
                 ? "bg-emerald-400"
                 : "bg-gray-400 dark:bg-zinc-600"
             }`} />
@@ -1528,11 +1528,11 @@ export default function AgentVisualization({
               <span className={`font-bold ${
                 agentStates.agent2 === "working"
                   ? "text-cyan-400 animate-pulse"
-                  : agentStates.agent2 === "done"
+                  : agentStates.agent2 === "success"
                   ? "text-emerald-400"
                   : "text-gray-400 dark:text-zinc-400"
               }`}>
-                {agentStates.agent2 === "working" ? "Shifting Peak Load..." : agentStates.agent2 === "done" ? "Pre-Cool Active ✓" : "Standby"}
+                {agentStates.agent2 === "working" ? "Shifting Peak Load..." : agentStates.agent2 === "success" ? "Pre-Cool Active ✓" : "Standby"}
               </span>
             </div>
           </div>
@@ -1567,8 +1567,8 @@ export default function AgentVisualization({
             <span className={`w-2.5 h-2.5 rounded-full ${
               agentStates.agent3 === "working"
                 ? "bg-rose-400 animate-ping"
-                : agentStates.agent3 === "done"
-                ? "bg-emerald-400"
+                : agentStates.agent3 === "alert"
+                ? "bg-rose-500"
                 : "bg-gray-400 dark:bg-zinc-600"
             }`} />
           </div>
@@ -1582,11 +1582,11 @@ export default function AgentVisualization({
               <span className={`font-bold ${
                 agentStates.agent3 === "working"
                   ? "text-rose-400 animate-pulse"
-                  : agentStates.agent3 === "done"
-                  ? "text-emerald-400"
+                  : agentStates.agent3 === "alert"
+                  ? "text-rose-500"
                   : "text-gray-400 dark:text-zinc-400"
               }`}>
-                {agentStates.agent3 === "working" ? "Dispatching Alert..." : agentStates.agent3 === "done" ? "Alert Broadcasted ✓" : "Standby"}
+                {agentStates.agent3 === "working" ? "Dispatching Alert..." : agentStates.agent3 === "alert" ? "Alert Broadcasted ✓" : "Standby"}
               </span>
             </div>
           </div>

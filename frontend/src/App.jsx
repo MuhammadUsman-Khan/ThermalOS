@@ -208,11 +208,11 @@ export default function App() {
         const data = await res.json();
         setCurrentReading(data);
         if (data.temperature_f) setCurrentTemp(data.temperature_f);
-        if (data.surface_temp_f) setSurfaceTemp(data.surface_temp_f);
-        if (data.ghi_w_m2) setSolarGhi(data.ghi_w_m2);
-        if (data.humidity_pct) setHumidity(data.humidity_pct);
+        if (data.surface_temperature_f) setSurfaceTemp(data.surface_temperature_f);
+        if (data.solar_irradiance_ghi) setSolarGhi(data.solar_irradiance_ghi);
+        if (data.relative_humidity != null) setHumidity(data.relative_humidity);
         if (data.wbgt_f) setWbgt(data.wbgt_f);
-        if (data.alert_level === "CRITICAL" || data.alert_level === "EXTREME") {
+        if (data.risk_level === "extreme" || data.risk_level === "high") {
           setIsEmergencyMode(true);
         } else {
           setIsEmergencyMode(false);

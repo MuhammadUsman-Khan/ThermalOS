@@ -113,6 +113,11 @@ class InfrastructurePrecoolReport(BaseModel):
     trigger_reason: Optional[str] = None
     hvac_action_plan: str
     n8n_dispatch: str
+    peak_demand_window: str = "14:00 – 18:00 Local"
+    estimated_power_shift_kw: float = 480.0
+    projected_cost_savings_usd: float = 1420.0
+    chiller_pre_cool_duration_hrs: float = 2.5
+    solar_ghi: float = 550.0
 
 
 class AgentRequest(BaseModel):

@@ -376,7 +376,7 @@ export default function NationalThermalGridMatrix({ selectedCity, onSelectCity }
           </div>
 
           <div className="flex items-center p-1 rounded-2xl glass-panel-subtle text-xs font-mono relative shadow-xs">
-            {["all", "critical", "precool", "nominal"].map((st) => {
+            {["all", "critical", "elevated", "precool", "nominal"].map((st) => {
               const isActive = statusFilter === st;
 
               return (
