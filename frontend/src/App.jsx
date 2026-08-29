@@ -627,74 +627,55 @@ export default function App() {
               </motion.button>
             </div>
 
-            {/* Real-Time Backend & Telemetry Connection Status Badge */}
+            {/* Unified Enterprise Telemetry & FortyGuard Status Pill */}
             <div
               title={
-                backendStatus === "connected"
-                  ? "ThermalOS FastAPI Engine & FortyGuard Live API Connected (Port 8000)"
-                  : backendStatus === "checking"
-                  ? "Checking Backend connection on Port 8000..."
-                  : "Backend disconnected. Run 'python mock_api.py' in d:\\ThermalOS\\backend"
+                currentReading?.data_label ||
+                `Engine: FortyGuard TCM & Microclimate Grid | Connection: ${backendStatus} | Source: ${currentReading?.data_source || "LIVE_API"}`
               }
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl border text-xs font-mono h-9 transition-colors select-none ${
-                isEmergencyMode
-                  ? "border-rose-500/30 bg-rose-500/10 text-rose-500"
-                  : backendStatus === "connected"
-                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                  : backendStatus === "checking"
-                  ? "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                  : "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400"
-              }`}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-2xl border border-gray-200/80 dark:border-white/[0.08] bg-gray-100/80 dark:bg-white/[0.04] text-xs font-mono h-9 select-none transition-all shadow-xs backdrop-blur-md"
             >
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  isEmergencyMode
-                    ? "bg-rose-500 animate-ping"
-                    : backendStatus === "connected"
-                    ? "bg-emerald-500 animate-radar-ping"
-                    : backendStatus === "checking"
-                    ? "bg-amber-500 animate-pulse"
-                    : "bg-rose-500 animate-ping"
-                }`}
-              />
-              <span className="font-semibold tracking-tight">
-                {isEmergencyMode
-                  ? "Thermal Advisory"
-                  : backendStatus === "connected"
-                  ? "Live · 40G Online"
-                  : backendStatus === "checking"
-                  ? "Syncing..."
-                  : "Backend Offline"}
+              <span className="relative flex h-2 w-2">
+                <span
+                  className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                    isEmergencyMode
+                      ? "bg-rose-400"
+                      : currentReading?.is_modeled
+                      ? "bg-amber-400"
+                      : "bg-emerald-400"
+                  }`}
+                />
+                <span
+                  className={`relative inline-flex rounded-full h-2 w-2 ${
+                    isEmergencyMode
+                      ? "bg-rose-500"
+                      : currentReading?.is_modeled
+                      ? "bg-amber-500"
+                      : "bg-emerald-500"
+                  }`}
+                />
+              </span>
+              <span className="font-semibold tracking-tight text-gray-800 dark:text-zinc-200 flex items-center gap-1.5">
+                <span>FortyGuard</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider ${
+                    isEmergencyMode
+                      ? "bg-rose-500/15 text-rose-500 border border-rose-500/30"
+                      : currentReading?.is_modeled
+                      ? "bg-amber-500/15 text-amber-500 border border-amber-500/30"
+                      : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                  }`}
+                >
+                  {isEmergencyMode
+                    ? "Advisory"
+                    : currentReading?.is_modeled
+                    ? "Modeled"
+                    : currentReading?.data_source === "1H_CACHE"
+                    ? "1H Cache"
+                    : "Live TCM"}
+                </span>
               </span>
             </div>
-
-            {/* Data provenance badge — proves whether the current readings are authentic
-                FortyGuard data or a clearly-labeled modeled estimate (API unavailable). */}
-            {currentReading?.data_source && (
-              <div
-                title={
-                  currentReading.data_label ||
-                  `Data source: ${currentReading.data_source}`
-                }
-                className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-2xl border text-xs font-mono h-9 select-none ${
-                  currentReading.is_modeled
-                    ? "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                    : "border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400"
-                }`}
-              >
-                <span className="font-semibold tracking-tight">
-                  {currentReading.is_modeled
-                    ? "⚠ Modeled Estimate"
-                    : `✓ FortyGuard ${
-                        currentReading.data_source === "LIVE_API"
-                          ? "Live"
-                          : currentReading.data_source === "1H_CACHE"
-                          ? "Cached"
-                          : "Data"
-                      }`}
-                </span>
-              </div>
-            )}
 
             {/* Theme Toggle */}
             <motion.button
