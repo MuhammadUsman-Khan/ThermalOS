@@ -300,10 +300,10 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
     if api_key and api_key != "insert_your_actual_key_here" and api_key != "mock_key":
         try:
             llm = ChatGoogleGenerativeAI(
-                model="gemini-1.5-flash",
+                model="gemini-3.7-flash",
                 google_api_key=api_key,
                 temperature=0.2,
-                timeout=3.0,
+                timeout=5.0,
                 max_retries=0,
             )
 

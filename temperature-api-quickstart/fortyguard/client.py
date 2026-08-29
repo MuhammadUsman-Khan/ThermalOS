@@ -52,6 +52,9 @@ class FortyGuardClient:
         self.base_url = (base_url or os.getenv("FORTYGUARD_BASE_URL") or DEFAULT_BASE_URL).rstrip("/")
         self.timeout = timeout
         self._session = requests.Session()
+        self._session.verify = False
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self._session.headers.update(
             {"api-key": self.api_key, "Content-Type": "application/json"}
         )
