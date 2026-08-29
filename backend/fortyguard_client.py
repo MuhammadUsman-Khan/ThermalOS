@@ -71,21 +71,30 @@ BACKEND_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = BACKEND_DIR.parent
 QUICKSTART_DATA_DIR = PROJECT_ROOT / "temperature-api-quickstart" / "data"
 
-# On Vercel / AWS Lambda, use /tmp for caching and quota storage
-is_serverless = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
-if is_serverless:
-    CACHE_DIR = Path("/tmp") / "thermalos" / "cache" / "fortyguard"
-    QUOTA_FILE = Path("/tmp") / "thermalos" / "cache" / "quota_tracker.json"
-else:
-    CACHE_DIR = BACKEND_DIR / "cache" / "fortyguard"
-    QUOTA_FILE = BACKEND_DIR / "cache" / "quota_tracker.json"
+def _resolve_safe_storage_paths():
+    """Detects whether local filesystem is writable or read-only (e.g. Vercel/Lambda) and returns safe paths."""
+    local_cache = BACKEND_DIR / "cache" / "fortyguard"
+    local_quota = BACKEND_DIR / "cache" / "quota_tracker.json"
+    try:
+        local_cache.mkdir(parents=True, exist_ok=True)
+        test_file = local_cache / ".write_test"
+        test_file.touch(exist_ok=True)
+        test_file.unlink(missing_ok=True)
+        for sub in ["env_params", "heatmaps", "satellite", "intelligence"]:
+            (local_cache / sub).mkdir(parents=True, exist_ok=True)
+        return local_cache, local_quota
+    except Exception:
+        # Read-only container (Vercel Serverless) -> use /tmp
+        tmp_cache = Path("/tmp") / "thermalos" / "cache" / "fortyguard"
+        tmp_quota = Path("/tmp") / "thermalos" / "cache" / "quota_tracker.json"
+        try:
+            for sub in ["env_params", "heatmaps", "satellite", "intelligence"]:
+                (tmp_cache / sub).mkdir(parents=True, exist_ok=True)
+        except Exception as _tmp_err:
+            logger.warning(f"Could not create /tmp cache subdirectories: {_tmp_err}")
+        return tmp_cache, tmp_quota
 
-# Ensure cache directories exist gracefully
-try:
-    for sub in ["env_params", "heatmaps", "satellite", "intelligence"]:
-        (CACHE_DIR / sub).mkdir(parents=True, exist_ok=True)
-except Exception as _mkdir_err:
-    logger.warning(f"Could not create local cache directory: {_mkdir_err}")
+CACHE_DIR, QUOTA_FILE = _resolve_safe_storage_paths()
 
 # Add quickstart directory to sys.path to access the official fortyguard SDK
 QUICKSTART_PKG_DIR = PROJECT_ROOT / "temperature-api-quickstart"

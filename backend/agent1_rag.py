@@ -108,12 +108,18 @@ def initialize_vector_db():
     """
     global _collection
     try:
-        is_serverless = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
-        if is_serverless:
+        candidate = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "chroma_db")
+        try:
+            os.makedirs(candidate, exist_ok=True)
+            test_f = os.path.join(candidate, ".write_test")
+            with open(test_f, "w") as f:
+                f.write("ok")
+            os.remove(test_f)
+            persist_dir = candidate
+        except Exception:
             persist_dir = os.path.join("/tmp", "thermalos", "chroma_db")
-        else:
-            persist_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "chroma_db")
-        os.makedirs(persist_dir, exist_ok=True)
+            os.makedirs(persist_dir, exist_ok=True)
+
         client = chromadb.PersistentClient(path=persist_dir)
         
         collection = client.get_or_create_collection(name="energy_codes")
