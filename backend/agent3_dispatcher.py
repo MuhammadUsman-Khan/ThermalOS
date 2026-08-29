@@ -248,7 +248,7 @@ def evaluate_civic_dispatch(
         )
 
     # Step 5: Mathematical Trigger Condition & Webhook Execution
-    should_alert = wbgt_index > WBGT_SURVIVABILITY_THRESHOLD_F or temp_f >= 105.0
+    should_alert = wbgt_index >= WBGT_SURVIVABILITY_THRESHOLD_F or temp_f >= 105.0
 
     event_timestamp = datetime.now(timezone.utc).isoformat()
 

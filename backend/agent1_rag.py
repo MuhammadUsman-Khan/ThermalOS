@@ -310,7 +310,11 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
     
     surface_temp_f = env_snapshot.get("surface_temperature_f", float(temp_f) + 12.0)
     solar_ghi = env_snapshot.get("solar_irradiance_ghi", 580.0)
-    building_pct = sat_data.get("segmentation", {}).get("material_fractions", {}).get("impervious_building_pct", 40.0)
+    # Real land-cover building fraction lives under surface_composition (segments-derived);
+    # fall back to a nominal value only if the satellite composition is unavailable.
+    building_pct = sat_data.get("surface_composition", {}).get("impervious_building_pct")
+    if building_pct is None:
+        building_pct = 40.0
 
     # 2. Exact Thermodynamic Sol-Air Envelope Calculations
     delta_t = max(0.0, surface_temp_f - float(temp_f))

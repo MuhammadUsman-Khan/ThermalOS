@@ -54,10 +54,19 @@ class InfrastructurePrecoolReport:
 class RollingWindowThresholdModel:
     def __init__(self, window_size: int = WINDOW_SIZE):
         self.window_size = window_size
-        self._window: deque = deque(maxlen=window_size)
+        # Per-location windows so one city's readings never pollute another city's
+        # rolling average / anomaly-jump detection.
+        self._windows: Dict[str, deque] = {}
+
+    def _win(self, location: str) -> deque:
+        w = self._windows.get(location)
+        if w is None:
+            w = deque(maxlen=self.window_size)
+            self._windows[location] = w
+        return w
 
     def ingest(self, reading: TemperatureReading, solar_ghi: float = 0.0) -> Optional[str]:
-        self._window.append(reading)
+        self._win(reading.location).append(reading)
         return self._should_trigger(reading, solar_ghi)
 
     def _should_trigger(self, reading: TemperatureReading, solar_ghi: float) -> Optional[str]:
@@ -68,7 +77,7 @@ class RollingWindowThresholdModel:
         if solar_ghi >= HIGH_SOLAR_GHI_THRESHOLD and reading.temperature_f >= 98.0:
             return "solar_radiation_spike"
 
-        prior_readings = list(self._window)[:-1]
+        prior_readings = list(self._win(reading.location))[:-1]
         if len(prior_readings) >= 3:
             prior_avg = sum(r.temperature_f for r in prior_readings) / len(prior_readings)
             if reading.temperature_f - prior_avg >= ANOMALY_JUMP_THRESHOLD_F:
@@ -92,7 +101,7 @@ class RollingWindowThresholdModel:
                 f"combined with {reading.temperature_f:.1f}°F triggers preventive thermal load shift"
             )
         if reason == "anomaly_jump":
-            prior = list(self._window)[:-1]
+            prior = list(self._win(reading.location))[:-1]
             prior_avg = sum(r.temperature_f for r in prior) / len(prior)
             jump = reading.temperature_f - prior_avg
             return (
@@ -101,8 +110,8 @@ class RollingWindowThresholdModel:
             )
         return None
 
-    def recent_temps(self) -> list:
-        return [r.temperature_f for r in self._window]
+    def recent_temps(self, location: str) -> list:
+        return [r.temperature_f for r in self._win(location)]
 
 
 class N8nHvacDispatcher:
@@ -144,7 +153,9 @@ class N8nHvacDispatcher:
         import threading
         t = threading.Thread(target=self._send_post, args=(payload, location), daemon=True)
         t.start()
-        return {"dispatched": True, "status_code": 200, "reason": "triggered"}
+        # Fired on a background thread (n8n is best-effort). We report it as accepted for
+        # async dispatch rather than claiming a confirmed 2xx we haven't observed yet.
+        return {"dispatched": True, "status_code": 202, "reason": "queued_async"}
 
 
 def _parse_payload(payload: dict) -> Optional[TemperatureReading]:
@@ -237,9 +248,9 @@ def process_reading(payload: dict) -> dict:
 
     return {
         "report": report.__dict__,
-        "window": model.recent_temps(),
+        "window": model.recent_temps(reading.location),
         "dispatch": dispatch_result,
-        "ok": dispatch_result.get("status_code") == 200 or not triggered,
+        "ok": dispatch_result.get("status_code") in (200, 202) or not triggered,
     }
 
 

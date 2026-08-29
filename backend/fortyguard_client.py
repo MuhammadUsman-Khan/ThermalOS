@@ -488,8 +488,13 @@ class FortyGuardAdapter:
     # -------------------------------------------------------------------------
     # Disk Cache Helpers (Strict 1-Hour TTL)
     # -------------------------------------------------------------------------
-    def _read_disk_cache(self, category: str, cache_key: str, max_age_seconds: int = 3600) -> Optional[Dict[str, Any]]:
-        """Serve from disk cache ONLY if user asked within the last 1 hour (3600 seconds)."""
+    def _read_disk_cache(self, category: str, cache_key: str, max_age_seconds: int = 86400) -> Optional[Dict[str, Any]]:
+        """Serve from disk cache within the TTL.
+
+        Default TTL is 24h: the analysis date is a fixed historical day (2024-07-15), so a
+        cached FortyGuard response for a city does not go stale within a demo/session, and a
+        longer TTL keeps prewarmed real data serving instantly instead of decaying to modeled.
+        """
         safe_name = "".join([c if c.isalnum() or c in "._-" else "_" for c in cache_key]) + ".json"
         cfile = CACHE_DIR / category / safe_name
         if cfile.exists():
@@ -529,6 +534,7 @@ class FortyGuardAdapter:
         date_str: str = "2024-07-15",
         filter_type: int = 3,
         allow_live: bool = True,
+        live_timeout: float = 8.0,
     ) -> Dict[str, Any]:
         """Fetch 24h environmental and solar metrics with disk caching & quota protection.
 
@@ -558,7 +564,7 @@ class FortyGuardAdapter:
                     filter_type=filter_type,
                     wait=True,
                     poll_interval=2.0,
-                    timeout=8.0,
+                    timeout=live_timeout,
                     verbose=False,
                 )
                 payload = res.get("result", res) if isinstance(res, dict) else res
@@ -656,6 +662,7 @@ class FortyGuardAdapter:
         granularity: int = 100,
         force_live: bool = False,
         allow_live: bool = True,
+        live_timeout: float = 8.0,
     ) -> Dict[str, Any]:
         """Fetch spatial thermal tile mesh from FortyGuard Live API, with strict 1-hour cache reuse.
 
@@ -667,7 +674,7 @@ class FortyGuardAdapter:
         # 1. Always reuse a real FortyGuard response captured within the last hour.
         #    (Cache-first even for force_live: the daily heatmap quota is only 30, so
         #    re-serving a <1h-old authentic response protects credits without faking data.)
-        cached = self._read_disk_cache("heatmaps", cache_key, max_age_seconds=3600)
+        cached = self._read_disk_cache("heatmaps", cache_key, max_age_seconds=86400)
         if cached:
             st = cached.setdefault("stats_data", {})
             st["granularity_meters"] = granularity
@@ -694,7 +701,7 @@ class FortyGuardAdapter:
                     threshold=32.0 if analytic_type in ("exceedance", "persistence") else None,
                     direction="above" if analytic_type in ("exceedance", "persistence") else None,
                     wait=True,
-                    timeout=8.0,
+                    timeout=live_timeout,
                     verbose=False,
                 )
                 payload = res.get("result", res) if isinstance(res, dict) else res
@@ -813,6 +820,8 @@ class FortyGuardAdapter:
         lat: Optional[float] = None,
         lon: Optional[float] = None,
         date_str: str = "2024-07-15",
+        allow_live: bool = True,
+        live_timeout: float = 30.0,
     ) -> Dict[str, Any]:
         """Fetch 100m satellite land-cover segmentation with real class fractions.
 
@@ -832,13 +841,13 @@ class FortyGuardAdapter:
             cached.setdefault("data_source", SRC_CACHE)
             return self._augment_satellite(cached)
 
-        # Live FortyGuard satellite segmentation (short synchronous poll).
-        if self.is_live and self.sdk_client:
+        # Live FortyGuard satellite segmentation (synchronous poll; fetched async by the UI).
+        if allow_live and self.is_live and self.sdk_client:
             try:
                 res = self.sdk_client.satellite_segmentation(
                     latitude=target_lat, longitude=target_lon,
                     start_date=date_str, filter_type=3, granularity=100,
-                    wait=True, poll_interval=2.0, timeout=8.0, verbose=False,
+                    wait=True, poll_interval=3.0, timeout=live_timeout, verbose=False,
                 )
                 payload = res.get("result", res) if isinstance(res, dict) else res
                 if isinstance(payload, dict):
@@ -857,6 +866,8 @@ class FortyGuardAdapter:
             sat = json.loads(json.dumps(self._cached_satellite[0]))
             sat["data_source"] = SRC_QUICKSTART
             self._write_disk_cache("satellite", cache_key, sat)
+            return self._augment_satellite(sat)
+
         # Modeled last resort — clearly labeled, never presented as authentic.
         city_seg = CITY_LAND_COVER_PROFILES.get(
             city,
@@ -881,22 +892,72 @@ class FortyGuardAdapter:
     # composition-weighted albedo, since the API does not return albedo directly).
     _CLASS_ALBEDO = {"building": 0.12, "tree": 0.15, "earth, ground": 0.17, "plant": 0.20, "others": 0.25}
 
+    # The satellite/street-view segmenter emits a variable class vocabulary
+    # (building, skyscraper, road, sidewalk, tree, plant, grass, earth, sand, sky, water...).
+    # Group each class into the four surface buckets the dashboard reports on.
+    _SEG_GROUPS = {
+        "impervious": ("building", "skyscraper", "house", "wall", "road", "route",
+                       "sidewalk", "pavement", "runway", "bridge", "roof"),
+        "tree": ("tree",),
+        "plant": ("plant", "grass", "flora", "field", "vegetation", "shrub"),
+        "ground": ("earth, ground", "earth", "ground", "soil", "sand", "dirt", "land", "rock"),
+    }
+
     def _augment_satellite(self, sat: Dict[str, Any]) -> Dict[str, Any]:
-        """Map the API's real ``segments`` percentages to the UI card fields and derive albedo."""
+        """Map the API's real ``segments`` percentages to the UI card fields and derive albedo.
+
+        Aggregates the API's variable class vocabulary into four surface buckets so the
+        composition genuinely reflects (and varies with) each city's real segmentation.
+        """
         seg = sat.get("segmentation", {}) if isinstance(sat, dict) else {}
         segments = seg.get("segments", {})
         # Real responses use a {class: percent} dict; strip any non-numeric entries.
         if isinstance(segments, dict):
-            pct = {k: float(v) for k, v in segments.items() if isinstance(v, (int, float))}
+            pct = {str(k).lower(): float(v) for k, v in segments.items() if isinstance(v, (int, float))}
         else:
             pct = {}
-        albedo = round(sum(self._CLASS_ALBEDO.get(k, 0.2) * (v / 100.0) for k, v in pct.items()), 3) if pct else None
+
+        def _bucket_of(class_name: str) -> str:
+            """Assign a raw segment label to a surface bucket by keyword membership,
+            handling combined labels like 'road, route' and 'sidewalk, pavement'."""
+            n = class_name.lower()
+            for bucket, keywords in self._SEG_GROUPS.items():
+                if any(kw in n for kw in keywords):
+                    return bucket
+            return "other"
+
+        building = tree = plant = ground = other = 0.0
+        for cls, val in pct.items():
+            b = _bucket_of(cls)
+            if b == "impervious":
+                building += val
+            elif b == "tree":
+                tree += val
+            elif b == "plant":
+                plant += val
+            elif b == "ground":
+                ground += val
+            else:
+                other += val
+        building, tree, plant, ground, other = (round(building, 1), round(tree, 1),
+                                                 round(plant, 1), round(ground, 1), round(other, 1))
+
+        # Composition-weighted albedo from the real fractions (building-like → low albedo).
+        if pct:
+            albedo = round(
+                (building * 0.12 + tree * 0.15 + plant * 0.20 + ground * 0.17 + other * 0.25)
+                / max(1.0, building + tree + plant + ground + other),
+                3,
+            )
+        else:
+            albedo = None
+
         sat["surface_composition"] = {
-            "impervious_building_pct": round(pct.get("building", 0.0), 1),
-            "tree_canopy_pct": round(pct.get("tree", 0.0), 1),
-            "plant_cover_pct": round(pct.get("plant", 0.0), 1),
-            "ground_soil_pct": round(pct.get("earth, ground", 0.0), 1),
-            "other_pct": round(pct.get("others", 0.0), 1),
+            "impervious_building_pct": building,
+            "tree_canopy_pct": tree,
+            "plant_cover_pct": plant,
+            "ground_soil_pct": ground,
+            "other_pct": other,
             "albedo_mean": albedo,
             "albedo_is_derived": True,
             "data_source": sat.get("data_source", SRC_MODELED),

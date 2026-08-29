@@ -361,6 +361,12 @@ def national_grid_endpoint():
                 "nominal": ("Nominal", "precool"),
             }
             status, status_type = status_map.get(risk, ("Nominal", "precool"))
+            # Land-cover building fraction from cached satellite (no live fan-out here).
+            try:
+                sat = fortyguard_client.get_satellite_segmentation(city=city, allow_live=False)
+                building_pct = sat.get("surface_composition", {}).get("impervious_building_pct")
+            except Exception:
+                building_pct = None
             rows.append({
                 "city": city,
                 "ambient": round(amb, 1),
@@ -369,7 +375,8 @@ def national_grid_endpoint():
                 "ghi": snap.get("solar_irradiance_ghi", 0.0),
                 "humidity": snap.get("relative_humidity", 0.0),
                 "wetBulb": snap.get("wet_bulb_f", 0.0),
-                "wbgt": snap.get("heat_index_f", 0.0),
+                "wbgt": snap.get("wbgt_f", snap.get("heat_index_f", 0.0)),
+                "buildingPct": building_pct,
                 "status": status,
                 "statusType": status_type,
                 "data_source": snap.get("data_source", "MODELED"),

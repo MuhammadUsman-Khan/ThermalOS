@@ -223,10 +223,10 @@ export default function DiurnalTimelineScrubber({
           </span>
           <span className="text-gray-300 dark:text-zinc-700">|</span>
           <span>
-            Heat Idx: <strong className="text-orange-400">{activePoint.surface}°F</strong>
+            Heat Idx: <strong className="text-orange-400">{activePoint.surface != null ? `${activePoint.surface}°F` : "—"}</strong>
           </span>
           <span>
-            Air: <strong className="text-cyan-400">{activePoint.ambient}°F</strong>
+            Air: <strong className="text-cyan-400">{activePoint.ambient != null ? `${activePoint.ambient}°F` : "—"}</strong>
           </span>
           <span>
             GHI: <strong className="text-amber-400">{activePoint.ghi} W/m²</strong>

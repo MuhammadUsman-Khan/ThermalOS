@@ -237,7 +237,13 @@ export default function App() {
       const res = await fetch(`${API_BASE}/api/telemetry?city=${encodeURIComponent(city)}`);
       if (res.ok) {
         const data = await res.json();
-        setCurrentReading((prev) => ({ ...(prev || {}), ...data }));
+        // On city switch (reseed) replace wholesale so the previous city's land-cover
+        // segmentation doesn't linger; on background polls merge to preserve it.
+        if (reseedChart) {
+          setCurrentReading(data);
+        } else {
+          setCurrentReading((prev) => ({ ...(prev || {}), ...data }));
+        }
         const amb = data.temperature_f ?? data.temperature ?? data.ambient_temp_f;
         const surf = data.surface_temperature_f ?? data.surface_temp_f;
         const ghi = data.solar_irradiance_ghi ?? data.ghi_w_m2 ?? data.solar_ghi;
