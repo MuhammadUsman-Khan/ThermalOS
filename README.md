@@ -7,7 +7,7 @@
 <br/>
 
 [![FortyGuard Hackathon](https://img.shields.io/badge/FortyGuard%20Hackathon-2026%20Track%206%3A%20Agentic-FF5722.svg?style=for-the-badge&logo=target&logoColor=white)](https://fortyguard.com)
-[![Live Frontend](https://img.shields.io/badge/Live%20Demo-thermal--os--frontend.vercel.app-blueviolet.svg?style=for-the-badge&logo=vercel&logoColor=white)](https://thermal-os-frontend.vercel.app/)
+[![Live Frontend](https://img.shields.io/badge/Live%20Demo-thermal--os.vercel.app-blueviolet.svg?style=for-the-badge&logo=vercel&logoColor=white)](https://thermal-os.vercel.app/)
 [![Live Backend API](https://img.shields.io/badge/Live%20API-thermal--os--api.vercel.app-000000.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://thermal-os-api.vercel.app/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React 19](https://img.shields.io/badge/React%2019-20232A.svg?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev)
@@ -21,7 +21,7 @@
 
 <br/>
 
-[🚀 Live Application Demo](https://thermal-os-frontend.vercel.app/) • [🌐 Live Backend API](https://thermal-os-api.vercel.app/) • [📖 API Integration Guide](FORTYGUARD_API_DOCUMENTATION.md) • [📋 Project Summary](PROJECT_SUMMARY.md)
+[🚀 Live Application Demo](https://thermal-os.vercel.app/) • [🌐 Live Backend API](https://thermal-os-api.vercel.app/) • [📖 API Integration Guide](FORTYGUARD_API_DOCUMENTATION.md) • [📋 Project Summary](PROJECT_SUMMARY.md)
 
 ---
 

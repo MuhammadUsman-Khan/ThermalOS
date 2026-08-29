@@ -1,7 +1,7 @@
 # FortyGuard Enterprise API — Integration & Usage Documentation
 
 **System**: [ThermalOS](https://github.com/MuhammadUsman-Khan/ThermalOS)  
-**Live Frontend**: [https://thermal-os-frontend.vercel.app](https://thermal-os-frontend.vercel.app)  
+**Live Frontend**: [https://thermal-os.vercel.app](https://thermal-os.vercel.app)  
 **Live Backend API**: [https://thermal-os-api.vercel.app](https://thermal-os-api.vercel.app)  
 **Client Module**: [`backend/fortyguard_client.py`](file:///d:/ThermalOS/backend/fortyguard_client.py)  
 **API Documentation Reference**: [FortyGuard Developer Portal](https://api.fortyguard.com)
