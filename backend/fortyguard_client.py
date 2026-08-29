@@ -105,11 +105,13 @@ if str(QUICKSTART_PKG_DIR) not in sys.path and QUICKSTART_PKG_DIR.exists():
 try:
     # pyrefly: ignore [missing-import]
     from fortyguard import FortyGuardClient  # type: ignore
-    from fortyguard.exceptions import FortyGuardError  # type: ignore
+    from fortyguard.exceptions import FortyGuardError, TaskTimeoutError  # type: ignore
     FORTYGUARD_SDK_AVAILABLE = True
 except Exception:
     FortyGuardClient = None
     FortyGuardError = Exception  # type: ignore
+    class TaskTimeoutError(Exception):  # type: ignore
+        """Fallback when the FortyGuard SDK is unavailable."""
     FORTYGUARD_SDK_AVAILABLE = False
 
 # Default ~104 km² polygon covering central San Jose, CA for FortyGuard API Heatmaps
@@ -338,21 +340,22 @@ class FortyGuardQuotaTracker:
 
     def record_call(self, endpoint: str, credits_cost: int = 100) -> None:
         """Record an executed live FortyGuard API request and deduct credits."""
-        self._check_and_reset_daily(self.data)
-        
-        # Deduct credits
-        acc = self.data["account"]
-        acc["credits_used"] += credits_cost
-        acc["credits_remaining"] = max(0, acc["credit_allowance"] - acc["credits_used"])
+        with self._lock:
+            self._check_and_reset_daily(self.data)
 
-        # Increment daily endpoint counters
-        if endpoint in self.data["daily_limits"]:
-            ep = self.data["daily_limits"][endpoint]
-            ep["calls_today"] = ep.get("calls_today", 0) + 1
-            if "max_per_day" in ep:
-                ep["remaining_today"] = max(0, ep["max_per_day"] - ep["calls_today"])
+            # Deduct credits
+            acc = self.data["account"]
+            acc["credits_used"] += credits_cost
+            acc["credits_remaining"] = max(0, acc["credit_allowance"] - acc["credits_used"])
 
-        self._save()
+            # Increment daily endpoint counters
+            if endpoint in self.data["daily_limits"]:
+                ep = self.data["daily_limits"][endpoint]
+                ep["calls_today"] = ep.get("calls_today", 0) + 1
+                if "max_per_day" in ep:
+                    ep["remaining_today"] = max(0, ep["max_per_day"] - ep["calls_today"])
+
+            self._save()
         logger.info(
             f"FortyGuard API [{endpoint}] called. Credits used: +{credits_cost}. "
             f"Remaining allowance: {acc['credits_remaining']:,} credits. "
@@ -504,7 +507,8 @@ class FortyGuardAdapter:
         cache_key = f"env_{city}_{date_str}_{filter_type}"
         cached = self._read_disk_cache("env_params", cache_key)
         if cached:
-            cached.setdefault("data_source", SRC_CACHE)
+            # A real (live-origin) response reused within 1h is a cache hit, not fresh live.
+            cached["data_source"] = SRC_MODELED if cached.get("data_source") == SRC_MODELED else SRC_CACHE
             return cached
 
         coords = CITY_COORDINATES.get(city, {"lat": 33.4484, "lon": -112.0740, "elevation": 331.0})
@@ -532,6 +536,10 @@ class FortyGuardAdapter:
                 self.quota_tracker.record_call(endpoint="env_params", credits_cost=200)
                 self._write_disk_cache("env_params", cache_key, payload)
                 return payload
+            except TaskTimeoutError as e:
+                # Job submitted (billable) but not finished in the poll window — record it.
+                self.quota_tracker.record_call(endpoint="env_params", credits_cost=200)
+                logger.warning(f"Live environmental_parameters timed out ({e}); recorded against quota. Using physics model.")
             except Exception as e:
                 logger.error(f"Live environmental_parameters failed: {e}. Falling back to physics model.")
 
@@ -667,6 +675,12 @@ class FortyGuardAdapter:
                 self.quota_tracker.record_call(endpoint="heatmap", credits_cost=1000)
                 self._write_disk_cache("heatmaps", cache_key, payload)
                 return payload
+            except TaskTimeoutError as e:
+                # The job WAS submitted (credits consumed server-side) but did not finish
+                # within our short poll window. Record it so the 30/day guard actually
+                # engages instead of re-submitting a fresh billable job on every request.
+                self.quota_tracker.record_call(endpoint="heatmap", credits_cost=1000)
+                logger.warning(f"Live create_heatmap timed out for {city} ({e}); recorded against quota. Serving spatial mesh.")
             except Exception as e:
                 logger.warning(f"Live FortyGuard create_heatmap deferred ({e}). Serving calibrated spatial mesh.")
 
@@ -799,6 +813,9 @@ class FortyGuardAdapter:
                     self.quota_tracker.record_call(endpoint="satellite", credits_cost=300)
                     self._write_disk_cache("satellite", cache_key, payload)
                     return self._augment_satellite(payload)
+            except TaskTimeoutError as e:
+                self.quota_tracker.record_call(endpoint="satellite", credits_cost=300)
+                logger.warning(f"Live satellite_segmentation timed out ({e}); recorded against quota. Serving cached/modeled land cover.")
             except Exception as e:
                 logger.warning(f"Live satellite_segmentation deferred ({e}). Serving cached/modeled land cover.")
 
