@@ -756,7 +756,10 @@ export default function App() {
                             <div className="space-y-0.5">
                               {regionCities.map((c) => {
                                 const isSelected = selectedCity === c.name;
-                                const tempNum = parseFloat(c.tempF);
+                                const displayTemp = isSelected
+                                  ? `${currentTemp.toFixed(1)}°F`
+                                  : c.tempF;
+                                const tempNum = parseFloat(displayTemp);
 
                                 return (
                                   <button
@@ -774,14 +777,16 @@ export default function App() {
                                     </div>
                                     <span
                                       className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold ${
-                                        tempNum >= 105
+                                        tempNum >= 95
                                           ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
-                                          : tempNum >= 95
+                                          : tempNum >= 88
                                           ? "bg-orange-500/15 text-orange-400 border border-orange-500/30"
-                                          : "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                          : tempNum >= 80
+                                          ? "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                                          : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
                                       }`}
                                     >
-                                      {c.tempF}
+                                      {displayTemp}
                                     </span>
                                   </button>
                                 );
