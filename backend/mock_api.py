@@ -209,7 +209,6 @@ def audit_endpoint(request: AuditRequest):
 @app.post("/v1/agents/infrastructure", response_model=InfrastructurePrecoolReport)
 def infrastructure_precool_endpoint(request: AgentRequest):
     """Agent 2: Infrastructure Pre-Cool Controller powered by FortyGuard Solar & Thermal Lag."""
-    time.sleep(1.0)
     try:
         agent2_result = agent2_process_reading(
             {
@@ -257,17 +256,23 @@ def civic_dispatch_endpoint(request: AgentRequest):
 def multi_agent_synthesis_endpoint(request: AgentRequest):
     """Generates a unified Multi-Agent Municipal Executive Synthesis across all 3 agents."""
     try:
-        # Run all 3 agent pipelines concurrently for this city
-        audit_rep = run_compliance_audit(city=request.city, temp_f=int(request.temperature_f))
-        infra_res = agent2_process_reading(
-            {
-                "location": request.city,
-                "temperature_f": request.temperature_f,
-                "risk_level": request.risk_level or ("extreme" if request.temperature_f >= 105 else "elevated"),
-            }
-        )
-        infra_rep = infra_res["report"]
-        civic_rep = evaluate_civic_dispatch(city=request.city, temp_f=request.temperature_f)
+        from concurrent.futures import ThreadPoolExecutor
+
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            future_audit = executor.submit(run_compliance_audit, city=request.city, temp_f=int(request.temperature_f))
+            future_infra = executor.submit(
+                agent2_process_reading,
+                {
+                    "location": request.city,
+                    "temperature_f": request.temperature_f,
+                    "risk_level": request.risk_level or ("extreme" if request.temperature_f >= 105 else "elevated"),
+                }
+            )
+            future_civic = executor.submit(evaluate_civic_dispatch, city=request.city, temp_f=request.temperature_f)
+
+            audit_rep = future_audit.result()
+            infra_res = future_infra.result()
+            civic_rep = future_civic.result()
 
         # Composite overall risk tier
         if civic_rep.heat_stress_risk == "EXTREME" or request.temperature_f >= 105:
