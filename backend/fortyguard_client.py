@@ -66,16 +66,26 @@ CITY_COORDINATES: Dict[str, Dict[str, float]] = {
     "Atlanta, GA": {"lat": 33.7490, "lon": -84.3880, "elevation": 320.0},
 }
 
-# Resolve directories
+# Resolve directories (Serverless / Read-Only Filesystem Safe)
 BACKEND_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = BACKEND_DIR.parent
 QUICKSTART_DATA_DIR = PROJECT_ROOT / "temperature-api-quickstart" / "data"
-CACHE_DIR = BACKEND_DIR / "cache" / "fortyguard"
-QUOTA_FILE = BACKEND_DIR / "cache" / "quota_tracker.json"
 
-# Ensure cache directories exist
-for sub in ["env_params", "heatmaps", "satellite", "intelligence"]:
-    (CACHE_DIR / sub).mkdir(parents=True, exist_ok=True)
+# On Vercel / AWS Lambda, use /tmp for caching and quota storage
+is_serverless = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+if is_serverless:
+    CACHE_DIR = Path("/tmp") / "thermalos" / "cache" / "fortyguard"
+    QUOTA_FILE = Path("/tmp") / "thermalos" / "cache" / "quota_tracker.json"
+else:
+    CACHE_DIR = BACKEND_DIR / "cache" / "fortyguard"
+    QUOTA_FILE = BACKEND_DIR / "cache" / "quota_tracker.json"
+
+# Ensure cache directories exist gracefully
+try:
+    for sub in ["env_params", "heatmaps", "satellite", "intelligence"]:
+        (CACHE_DIR / sub).mkdir(parents=True, exist_ok=True)
+except Exception as _mkdir_err:
+    logger.warning(f"Could not create local cache directory: {_mkdir_err}")
 
 # Add quickstart directory to sys.path to access the official fortyguard SDK
 QUICKSTART_PKG_DIR = PROJECT_ROOT / "temperature-api-quickstart"

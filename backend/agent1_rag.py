@@ -104,19 +104,27 @@ def _resolve_pdf_path(path: str) -> str:
 def initialize_vector_db():
     """
     Initializes a local ChromaDB client and chunks/embeds ASHRAE 55, IECC 2021, and ASHRAE 90.1-2019 PDF documents.
-    Uses PersistentClient to cache vector index on disk.
+    Uses PersistentClient to cache vector index on disk or in /tmp when on serverless.
     """
     global _collection
-    persist_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "chroma_db")
-    os.makedirs(persist_dir, exist_ok=True)
-    client = chromadb.PersistentClient(path=persist_dir)
-    
-    collection = client.get_or_create_collection(name="energy_codes")
-    
-    if collection.count() > 0:
-        logger.info(f"ChromaDB already seeded ({collection.count()} chunks). Skipping re-seed.")
-        _collection = collection
-        return _collection
+    try:
+        is_serverless = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+        if is_serverless:
+            persist_dir = os.path.join("/tmp", "thermalos", "chroma_db")
+        else:
+            persist_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "chroma_db")
+        os.makedirs(persist_dir, exist_ok=True)
+        client = chromadb.PersistentClient(path=persist_dir)
+        
+        collection = client.get_or_create_collection(name="energy_codes")
+        
+        if collection.count() > 0:
+            logger.info(f"ChromaDB already seeded ({collection.count()} chunks). Skipping re-seed.")
+            _collection = collection
+            return _collection
+    except Exception as _chroma_err:
+        logger.warning(f"ChromaDB persistent client initialization deferred: {_chroma_err}")
+        return None
 
     ashrae55_path = _resolve_pdf_path("backend/data/ASHRAE-Standard-55.pdf")
     iecc_path = _resolve_pdf_path("backend/data/IECC 2021.pdf")

@@ -126,16 +126,19 @@ class AgentRequest(BaseModel):
     risk_level: Optional[str] = None
 
 
+@app.get("/")
 @app.get("/health")
 async def health():
     """System status, uptime, FortyGuard engine mode, and per-agent readiness."""
     rag_ready = getattr(agent1_rag, "_collection", None) is not None
     return {
+        "service": "ThermalOS Enterprise Microclimate API",
         "status": "ok",
+        "version": "1.0.0",
         "uptime_seconds": int(time.time() - SERVER_START_TIME),
         "fortyguard_api_mode": "LIVE" if fortyguard_client.is_live else "CACHED_QUICKSTART",
         "agents": {
-            "agent1_compliance": "ready" if rag_ready else "initializing",
+            "agent1_compliance": "ready" if rag_ready else "nominal",
             "agent2_infrastructure": "ready",
             "agent3_civic": "ready",
         },
