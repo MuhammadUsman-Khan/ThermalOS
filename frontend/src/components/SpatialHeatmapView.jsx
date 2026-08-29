@@ -21,21 +21,28 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { MONITORED_CITIES, REGIONS } from "../data/cities";
 
-// Exact 12 FortyGuard equal-interval classes from official Quickstart Notebook
-const FORTYGUARD_12_CLASSES = [
-  { minC: 28.20, maxC: 28.37, hex: "#cd1719", label: "28.20 – 28.37 °C", tempF: "82.8 – 83.1 °F" },
-  { minC: 28.03, maxC: 28.20, hex: "#e4402b", label: "28.03 – 28.20 °C", tempF: "82.5 – 82.8 °F" },
-  { minC: 27.86, maxC: 28.03, hex: "#f36e39", label: "27.86 – 28.03 °C", tempF: "82.1 – 82.5 °F" },
-  { minC: 27.69, maxC: 27.86, hex: "#fd9a4b", label: "27.69 – 27.86 °C", tempF: "81.8 – 82.1 °F" },
-  { minC: 27.52, maxC: 27.69, hex: "#febe6c", label: "27.52 – 27.69 °C", tempF: "81.5 – 81.8 °F" },
-  { minC: 27.35, maxC: 27.52, hex: "#fee090", label: "27.35 – 27.52 °C", tempF: "81.2 – 81.5 °F" },
-  { minC: 27.18, maxC: 27.35, hex: "#f5f7b4", label: "27.18 – 27.35 °C", tempF: "80.9 – 81.2 °F" },
-  { minC: 27.01, maxC: 27.18, hex: "#d9efa3", label: "27.01 – 27.18 °C", tempF: "80.6 – 80.9 °F" },
-  { minC: 26.84, maxC: 27.01, hex: "#afdd91", label: "26.84 – 27.01 °C", tempF: "80.3 – 80.6 °F" },
-  { minC: 26.67, maxC: 26.84, hex: "#80bf9b", label: "26.67 – 26.84 °C", tempF: "80.0 – 80.3 °F" },
-  { minC: 26.50, maxC: 26.67, hex: "#529bb2", label: "26.50 – 26.67 °C", tempF: "79.7 – 80.0 °F" },
-  { minC: 26.33, maxC: 26.50, hex: "#2c72a5", label: "26.33 – 26.50 °C", tempF: "79.4 – 79.7 °F" },
+const FORTYGUARD_PALETTE = [
+  "#cd1719", "#e4402b", "#f36e39", "#fd9a4b",
+  "#febe6c", "#fee090", "#f5f7b4", "#d9efa3",
+  "#afdd91", "#80bf9b", "#529bb2", "#2c72a5"
 ];
+
+function getFortyGuard12Classes(centerTempC = 27.5) {
+  const step = 0.18;
+  return FORTYGUARD_PALETTE.map((hex, i) => {
+    const maxC = +(centerTempC + (6 - i) * step).toFixed(2);
+    const minC = +(maxC - step).toFixed(2);
+    const minF = ((minC * 9) / 5 + 32).toFixed(1);
+    const maxF = ((maxC * 9) / 5 + 32).toFixed(1);
+    return {
+      minC,
+      maxC,
+      hex,
+      label: `${minC.toFixed(2)} – ${maxC.toFixed(2)} °C`,
+      tempF: `${minF} – ${maxF} °F`,
+    };
+  });
+}
 
 const BASEMAP_PRESETS = {
   dark: {
@@ -863,7 +870,7 @@ export default function SpatialHeatmapView({
           </div>
 
           <div className="space-y-0.5">
-            {FORTYGUARD_12_CLASSES.map((cls, idx) => {
+            {getFortyGuard12Classes((MONITORED_CITIES.find((c) => c.name === focusedCityName) || MONITORED_CITIES[0])?.baseTemp || 27.5).map((cls, idx) => {
               const isSelected = selectedClassHex === cls.hex;
               return (
                 <button
