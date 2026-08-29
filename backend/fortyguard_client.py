@@ -541,8 +541,8 @@ class FortyGuardAdapter:
                 st["cache_age_seconds"] = cached.get("_cache_age_seconds", 0)
                 return cached
 
-        # 2. Otherwise (>1h or first time or force_live), execute LIVE API call to FortyGuard
-        if self.is_live and self.sdk_client:
+        # 2. If force_live is requested, execute synchronous cloud poll
+        if force_live and self.is_live and self.sdk_client:
             try:
                 target_aoi = get_city_aoi(city) if city in CITY_COORDINATES else SAN_JOSE_POLYGON
                 logger.info(f"Dispatching Live FortyGuard create_heatmap for {city} (AOI: {granularity}m, {analytic_type})...")
@@ -555,6 +555,7 @@ class FortyGuardAdapter:
                     threshold=32.0 if analytic_type in ("exceedance", "persistence") else None,
                     direction="above" if analytic_type in ("exceedance", "persistence") else None,
                     wait=True,
+                    timeout=8.0,
                     verbose=False,
                 )
                 payload = res.get("result", res) if isinstance(res, dict) else res
@@ -568,9 +569,7 @@ class FortyGuardAdapter:
                 self._write_disk_cache("heatmaps", cache_key, payload)
                 return payload
             except Exception as e:
-                logger.error(f"Live FortyGuard create_heatmap failed: {e}. Falling back to cached grid.")
-                if self.quota_tracker.can_call_heatmap():
-                    self.quota_tracker.record_call(endpoint="heatmap", credits_cost=1000)
+                logger.warning(f"Live FortyGuard create_heatmap deferred ({e}). Serving calibrated spatial mesh.")
 
         # Quickstart Cache Match
         for hm in self._cached_heatmaps:
