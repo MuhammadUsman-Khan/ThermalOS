@@ -180,6 +180,37 @@ SRC_CACHE = "1H_CACHE"         # a real FortyGuard response reused within 1 hour
 SRC_QUICKSTART = "QUICKSTART_CACHE"  # authentic captured FortyGuard response on disk
 SRC_MODELED = "MODELED"        # last-resort physics model (API unavailable) — must be labeled
 
+# Region & geography-calibrated land-cover profiles for monitored US metros.
+CITY_LAND_COVER_PROFILES = {
+    "Phoenix, AZ": {"building": 48.5, "tree": 7.2, "plant": 5.8, "earth, ground": 38.5},
+    "Las Vegas, NV": {"building": 52.0, "tree": 4.5, "plant": 4.2, "earth, ground": 39.3},
+    "Tucson, AZ": {"building": 44.0, "tree": 9.8, "plant": 8.4, "earth, ground": 37.8},
+    "Houston, TX": {"building": 49.2, "tree": 22.4, "plant": 14.8, "earth, ground": 13.6},
+    "Dallas, TX": {"building": 51.5, "tree": 18.2, "plant": 12.6, "earth, ground": 17.7},
+    "Austin, TX": {"building": 46.0, "tree": 24.5, "plant": 15.2, "earth, ground": 14.3},
+    "San Antonio, TX": {"building": 47.8, "tree": 19.4, "plant": 13.5, "earth, ground": 19.3},
+    "New Orleans, LA": {"building": 45.0, "tree": 25.6, "plant": 18.2, "earth, ground": 11.2},
+    "San Jose, CA": {"building": 26.94, "tree": 1.63, "plant": 38.83, "earth, ground": 28.2},
+    "Los Angeles, CA": {"building": 54.2, "tree": 14.8, "plant": 11.5, "earth, ground": 19.5},
+    "San Francisco, CA": {"building": 52.4, "tree": 18.6, "plant": 14.2, "earth, ground": 14.8},
+    "Seattle, WA": {"building": 32.5, "tree": 35.8, "plant": 22.4, "earth, ground": 9.3},
+    "Portland, OR": {"building": 35.2, "tree": 33.4, "plant": 20.8, "earth, ground": 10.6},
+    "San Diego, CA": {"building": 46.5, "tree": 16.2, "plant": 15.0, "earth, ground": 22.3},
+    "Sacramento, CA": {"building": 43.8, "tree": 23.5, "plant": 14.2, "earth, ground": 18.5},
+    "Denver, CO": {"building": 42.0, "tree": 16.5, "plant": 13.2, "earth, ground": 28.3},
+    "Salt Lake City, UT": {"building": 44.5, "tree": 15.2, "plant": 11.8, "earth, ground": 28.5},
+    "Chicago, IL": {"building": 58.2, "tree": 15.4, "plant": 9.8, "earth, ground": 16.6},
+    "Minneapolis, MN": {"building": 38.6, "tree": 29.4, "plant": 19.5, "earth, ground": 12.5},
+    "St. Louis, MO": {"building": 47.2, "tree": 21.8, "plant": 13.5, "earth, ground": 17.5},
+    "New York, NY": {"building": 64.5, "tree": 11.2, "plant": 6.8, "earth, ground": 17.5},
+    "Boston, MA": {"building": 53.8, "tree": 21.0, "plant": 12.4, "earth, ground": 12.8},
+    "Philadelphia, PA": {"building": 56.4, "tree": 18.5, "plant": 10.2, "earth, ground": 14.9},
+    "Washington, DC": {"building": 48.2, "tree": 26.4, "plant": 14.8, "earth, ground": 10.6},
+    "Miami, FL": {"building": 41.5, "tree": 28.2, "plant": 21.8, "earth, ground": 8.5},
+    "Orlando, FL": {"building": 43.0, "tree": 26.5, "plant": 19.4, "earth, ground": 11.1},
+    "Atlanta, GA": {"building": 42.8, "tree": 32.5, "plant": 15.2, "earth, ground": 9.5},
+}
+
 
 def extract_heatmap_temperature_stats_c(hm: Dict[str, Any]) -> Dict[str, Optional[float]]:
     """Pull min/max/mean tile temperature (°C) from ANY heatmap shape.
@@ -826,41 +857,8 @@ class FortyGuardAdapter:
             sat = json.loads(json.dumps(self._cached_satellite[0]))
             sat["data_source"] = SRC_QUICKSTART
             self._write_disk_cache("satellite", cache_key, sat)
-            return self._augment_satellite(sat)
-
-    # Region & geography-calibrated land-cover profiles for monitored US metros.
-    CITY_LAND_COVER_PROFILES = {
-        "Phoenix, AZ": {"building": 48.5, "tree": 7.2, "plant": 5.8, "earth, ground": 38.5},
-        "Las Vegas, NV": {"building": 52.0, "tree": 4.5, "plant": 4.2, "earth, ground": 39.3},
-        "Tucson, AZ": {"building": 44.0, "tree": 9.8, "plant": 8.4, "earth, ground": 37.8},
-        "Houston, TX": {"building": 49.2, "tree": 22.4, "plant": 14.8, "earth, ground": 13.6},
-        "Dallas, TX": {"building": 51.5, "tree": 18.2, "plant": 12.6, "earth, ground": 17.7},
-        "Austin, TX": {"building": 46.0, "tree": 24.5, "plant": 15.2, "earth, ground": 14.3},
-        "San Antonio, TX": {"building": 47.8, "tree": 19.4, "plant": 13.5, "earth, ground": 19.3},
-        "New Orleans, LA": {"building": 45.0, "tree": 25.6, "plant": 18.2, "earth, ground": 11.2},
-        "San Jose, CA": {"building": 26.94, "tree": 1.63, "plant": 38.83, "earth, ground": 28.2},
-        "Los Angeles, CA": {"building": 54.2, "tree": 14.8, "plant": 11.5, "earth, ground": 19.5},
-        "San Francisco, CA": {"building": 52.4, "tree": 18.6, "plant": 14.2, "earth, ground": 14.8},
-        "Seattle, WA": {"building": 32.5, "tree": 35.8, "plant": 22.4, "earth, ground": 9.3},
-        "Portland, OR": {"building": 35.2, "tree": 33.4, "plant": 20.8, "earth, ground": 10.6},
-        "San Diego, CA": {"building": 46.5, "tree": 16.2, "plant": 15.0, "earth, ground": 22.3},
-        "Sacramento, CA": {"building": 43.8, "tree": 23.5, "plant": 14.2, "earth, ground": 18.5},
-        "Denver, CO": {"building": 42.0, "tree": 16.5, "plant": 13.2, "earth, ground": 28.3},
-        "Salt Lake City, UT": {"building": 44.5, "tree": 15.2, "plant": 11.8, "earth, ground": 28.5},
-        "Chicago, IL": {"building": 58.2, "tree": 15.4, "plant": 9.8, "earth, ground": 16.6},
-        "Minneapolis, MN": {"building": 38.6, "tree": 29.4, "plant": 19.5, "earth, ground": 12.5},
-        "St. Louis, MO": {"building": 47.2, "tree": 21.8, "plant": 13.5, "earth, ground": 17.5},
-        "New York, NY": {"building": 64.5, "tree": 11.2, "plant": 6.8, "earth, ground": 17.5},
-        "Boston, MA": {"building": 53.8, "tree": 21.0, "plant": 12.4, "earth, ground": 12.8},
-        "Philadelphia, PA": {"building": 56.4, "tree": 18.5, "plant": 10.2, "earth, ground": 14.9},
-        "Washington, DC": {"building": 48.2, "tree": 26.4, "plant": 14.8, "earth, ground": 10.6},
-        "Miami, FL": {"building": 41.5, "tree": 28.2, "plant": 21.8, "earth, ground": 8.5},
-        "Orlando, FL": {"building": 43.0, "tree": 26.5, "plant": 19.4, "earth, ground": 11.1},
-        "Atlanta, GA": {"building": 42.8, "tree": 32.5, "plant": 15.2, "earth, ground": 9.5},
-    }
-
         # Modeled last resort — clearly labeled, never presented as authentic.
-        city_seg = self.CITY_LAND_COVER_PROFILES.get(
+        city_seg = CITY_LAND_COVER_PROFILES.get(
             city,
             {"building": 42.5, "tree": 18.2, "plant": 12.4, "earth, ground": 15.6}
         )
