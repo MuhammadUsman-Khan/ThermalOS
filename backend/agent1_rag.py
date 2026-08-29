@@ -5,10 +5,19 @@ import logging
 from typing import Optional
 from dotenv import load_dotenv
 import requests
-import chromadb
 from pydantic import BaseModel, Field
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_google_genai import ChatGoogleGenerativeAI
+
+try:
+    import chromadb
+except Exception:
+    chromadb = None
+
+try:
+    from langchain_core.prompts import ChatPromptTemplate
+    from langchain_google_genai import ChatGoogleGenerativeAI
+except Exception:
+    ChatPromptTemplate = None
+    ChatGoogleGenerativeAI = None
 
 # Ensure backend directory is in sys.path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -107,6 +116,8 @@ def initialize_vector_db():
     Uses PersistentClient to cache vector index on disk or in /tmp when on serverless.
     """
     global _collection
+    if chromadb is None:
+        return None
     try:
         candidate = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "chroma_db")
         try:
