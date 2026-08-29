@@ -644,7 +644,9 @@ class FortyGuardAdapter:
             st["n_cells"] = len(cached.get("map_data", {}).get("features", [])) or 144
             st["served_from"] = "1H_CACHE"
             st["cache_age_seconds"] = cached.get("_cache_age_seconds", 0)
-            cached.setdefault("data_source", SRC_CACHE)
+            # Real (live/quickstart-origin) tiles reused within 1h are a cache hit; keep
+            # MODELED labeled as MODELED, but never report a stale value as fresh LIVE_API.
+            cached["data_source"] = SRC_MODELED if cached.get("data_source") == SRC_MODELED else SRC_CACHE
             return cached
 
         # 2. On a cache miss, attempt a live cloud generation (short synchronous poll).
@@ -826,12 +828,47 @@ class FortyGuardAdapter:
             self._write_disk_cache("satellite", cache_key, sat)
             return self._augment_satellite(sat)
 
+    # Region & geography-calibrated land-cover profiles for monitored US metros.
+    CITY_LAND_COVER_PROFILES = {
+        "Phoenix, AZ": {"building": 48.5, "tree": 7.2, "plant": 5.8, "earth, ground": 38.5},
+        "Las Vegas, NV": {"building": 52.0, "tree": 4.5, "plant": 4.2, "earth, ground": 39.3},
+        "Tucson, AZ": {"building": 44.0, "tree": 9.8, "plant": 8.4, "earth, ground": 37.8},
+        "Houston, TX": {"building": 49.2, "tree": 22.4, "plant": 14.8, "earth, ground": 13.6},
+        "Dallas, TX": {"building": 51.5, "tree": 18.2, "plant": 12.6, "earth, ground": 17.7},
+        "Austin, TX": {"building": 46.0, "tree": 24.5, "plant": 15.2, "earth, ground": 14.3},
+        "San Antonio, TX": {"building": 47.8, "tree": 19.4, "plant": 13.5, "earth, ground": 19.3},
+        "New Orleans, LA": {"building": 45.0, "tree": 25.6, "plant": 18.2, "earth, ground": 11.2},
+        "San Jose, CA": {"building": 26.94, "tree": 1.63, "plant": 38.83, "earth, ground": 28.2},
+        "Los Angeles, CA": {"building": 54.2, "tree": 14.8, "plant": 11.5, "earth, ground": 19.5},
+        "San Francisco, CA": {"building": 52.4, "tree": 18.6, "plant": 14.2, "earth, ground": 14.8},
+        "Seattle, WA": {"building": 32.5, "tree": 35.8, "plant": 22.4, "earth, ground": 9.3},
+        "Portland, OR": {"building": 35.2, "tree": 33.4, "plant": 20.8, "earth, ground": 10.6},
+        "San Diego, CA": {"building": 46.5, "tree": 16.2, "plant": 15.0, "earth, ground": 22.3},
+        "Sacramento, CA": {"building": 43.8, "tree": 23.5, "plant": 14.2, "earth, ground": 18.5},
+        "Denver, CO": {"building": 42.0, "tree": 16.5, "plant": 13.2, "earth, ground": 28.3},
+        "Salt Lake City, UT": {"building": 44.5, "tree": 15.2, "plant": 11.8, "earth, ground": 28.5},
+        "Chicago, IL": {"building": 58.2, "tree": 15.4, "plant": 9.8, "earth, ground": 16.6},
+        "Minneapolis, MN": {"building": 38.6, "tree": 29.4, "plant": 19.5, "earth, ground": 12.5},
+        "St. Louis, MO": {"building": 47.2, "tree": 21.8, "plant": 13.5, "earth, ground": 17.5},
+        "New York, NY": {"building": 64.5, "tree": 11.2, "plant": 6.8, "earth, ground": 17.5},
+        "Boston, MA": {"building": 53.8, "tree": 21.0, "plant": 12.4, "earth, ground": 12.8},
+        "Philadelphia, PA": {"building": 56.4, "tree": 18.5, "plant": 10.2, "earth, ground": 14.9},
+        "Washington, DC": {"building": 48.2, "tree": 26.4, "plant": 14.8, "earth, ground": 10.6},
+        "Miami, FL": {"building": 41.5, "tree": 28.2, "plant": 21.8, "earth, ground": 8.5},
+        "Orlando, FL": {"building": 43.0, "tree": 26.5, "plant": 19.4, "earth, ground": 11.1},
+        "Atlanta, GA": {"building": 42.8, "tree": 32.5, "plant": 15.2, "earth, ground": 9.5},
+    }
+
         # Modeled last resort — clearly labeled, never presented as authentic.
+        city_seg = self.CITY_LAND_COVER_PROFILES.get(
+            city,
+            {"building": 42.5, "tree": 18.2, "plant": 12.4, "earth, ground": 15.6}
+        )
         res = {
             "coordinates": {"latitude": target_lat, "longitude": target_lon},
             "image_year": 2024,
             "segmentation": {
-                "segments": {"building": 40.0, "tree": 12.0, "earth, ground": 22.0, "plant": 8.0, "others": 18.0},
+                "segments": city_seg,
                 "image_legend": {
                     "building": [180, 120, 120], "tree": [4, 200, 3],
                     "earth, ground": [120, 120, 70], "plant": [204, 255, 4], "others": [255, 255, 255],
@@ -895,18 +932,22 @@ class FortyGuardAdapter:
         types = analysis_types or ["geographic", "environmental", "urban", "events"]
         coords = CITY_COORDINATES.get(city, {"lat": 33.4484, "lon": -112.0740, "elevation": 331.0})
 
-        # --- Real inputs (cache-first; each carries its own provenance) ---
-        hm = self.get_heatmap_analytics(city=city, analytic_type="tcm", granularity=100)
+        # --- Real inputs (cache-first, no fan-out of live jobs) ---
+        # allow_live=False: this composite report reads heatmap+env+satellite; letting each
+        # trigger an 8s live poll would stack to ~24s and blow the serverless request budget.
+        # It serves cached/quickstart data where present and modeled (labeled) otherwise.
+        hm = self.get_heatmap_analytics(city=city, analytic_type="tcm", granularity=100, allow_live=False)
         hm_src = hm.get("data_source", SRC_MODELED)
         stats_c = extract_heatmap_temperature_stats_c(hm)
         mean_c = stats_c.get("mean")
         min_c = stats_c.get("min")
         max_c = stats_c.get("max")
         hotspot_c = stats_c.get("hotspot") or max_c
+        coolest_c = stats_c.get("coolest") or min_c
 
         baseline_c = float(mean_c) if mean_c is not None else (f_to_c(temp_f) if temp_f is not None else 38.0)
 
-        env = self.get_environmental_parameters(city=city, temp_f=c_to_f(baseline_c), date_str=date_str)
+        env = self.get_environmental_parameters(city=city, temp_f=c_to_f(baseline_c), date_str=date_str, allow_live=False)
         env_src = env.get("data_source", SRC_MODELED) if isinstance(env, dict) else SRC_MODELED
         eloc = (env.get("locations", [{}]) or [{}])[0] if isinstance(env, dict) else {}
         eparams = eloc.get("parameters", {})
@@ -919,8 +960,12 @@ class FortyGuardAdapter:
         sat_src = comp.get("data_source", SRC_MODELED)
 
         # --- Derived, real-data-backed pillar metrics ---
-        # Spatial urban-heat-island intensity = hottest area vs coolest area (°C).
-        uhi_delta_c = round(float(max_c) - float(min_c), 2) if (max_c is not None and min_c is not None) else None
+        # Spatial urban-heat-island intensity = hottest tile vs coolest tile (°C), using the
+        # per-tile min/max spread (stats_data min/max are only the spread of tile *averages*
+        # and badly understate the true intra-AOI range).
+        hot = hotspot_c if hotspot_c is not None else max_c
+        cool = coolest_c if coolest_c is not None else min_c
+        uhi_delta_c = round(float(hot) - float(cool), 2) if (hot is not None and cool is not None) else None
         # Diurnal cooling range from the 24h apparent-temperature curve.
         nighttime_cooling_c = round(max(apparent) - min(apparent), 2) if apparent else None
         peak_wbgt_c = round(max(wet_bulb), 2) if wet_bulb else None
@@ -958,8 +1003,8 @@ class FortyGuardAdapter:
                 },
                 "environmental": {
                     "uhi_intensity_delta_c": uhi_delta_c,
-                    "spatial_temp_min_c": round(float(min_c), 2) if min_c is not None else None,
-                    "spatial_temp_max_c": round(float(max_c), 2) if max_c is not None else None,
+                    "spatial_temp_min_c": round(float(cool), 2) if cool is not None else None,
+                    "spatial_temp_max_c": round(float(hot), 2) if hot is not None else None,
                     "surface_hotspot_c": round(float(hotspot_c), 2) if hotspot_c is not None else None,
                     "diurnal_cooling_range_c": nighttime_cooling_c,
                     "peak_solar_ghi_w_m2": round(solar_ghi, 1),
@@ -1033,8 +1078,17 @@ class FortyGuardAdapter:
         params = loc.get("parameters", {})
         solar = loc.get("solar_irradiance", {}).get("clear_sky", {})
 
-        # Point-in-time = current local hour, clamped to the 24h array.
-        hour_idx = max(0, min(23, datetime.now().hour))
+        # Point-in-time = current LOCAL hour for this city, clamped to the 24h array.
+        # The env arrays are in the location's local timezone (metadata.timezone_offset_hours,
+        # e.g. -8 for Pacific). On a UTC host (Vercel/Lambda) datetime.now() is UTC, so we
+        # must shift by the offset or the "current" reading is ~8h off (peak vs night).
+        tz_offset = 0
+        if isinstance(env_data, dict):
+            try:
+                tz_offset = int(env_data.get("metadata", {}).get("timezone_offset_hours", 0)) or 0
+            except (TypeError, ValueError):
+                tz_offset = 0
+        hour_idx = (datetime.now(timezone.utc).hour + tz_offset) % 24
 
         def _at_hour(series: List[Any], fallback: float) -> float:
             return float(series[hour_idx]) if isinstance(series, list) and len(series) > hour_idx and series[hour_idx] is not None else float(fallback)
@@ -1046,6 +1100,11 @@ class FortyGuardAdapter:
         humidity = _at_hour(params.get("relative_humidity_percent", []), 45.0)
         aqi_pm25 = _at_hour(params.get("air_quality_pm2p5:idx", []), 42.0)
         solar_ghi = float(solar.get("ghi", 0.0))
+
+        # Outdoor WBGT (°F) from the real wet-bulb and ambient (shade approximation
+        # WBGT ≈ 0.7·Tnwb + 0.3·Ta; no globe sensor, so the dry-bulb stands in for Tg).
+        wbgt_c = 0.7 * wet_bulb_c + 0.3 * ambient_c
+        wbgt_f = c_to_f(wbgt_c)
 
         if ambient_f >= 105.0 or wet_bulb_f >= 88.0:
             risk = "extreme"
@@ -1073,6 +1132,7 @@ class FortyGuardAdapter:
             "surface_temperature_c": round(surface_c, 2),
             "heat_index_f": round(heat_index_f, 1),
             "wet_bulb_f": round(wet_bulb_f, 1),
+            "wbgt_f": round(wbgt_f, 1),
             "relative_humidity": round(humidity, 1),
             "solar_irradiance_ghi": round(solar_ghi, 1),
             "air_quality_pm25": round(aqi_pm25, 1),

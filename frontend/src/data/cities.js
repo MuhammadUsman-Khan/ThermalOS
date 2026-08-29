@@ -12,6 +12,13 @@ export const MONITORED_CITIES = [
     tempF: "104.0°F",
     status: "Critical",
     dotClass: "bg-rose-500",
+    composition: {
+      impervious_building_pct: 48.5,
+      tree_canopy_pct: 7.2,
+      plant_cover_pct: 5.8,
+      ground_soil_pct: 38.5,
+      albedo_mean: 0.22,
+    },
   },
   {
     id: "las_vegas",
@@ -25,6 +32,13 @@ export const MONITORED_CITIES = [
     tempF: "101.0°F",
     status: "High",
     dotClass: "bg-rose-500",
+    composition: {
+      impervious_building_pct: 52.0,
+      tree_canopy_pct: 4.5,
+      plant_cover_pct: 4.2,
+      ground_soil_pct: 39.3,
+      albedo_mean: 0.24,
+    },
   },
   {
     id: "tucson",
@@ -38,6 +52,13 @@ export const MONITORED_CITIES = [
     tempF: "99.0°F",
     status: "High",
     dotClass: "bg-orange-500",
+    composition: {
+      impervious_building_pct: 44.0,
+      tree_canopy_pct: 9.8,
+      plant_cover_pct: 8.4,
+      ground_soil_pct: 37.8,
+      albedo_mean: 0.21,
+    },
   },
   // Texas & South Central
   {
@@ -52,6 +73,13 @@ export const MONITORED_CITIES = [
     tempF: "93.0°F",
     status: "Critical",
     dotClass: "bg-rose-500",
+    composition: {
+      impervious_building_pct: 49.2,
+      tree_canopy_pct: 22.4,
+      plant_cover_pct: 14.8,
+      ground_soil_pct: 13.6,
+      albedo_mean: 0.16,
+    },
   },
   {
     id: "dallas",
@@ -65,6 +93,13 @@ export const MONITORED_CITIES = [
     tempF: "96.0°F",
     status: "High",
     dotClass: "bg-orange-500",
+    composition: {
+      impervious_building_pct: 51.5,
+      tree_canopy_pct: 18.2,
+      plant_cover_pct: 12.6,
+      ground_soil_pct: 17.7,
+      albedo_mean: 0.17,
+    },
   },
   {
     id: "austin",
@@ -78,6 +113,13 @@ export const MONITORED_CITIES = [
     tempF: "97.0°F",
     status: "High",
     dotClass: "bg-orange-500",
+    composition: {
+      impervious_building_pct: 46.0,
+      tree_canopy_pct: 24.5,
+      plant_cover_pct: 15.2,
+      ground_soil_pct: 14.3,
+      albedo_mean: 0.17,
+    },
   },
   {
     id: "san_antonio",
@@ -91,6 +133,13 @@ export const MONITORED_CITIES = [
     tempF: "95.0°F",
     status: "High",
     dotClass: "bg-orange-500",
+    composition: {
+      impervious_building_pct: 47.8,
+      tree_canopy_pct: 19.4,
+      plant_cover_pct: 13.5,
+      ground_soil_pct: 19.3,
+      albedo_mean: 0.18,
+    },
   },
   {
     id: "new_orleans",
@@ -104,6 +153,13 @@ export const MONITORED_CITIES = [
     tempF: "89.0°F",
     status: "Critical",
     dotClass: "bg-rose-500",
+    composition: {
+      impervious_building_pct: 45.0,
+      tree_canopy_pct: 25.6,
+      plant_cover_pct: 18.2,
+      ground_soil_pct: 11.2,
+      albedo_mean: 0.15,
+    },
   },
   // West Coast & Pacific
   {
@@ -118,6 +174,13 @@ export const MONITORED_CITIES = [
     tempF: "82.0°F",
     status: "Nominal",
     dotClass: "bg-cyan-500",
+    composition: {
+      impervious_building_pct: 26.9,
+      tree_canopy_pct: 1.6,
+      plant_cover_pct: 38.8,
+      ground_soil_pct: 28.2,
+      albedo_mean: 0.18,
+    },
   },
   {
     id: "los_angeles",
@@ -131,6 +194,13 @@ export const MONITORED_CITIES = [
     tempF: "88.0°F",
     status: "Pre-Cool",
     dotClass: "bg-cyan-500",
+    composition: {
+      impervious_building_pct: 54.2,
+      tree_canopy_pct: 14.8,
+      plant_cover_pct: 11.5,
+      ground_soil_pct: 19.5,
+      albedo_mean: 0.16,
+    },
   },
   {
     id: "san_francisco",
@@ -144,6 +214,13 @@ export const MONITORED_CITIES = [
     tempF: "68.0°F",
     status: "Nominal",
     dotClass: "bg-emerald-500",
+    composition: {
+      impervious_building_pct: 52.4,
+      tree_canopy_pct: 18.6,
+      plant_cover_pct: 14.2,
+      ground_soil_pct: 14.8,
+      albedo_mean: 0.15,
+    },
   },
   {
     id: "seattle",
@@ -157,6 +234,13 @@ export const MONITORED_CITIES = [
     tempF: "74.0°F",
     status: "Nominal",
     dotClass: "bg-emerald-500",
+    composition: {
+      impervious_building_pct: 32.5,
+      tree_canopy_pct: 35.8,
+      plant_cover_pct: 22.4,
+      ground_soil_pct: 9.3,
+      albedo_mean: 0.14,
+    },
   },
   {
     id: "portland",
@@ -170,6 +254,13 @@ export const MONITORED_CITIES = [
     tempF: "76.0°F",
     status: "Nominal",
     dotClass: "bg-emerald-500",
+    composition: {
+      impervious_building_pct: 35.2,
+      tree_canopy_pct: 33.4,
+      plant_cover_pct: 20.8,
+      ground_soil_pct: 10.6,
+      albedo_mean: 0.15,
+    },
   },
   {
     id: "san_diego",
@@ -183,6 +274,13 @@ export const MONITORED_CITIES = [
     tempF: "78.0°F",
     status: "Nominal",
     dotClass: "bg-emerald-500",
+    composition: {
+      impervious_building_pct: 46.5,
+      tree_canopy_pct: 16.2,
+      plant_cover_pct: 15.0,
+      ground_soil_pct: 22.3,
+      albedo_mean: 0.17,
+    },
   },
   {
     id: "sacramento",
@@ -196,6 +294,13 @@ export const MONITORED_CITIES = [
     tempF: "94.0°F",
     status: "High",
     dotClass: "bg-orange-500",
+    composition: {
+      impervious_building_pct: 43.8,
+      tree_canopy_pct: 23.5,
+      plant_cover_pct: 14.2,
+      ground_soil_pct: 18.5,
+      albedo_mean: 0.17,
+    },
   },
   // Mountain & Midwest
   {
@@ -210,6 +315,13 @@ export const MONITORED_CITIES = [
     tempF: "84.0°F",
     status: "Nominal",
     dotClass: "bg-cyan-500",
+    composition: {
+      impervious_building_pct: 42.0,
+      tree_canopy_pct: 16.5,
+      plant_cover_pct: 13.2,
+      ground_soil_pct: 28.3,
+      albedo_mean: 0.19,
+    },
   },
   {
     id: "salt_lake_city",
@@ -223,6 +335,13 @@ export const MONITORED_CITIES = [
     tempF: "91.0°F",
     status: "Elevated",
     dotClass: "bg-amber-500",
+    composition: {
+      impervious_building_pct: 44.5,
+      tree_canopy_pct: 15.2,
+      plant_cover_pct: 11.8,
+      ground_soil_pct: 28.5,
+      albedo_mean: 0.20,
+    },
   },
   {
     id: "chicago",
@@ -236,6 +355,13 @@ export const MONITORED_CITIES = [
     tempF: "82.0°F",
     status: "Nominal",
     dotClass: "bg-cyan-500",
+    composition: {
+      impervious_building_pct: 58.2,
+      tree_canopy_pct: 15.4,
+      plant_cover_pct: 9.8,
+      ground_soil_pct: 16.6,
+      albedo_mean: 0.14,
+    },
   },
   {
     id: "minneapolis",
@@ -249,6 +375,13 @@ export const MONITORED_CITIES = [
     tempF: "79.0°F",
     status: "Nominal",
     dotClass: "bg-emerald-500",
+    composition: {
+      impervious_building_pct: 38.6,
+      tree_canopy_pct: 29.4,
+      plant_cover_pct: 19.5,
+      ground_soil_pct: 12.5,
+      albedo_mean: 0.15,
+    },
   },
   {
     id: "st_louis",
@@ -262,6 +395,13 @@ export const MONITORED_CITIES = [
     tempF: "88.0°F",
     status: "Elevated",
     dotClass: "bg-amber-500",
+    composition: {
+      impervious_building_pct: 47.2,
+      tree_canopy_pct: 21.8,
+      plant_cover_pct: 13.5,
+      ground_soil_pct: 17.5,
+      albedo_mean: 0.16,
+    },
   },
   // East Coast & Southeast
   {
@@ -276,6 +416,13 @@ export const MONITORED_CITIES = [
     tempF: "85.0°F",
     status: "Pre-Cool",
     dotClass: "bg-cyan-500",
+    composition: {
+      impervious_building_pct: 64.5,
+      tree_canopy_pct: 11.2,
+      plant_cover_pct: 6.8,
+      ground_soil_pct: 17.5,
+      albedo_mean: 0.13,
+    },
   },
   {
     id: "boston",
@@ -289,6 +436,13 @@ export const MONITORED_CITIES = [
     tempF: "81.0°F",
     status: "Nominal",
     dotClass: "bg-emerald-500",
+    composition: {
+      impervious_building_pct: 53.8,
+      tree_canopy_pct: 21.0,
+      plant_cover_pct: 12.4,
+      ground_soil_pct: 12.8,
+      albedo_mean: 0.14,
+    },
   },
   {
     id: "philadelphia",
@@ -302,6 +456,13 @@ export const MONITORED_CITIES = [
     tempF: "86.0°F",
     status: "Pre-Cool",
     dotClass: "bg-cyan-500",
+    composition: {
+      impervious_building_pct: 56.4,
+      tree_canopy_pct: 18.5,
+      plant_cover_pct: 10.2,
+      ground_soil_pct: 14.9,
+      albedo_mean: 0.14,
+    },
   },
   {
     id: "washington_dc",
@@ -315,6 +476,13 @@ export const MONITORED_CITIES = [
     tempF: "88.0°F",
     status: "High",
     dotClass: "bg-orange-500",
+    composition: {
+      impervious_building_pct: 48.2,
+      tree_canopy_pct: 26.4,
+      plant_cover_pct: 14.8,
+      ground_soil_pct: 10.6,
+      albedo_mean: 0.15,
+    },
   },
   {
     id: "miami",
@@ -328,6 +496,13 @@ export const MONITORED_CITIES = [
     tempF: "91.0°F",
     status: "Critical",
     dotClass: "bg-rose-500",
+    composition: {
+      impervious_building_pct: 41.5,
+      tree_canopy_pct: 28.2,
+      plant_cover_pct: 21.8,
+      ground_soil_pct: 8.5,
+      albedo_mean: 0.17,
+    },
   },
   {
     id: "orlando",
@@ -341,6 +516,13 @@ export const MONITORED_CITIES = [
     tempF: "92.0°F",
     status: "Critical",
     dotClass: "bg-rose-500",
+    composition: {
+      impervious_building_pct: 43.0,
+      tree_canopy_pct: 26.5,
+      plant_cover_pct: 19.4,
+      ground_soil_pct: 11.1,
+      albedo_mean: 0.16,
+    },
   },
   {
     id: "atlanta",
@@ -354,6 +536,13 @@ export const MONITORED_CITIES = [
     tempF: "89.0°F",
     status: "High",
     dotClass: "bg-orange-500",
+    composition: {
+      impervious_building_pct: 42.8,
+      tree_canopy_pct: 32.5,
+      plant_cover_pct: 15.2,
+      ground_soil_pct: 9.5,
+      albedo_mean: 0.15,
+    },
   },
 ];
 

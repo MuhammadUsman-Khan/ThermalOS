@@ -1,8 +1,13 @@
 import { Building2, Trees, Sprout, Layers, Globe, ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { MONITORED_CITIES } from "../data/cities";
 
 export default function SurfaceSegmentationCard({ segmentation, city }) {
-  const data = segmentation || {
+  const cityObj = MONITORED_CITIES.find(
+    (c) => c.name === city || c.shortName === city || c.id === city
+  ) || MONITORED_CITIES[0];
+
+  const fallbackData = cityObj?.composition || {
     impervious_building_pct: 42.5,
     tree_canopy_pct: 18.2,
     plant_cover_pct: 12.4,
@@ -10,11 +15,14 @@ export default function SurfaceSegmentationCard({ segmentation, city }) {
     albedo_mean: 0.18,
   };
 
-  const buildingPct = data.impervious_building_pct ?? 42.5;
-  const treePct = data.tree_canopy_pct ?? 18.2;
-  const plantPct = data.plant_cover_pct ?? 12.4;
-  const soilPct = data.ground_soil_pct ?? 15.6;
-  const albedo = data.albedo_mean ?? 0.18;
+  const data = segmentation || fallbackData;
+
+  const buildingPct = data.impervious_building_pct ?? fallbackData.impervious_building_pct;
+  const treePct = data.tree_canopy_pct ?? fallbackData.tree_canopy_pct;
+  const plantPct = data.plant_cover_pct ?? fallbackData.plant_cover_pct;
+  const soilPct = data.ground_soil_pct ?? fallbackData.ground_soil_pct;
+  const albedo = data.albedo_mean ?? fallbackData.albedo_mean;
+  const albedoLabel = typeof albedo === "number" ? albedo.toFixed(2) : "0.18";
 
   return (
     <div className="glass-panel rounded-3xl p-5 flex flex-col justify-between transition-all hover:border-orange-500/30 relative overflow-hidden group">
@@ -37,7 +45,7 @@ export default function SurfaceSegmentationCard({ segmentation, city }) {
           </div>
         </div>
         <div className="px-3 py-1.5 rounded-xl glass-panel-subtle border border-orange-500/25 text-xs font-mono text-orange-500 shadow-xs">
-          Mean Albedo: <strong className="text-black dark:text-white font-bold ml-1">α = {albedo.toFixed(2)}</strong>
+          Mean Albedo: <strong className="text-black dark:text-white font-bold ml-1">α = {albedoLabel}</strong>
         </div>
       </div>
 

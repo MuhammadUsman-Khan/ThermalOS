@@ -225,6 +225,8 @@ export default function App() {
     setIsDropdownOpen(false);
     showToast(`Switched telemetry focus to ${city}`, "info");
     addLog(`Target AOI updated to ${city}`, "city_change", "Grid Focus");
+    // Clear previous city's specific telemetry so all components immediately update to the new city profile.
+    setCurrentReading(null);
     // All readings come from the FortyGuard-backed API; re-anchor the chart on switch.
     fetchTelemetry(city, { reseedChart: true });
   };
@@ -248,7 +250,9 @@ export default function App() {
         if (ghi != null) setSolarGhi(+ghi);
         if (hum != null) setHumidity(+hum);
         if (wb != null) setWbgt(+wb);
-        if (risk != null) {
+        // Only (re)derive emergency state from telemetry on first load / city switch —
+        // background re-anchor polls must not silently clear a manually-triggered civic alert.
+        if (reseedChart && risk != null) {
           setIsEmergencyMode(risk === "extreme" || risk === "high" || risk === "CRITICAL" || risk === "EXTREME");
         }
 
