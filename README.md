@@ -36,34 +36,28 @@ Extreme urban heat is the deadliest and fastest-growing climate risk, causing ov
 ## 🏛️ System Architecture
 
 ```mermaid
-graph TD
-    classDef cloud fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
-    classDef client fill:#1e293b,stroke:#818cf8,stroke-width:2px,color:#f8fafc;
-    classDef agent fill:#0f172a,stroke:#f59e0b,stroke-width:2px,color:#f8fafc;
-    classDef engine fill:#0f172a,stroke:#10b981,stroke-width:2px,color:#f8fafc;
-    classDef ui fill:#1e1b4b,stroke:#ec4899,stroke-width:2px,color:#f8fafc;
-
-    subgraph FortyGuard_Cloud["☁️ FortyGuard Enterprise Microclimate Platform"]
-        FG_Heat["<b>POST /v1/heatmap</b><br/>(60m-100m Radiometry: Ts, Ta, GHI, RH)"]:::cloud
-        FG_Quota["<b>GET /v1/quota</b><br/>(Real-Time Credit Telemetry & Balances)"]:::cloud
+flowchart TD
+    subgraph FG["FortyGuard Enterprise Microclimate Platform"]
+        FG_Heat["POST /v1/heatmap<br/>(60m-100m Radiometric Tiles: Ts, Ta, GHI, RH)"]
+        FG_Quota["GET /v1/quota<br/>(Real-Time Credit Telemetry & Balances)"]
     end
 
-    subgraph Core_Bridge["🛡️ ThermalOS Ingestion & Resilient Cache"]
-        ClientCore["<b>FortyGuard Client Core</b><br/>`backend/fortyguard_client.py`"]:::client
-        DiskCache[("💾 <b>1-Hour Disk Cache</b><br/>`backend/cache/` (TTL: 3600s)")]:::client
+    subgraph Core["ThermalOS Ingestion Core"]
+        ClientCore["FortyGuard Client Core<br/>backend/fortyguard_client.py"]
+        DiskCache[("1-Hour Disk Cache<br/>backend/cache/ (TTL: 3600s)")]
     end
 
-    subgraph Autonomous_Agents["🤖 Autonomous Tri-Agent Consensus Suite (Track 6: Agentic)"]
-        A1["<b>Agent 1: Compliance Auditor</b><br/>• Sol-Air Envelope Heat Flux<br/>• ChromaDB RAG Vector Store<br/>• ASHRAE 55-2023 & IECC 2024"]:::agent
-        A2["<b>Agent 2: Pre-Cool Controller</b><br/>• Structural Concrete Thermal Inertia (2-3.5h)<br/>• Off-Peak Chiller Load Shifting<br/>• 450–780 kW Peak Demand Shaved"]:::agent
-        A3["<b>Agent 3: Civic Heat Dispatcher</b><br/>• Thermodynamic Liljegren WBGT Calculation<br/>• Automated n8n Webhook Alerts<br/>• OSHA Work/Rest & Shelter Dispatch"]:::agent
-        A_Syn["<b>Executive Consensus Synthesis</b><br/>Unified Municipal Strategic Directive"]:::engine
+    subgraph Agents["Autonomous Tri-Agent Suite (Track 6: Agentic AI)"]
+        A1["Agent 1: Compliance Auditor<br/>• Sol-Air Envelope Heat Flux<br/>• ASHRAE 55 / IECC ChromaDB RAG"]
+        A2["Agent 2: Pre-Cool Controller<br/>• Structural Thermal Inertia (2-3.5h)<br/>• 450-780 kW Peak Demand Shaved"]
+        A3["Agent 3: Civic Heat Dispatcher<br/>• Liljegren WBGT Calculation<br/>• Automated n8n Webhook Alerts"]
+        A_Syn["Executive Consensus Synthesis<br/>Unified Municipal Strategic Directive"]
     end
 
-    subgraph UI_Suite["🖥️ Executive Command Deck & Spatial Analytics"]
-        GIS["<b>Leaflet Spatial GIS</b><br/>60m / 80m / 100m Heatmap Tiles"]:::ui
-        Diurnal["<b>24H Diurnal Forecaster</b><br/>Physics Pre-Cool & Peak Lag"]:::ui
-        PhaserCanvas["<b>Phaser 3 Office Engine</b><br/>Autonomous Agent Telemetry"]:::ui
+    subgraph Deck["Executive Command Deck & UI Suite"]
+        GIS["Leaflet Spatial GIS<br/>(60m, 80m, 100m Resolution Layers)"]
+        Diurnal["24H Diurnal Forecaster<br/>(00:00-12:00 Baseline / 12:00-24:00 AI Forecast)"]
+        PhaserCanvas["Phaser 3 Office Engine<br/>(Autonomous Agent Workflow Simulation)"]
     end
 
     FG_Heat --> ClientCore
