@@ -260,6 +260,13 @@ def extract_heatmap_temperature_stats_c(hm: Dict[str, Any]) -> Dict[str, Optiona
     hotspot = round(max(tile_maxes), 4) if tile_maxes else None
     coolest = round(min(tile_mins), 4) if tile_mins else None
 
+    # Compact warm-cache files precompute hotspot/coolest into stats_data (they carry a
+    # downsampled tile mesh, so deriving from features would be inaccurate). Prefer those.
+    if st.get("hotspot") is not None:
+        hotspot = st.get("hotspot")
+    if st.get("coolest") is not None:
+        coolest = st.get("coolest")
+
     return {"min": mn, "max": mx, "mean": mean, "hotspot": hotspot, "coolest": coolest}
 
 
@@ -445,7 +452,40 @@ class FortyGuardAdapter:
         self._cached_heatmaps: List[Dict[str, Any]] = []
         self._cached_satellite: List[Dict[str, Any]] = []
         self._cached_street_views: List[Dict[str, Any]] = []
+        self._seed_warm_cache()
         self._load_cached_quickstart_data()
+
+    def _seed_warm_cache(self) -> None:
+        """Seed the runtime cache from the committed warm_data/ bundle of REAL responses.
+
+        On serverless (Vercel) the runtime cache lives in an ephemeral /tmp that is empty on
+        every cold start, and live FortyGuard jobs (25-45s) exceed the function timeout — so
+        without this, production always serves modeled data. Copying the bundled real
+        per-city responses into the cache at startup lets every reading be authentic and fast.
+        """
+        warm = BACKEND_DIR / "warm_data"
+        if not warm.exists():
+            return
+        seeded = 0
+        for sub in ("heatmaps", "env_params", "satellite"):
+            src_dir = warm / sub
+            dst_dir = CACHE_DIR / sub
+            if not src_dir.exists():
+                continue
+            try:
+                dst_dir.mkdir(parents=True, exist_ok=True)
+            except Exception:
+                continue
+            for src in src_dir.glob("*.json"):
+                dst = dst_dir / src.name
+                if not dst.exists():
+                    try:
+                        dst.write_bytes(src.read_bytes())
+                        seeded += 1
+                    except Exception as e:
+                        logger.warning(f"warm_data seed failed for {src.name}: {e}")
+        if seeded:
+            logger.info(f"Seeded {seeded} real FortyGuard responses from warm_data into cache.")
 
     def _load_cached_quickstart_data(self) -> None:
         """Ingest authentic FortyGuard quickstart response caches from disk."""

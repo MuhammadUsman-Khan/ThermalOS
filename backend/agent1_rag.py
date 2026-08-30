@@ -325,9 +325,12 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
     sol_air_temp = float(temp_f) + ((0.70 * solar_ghi * 0.317) / 3.0)
     heat_flux = round(effective_u * max(5.0, sol_air_temp - 72.0), 1)
 
-    if temp_f >= 105 or surface_temp_f >= 115 or solar_ghi >= 620:
+    # Compliance tier is primarily an ASHRAE-55 thermal-comfort judgment, so it must be
+    # temperature-driven — otherwise near-ubiquitous solar levels flatten every city to the
+    # same tier. Cool cities (e.g. Seattle 65°F) are correctly NOMINAL; hot cities escalate.
+    if temp_f >= 100 or surface_temp_f >= 115:
         risk_tier = "CRITICAL_EXCEEDANCE"
-    elif temp_f > 79 or solar_ghi >= 450:
+    elif temp_f > 79:
         risk_tier = "ELEVATED_DRIFT"
     else:
         risk_tier = "NOMINAL_COMPLIANT"
