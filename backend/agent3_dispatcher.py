@@ -63,7 +63,7 @@ if not logger.handlers:
 # CONFIGURATION & N8N WEBHOOK MAPPING
 # =========================================================================
 
-DEFAULT_N8N_ALERT_WEBHOOK = os.getenv("N8N_ALERT_WEBHOOK_URL", "")
+DEFAULT_N8N_ALERT_WEBHOOK = os.getenv("N8N_ALERT_WEBHOOK_URL") or "https://usmankhan001.app.n8n.cloud/webhook/thermalos-alert"
 
 # Safe human survivability WBGT index threshold in Fahrenheit
 WBGT_SURVIVABILITY_THRESHOLD_F = 85.0
@@ -139,13 +139,13 @@ def calculate_wbgt(temp_f: float, relative_humidity: float) -> float:
     return round(wbgt_f, 1)
 
 
-def _send_civic_alert_http(payload: Dict[str, Any], webhook_url: str, timeout_seconds: float = 3.0):
+def _send_civic_alert_http(payload: Dict[str, Any], webhook_url: str, timeout_seconds: float = 4.0) -> bool:
     if requests is not None:
         try:
             response = requests.post(webhook_url, json=payload, timeout=timeout_seconds)
             if 200 <= response.status_code < 300:
                 logger.info("🚀 n8n Civic Safety Alert dispatched via requests to %s", webhook_url)
-                return
+                return True
         except Exception as err:
             logger.info("n8n requests POST attempted for %s (%s)", payload.get("city"), err)
 
@@ -160,40 +160,41 @@ def _send_civic_alert_http(payload: Dict[str, Any], webhook_url: str, timeout_se
         with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:
             if 200 <= resp.status < 300:
                 logger.info("🚀 n8n Civic Safety Alert dispatched via urllib to %s", webhook_url)
+                return True
     except Exception as err:
         logger.info("n8n webhook dispatch attempted for %s (%s)", payload.get("city"), err)
+    return False
 
 
 def dispatch_n8n_safety_alert(
     payload: Dict[str, Any],
     webhook_url: str = DEFAULT_N8N_ALERT_WEBHOOK,
-    timeout_seconds: float = 3.0
+    timeout_seconds: float = 4.0
 ) -> bool:
     """
-    Dispatches automated high-priority safety alert HTTP POST payload to n8n webhook asynchronously.
+    Dispatches automated high-priority safety alert HTTP POST payload to n8n webhook.
     Maintains exact n8n JSON schema contract.
     """
-    if not webhook_url:
+    target = webhook_url or os.getenv("N8N_ALERT_WEBHOOK_URL") or DEFAULT_N8N_ALERT_WEBHOOK
+    if not target:
         logger.info("Agent 3: N8N_ALERT_WEBHOOK_URL not configured. Skipping webhook dispatch.")
         return False
 
-    import threading
-    t = threading.Thread(target=_send_civic_alert_http, args=(payload, webhook_url, timeout_seconds), daemon=True)
-    t.start()
-    return True
+    return _send_civic_alert_http(payload, target, timeout_seconds)
 
 
 def evaluate_civic_dispatch(
     city: str,
     temp_f: float,
-    webhook_url: Optional[str] = None
+    webhook_url: Optional[str] = None,
+    force_dispatch: bool = False
 ) -> CivicDispatchReport:
     """
     Main Agent 3 Orchestration Function:
     1. Ingests FortyGuard relative humidity & environmental metrics.
     2. Calculates WBGT index fusing ambient ground-truth and microclimate vapor pressure.
     3. Evaluates human thermal survivability threshold (>85°F).
-    4. Triggers n8n civic safety alert webhook if threshold breached.
+    4. Triggers n8n civic safety alert webhook if threshold breached or explicitly forced.
     5. Returns strictly typed CivicDispatchReport object.
     """
     target_webhook = webhook_url or DEFAULT_N8N_ALERT_WEBHOOK
@@ -253,7 +254,7 @@ def evaluate_civic_dispatch(
     event_timestamp = datetime.now(timezone.utc).isoformat()
 
     alert_dispatched = False
-    if should_alert:
+    if should_alert or force_dispatch:
         # Exact n8n payload contract preserved
         alert_payload = {
             "agent": "Agent 3 (Civic Heat Stress & Emergency Dispatcher)",

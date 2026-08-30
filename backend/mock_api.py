@@ -183,7 +183,8 @@ def infrastructure_precool_endpoint(request: AgentRequest):
                 "location": request.city,
                 "temperature_f": request.temperature_f,
                 "risk_level": request.risk_level or ("extreme" if request.temperature_f >= 105 else "nominal"),
-            }
+            },
+            force_dispatch=True,
         )
 
         report = agent2_result["report"]
@@ -214,7 +215,7 @@ def infrastructure_precool_endpoint(request: AgentRequest):
 def civic_dispatch_endpoint(request: AgentRequest):
     """Agent 3: Civic WBGT Dispatch Engine powered by FortyGuard Environmental Fusion."""
     try:
-        return evaluate_civic_dispatch(city=request.city, temp_f=request.temperature_f)
+        return evaluate_civic_dispatch(city=request.city, temp_f=request.temperature_f, force_dispatch=True)
     except Exception as e:
         logger.exception("Agent 3 civic dispatcher failed")
         raise HTTPException(status_code=502, detail=f"Civic dispatcher failed: {e}")
@@ -234,9 +235,15 @@ def multi_agent_synthesis_endpoint(request: AgentRequest):
                     "location": request.city,
                     "temperature_f": request.temperature_f,
                     "risk_level": request.risk_level or ("extreme" if request.temperature_f >= 105 else "elevated"),
-                }
+                },
+                force_dispatch=True,
             )
-            future_civic = executor.submit(evaluate_civic_dispatch, city=request.city, temp_f=request.temperature_f)
+            future_civic = executor.submit(
+                evaluate_civic_dispatch,
+                city=request.city,
+                temp_f=request.temperature_f,
+                force_dispatch=True,
+            )
 
             audit_rep = future_audit.result()
             infra_res = future_infra.result()

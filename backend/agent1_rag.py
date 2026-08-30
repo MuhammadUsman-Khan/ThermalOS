@@ -31,7 +31,7 @@ os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
 
 load_dotenv()
 
-N8N_AUDIT_WEBHOOK_URL = os.getenv("N8N_AUDIT_WEBHOOK_URL", "")
+N8N_AUDIT_WEBHOOK_URL = os.getenv("N8N_AUDIT_WEBHOOK_URL") or "https://usmankhan001.app.n8n.cloud/webhook/thermalos-audit"
 
 try:
     from langchain_community.document_loaders import PyPDFLoader
@@ -240,8 +240,10 @@ def _clean_schema_for_gemini(schema_dict):
 
 
 def _send_n8n_post(payload: dict, target_url: str):
+    if not target_url:
+        return
     try:
-        resp = requests.post(target_url, json=payload, timeout=3.0)
+        resp = requests.post(target_url, json=payload, timeout=4.0)
         if 200 <= resp.status_code < 300:
             logger.info("🚀 Agent 1 n8n compliance audit dispatched successfully to %s", target_url)
         else:
@@ -252,10 +254,12 @@ def _send_n8n_post(payload: dict, target_url: str):
 
 def dispatch_n8n_audit(report: ComplianceReport, webhook_url: Optional[str] = None) -> bool:
     """
-    Dispatches the RAG compliance audit to the n8n webhook in a background thread.
+    Dispatches the RAG compliance audit to the n8n webhook.
     Maintains exact n8n JSON schema contract.
     """
-    target_url = webhook_url or N8N_AUDIT_WEBHOOK_URL
+    target_url = webhook_url or os.getenv("N8N_AUDIT_WEBHOOK_URL") or N8N_AUDIT_WEBHOOK_URL
+    if not target_url:
+        return False
 
     compliance_summary = f"{report.ashrae_compliance_status} | {report.iecc_envelope_warning}"
     action_items = [
@@ -282,9 +286,7 @@ def dispatch_n8n_audit(report: ComplianceReport, webhook_url: Optional[str] = No
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
 
-    import threading
-    t = threading.Thread(target=_send_n8n_post, args=(payload, target_url), daemon=True)
-    t.start()
+    _send_n8n_post(payload, target_url)
     return True
 
 
@@ -298,11 +300,13 @@ def run_compliance_audit(city: str, temp_f: int) -> ComplianceReport:
     1. Ingests FortyGuard surface temperature, solar irradiance (GHI), and satellite material fractions.
     2. Computes exact Sol-Air thermodynamic heat flux and -35% R-value envelope degradation.
     3. Retrieves standard citations from ChromaDB ASHRAE 55 and IECC vectors.
-    4. Dispatches the full Pydantic report asynchronously to n8n.
+    4. Dispatches the full Pydantic report to n8n.
     """
     cache_key = f"{city}_{temp_f}"
     if cache_key in _COMPLIANCE_CACHE:
-        return _COMPLIANCE_CACHE[cache_key]
+        report = _COMPLIANCE_CACHE[cache_key]
+        dispatch_n8n_audit(report)
+        return report
 
     # 1. Ingest FortyGuard real microclimate & satellite land cover data
     env_snapshot = fortyguard_client.get_live_telemetry_snapshot(city=city, temp_f=float(temp_f))

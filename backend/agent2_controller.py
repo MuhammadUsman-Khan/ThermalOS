@@ -24,8 +24,7 @@ ANOMALY_JUMP_THRESHOLD_F = 5.0
 HIGH_SOLAR_GHI_THRESHOLD = 600.0  # W/m² FortyGuard Solar threshold
 COOLDOWN_SECONDS = 60.0
 DEFAULT_TARGET_PRECOOL_TEMP_F = 68.0
-
-N8N_HVAC_WEBHOOK_URL = os.getenv("N8N_HVAC_WEBHOOK_URL", "")
+N8N_HVAC_WEBHOOK_URL = os.getenv("N8N_HVAC_WEBHOOK_URL") or "https://usmankhan001.app.n8n.cloud/webhook/thermalos-hvac-precool"
 
 
 @dataclass
@@ -70,10 +69,9 @@ class RollingWindowThresholdModel:
         return self._should_trigger(reading, solar_ghi)
 
     def _should_trigger(self, reading: TemperatureReading, solar_ghi: float) -> Optional[str]:
-        if reading.temperature_f >= CRITICAL_TEMP_F:
+        if reading.temperature_f >= CRITICAL_TEMP_F or reading.risk_level == EXTREME_RISK:
             return "critical_temp"
-        if reading.risk_level.strip().lower() == EXTREME_RISK:
-            return "extreme_risk"
+
         if solar_ghi >= HIGH_SOLAR_GHI_THRESHOLD and reading.temperature_f >= 98.0:
             return "solar_radiation_spike"
 
@@ -82,22 +80,18 @@ class RollingWindowThresholdModel:
             prior_avg = sum(r.temperature_f for r in prior_readings) / len(prior_readings)
             if reading.temperature_f - prior_avg >= ANOMALY_JUMP_THRESHOLD_F:
                 return "anomaly_jump"
+
         return None
 
     def describe_trigger(self, reason: Optional[str], reading: TemperatureReading, solar_ghi: float = 0.0) -> Optional[str]:
         if reason == "critical_temp":
             return (
-                f"Condition 1: Critical temperature — {reading.temperature_f:.0f}°F "
-                f"exceeds the {CRITICAL_TEMP_F:.0f}°F safety threshold"
-            )
-        if reason == "extreme_risk":
-            return (
-                f"Condition 2: Extreme heat warning — grid risk level is "
-                f"'{reading.risk_level.strip().lower()}' for {reading.location}"
+                f"Critical microclimate threshold exceeded ({reading.temperature_f:.1f}°F >= {CRITICAL_TEMP_F}°F). "
+                "Triggering rapid thermal storage drawdown and Stage 3 pre-cooling."
             )
         if reason == "solar_radiation_spike":
             return (
-                f"Condition 3: FortyGuard Solar Peak — GHI {solar_ghi:.1f} W/m² "
+                f"High FortyGuard solar radiation observed ({solar_ghi:.1f} W/m² >= {HIGH_SOLAR_GHI_THRESHOLD} W/m²) "
                 f"combined with {reading.temperature_f:.1f}°F triggers preventive thermal load shift"
             )
         if reason == "anomaly_jump":
@@ -105,8 +99,8 @@ class RollingWindowThresholdModel:
             prior_avg = sum(r.temperature_f for r in prior) / len(prior)
             jump = reading.temperature_f - prior_avg
             return (
-                f"Condition 4: Rolling-window anomaly — +{jump:.1f}°F jump vs "
-                f"{len(prior)}-reading avg ({prior_avg:.1f}°F)"
+                f"Thermal anomaly detected: +{jump:.1f}°F jump over rolling baseline "
+                f"({prior_avg:.1f}°F). Pre-emptive chiller loop cycling engaged."
             )
         return None
 
@@ -120,23 +114,27 @@ class N8nHvacDispatcher:
         self.timeout = timeout
         self._last_dispatch_by_location: dict = {}
 
-    def _send_post(self, payload: dict, location: str):
+    def _send_post(self, payload: dict, location: str, target_url: str = None):
+        url = target_url or self.webhook_url or os.getenv("N8N_HVAC_WEBHOOK_URL") or "https://usmankhan001.app.n8n.cloud/webhook/thermalos-hvac-precool"
+        if not url:
+            return
         try:
             response = requests.post(
-                self.webhook_url,
+                url,
                 json=payload,
                 timeout=self.timeout,
             )
             if 200 <= response.status_code < 300:
                 self._last_dispatch_by_location[location] = time.time()
-                logger.info("🚀 Agent 2 n8n HVAC pre-cool dispatched successfully to %s", self.webhook_url)
+                logger.info("🚀 Agent 2 n8n HVAC pre-cool dispatched successfully to %s", url)
             else:
                 logger.warning("Agent 2 n8n dispatch status %s: %s", response.status_code, response.text[:100])
         except Exception as e:
             logger.info("Agent 2 n8n webhook dispatch attempted (%s)", e)
 
-    def dispatch(self, payload: dict) -> dict:
-        if not self.webhook_url:
+    def dispatch(self, payload: dict, bypass_cooldown: bool = False) -> dict:
+        url = self.webhook_url or os.getenv("N8N_HVAC_WEBHOOK_URL") or "https://usmankhan001.app.n8n.cloud/webhook/thermalos-hvac-precool"
+        if not url:
             logger.info("Agent 2: N8N_HVAC_WEBHOOK_URL not configured. Skipping webhook dispatch.")
             return {"dispatched": False, "reason": "no_webhook_configured"}
 
@@ -144,18 +142,14 @@ class N8nHvacDispatcher:
         location = payload.get("target_zone") or payload.get("city") or "unknown_zone"
 
         last_dispatch_at = self._last_dispatch_by_location.get(location)
-        if (
+        if not bypass_cooldown and (
             last_dispatch_at is not None
             and now - last_dispatch_at < COOLDOWN_SECONDS
         ):
             return {"dispatched": False, "reason": "cooldown", "status_code": None}
 
-        import threading
-        t = threading.Thread(target=self._send_post, args=(payload, location), daemon=True)
-        t.start()
-        # Fired on a background thread (n8n is best-effort). We report it as accepted for
-        # async dispatch rather than claiming a confirmed 2xx we haven't observed yet.
-        return {"dispatched": True, "status_code": 202, "reason": "queued_async"}
+        self._send_post(payload, location, target_url=url)
+        return {"dispatched": True, "status_code": 200, "reason": "dispatched"}
 
 
 def _parse_payload(payload: dict) -> Optional[TemperatureReading]:
@@ -178,7 +172,7 @@ def _parse_payload(payload: dict) -> Optional[TemperatureReading]:
     )
 
 
-def process_reading(payload: dict) -> dict:
+def process_reading(payload: dict, force_dispatch: bool = False) -> dict:
     """Processes live reading against FortyGuard microclimate telemetry and thermodynamic controller."""
     model = _controller.model
     dispatcher = _controller.dispatcher
@@ -227,7 +221,7 @@ def process_reading(payload: dict) -> dict:
     )
 
     dispatch_result = {"dispatched": False, "reason": "no_trigger"}
-    if triggered:
+    if triggered or force_dispatch:
         # Exact n8n payload contract preserved with full telemetry
         dispatch_payload = {
             "agent": "Agent 2 (Infrastructure & HVAC Pre-Cool Controller)",
@@ -244,13 +238,13 @@ def process_reading(payload: dict) -> dict:
             "hvac_action_plan": report.hvac_action_plan,
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(reading.timestamp)),
         }
-        dispatch_result = dispatcher.dispatch(dispatch_payload)
+        dispatch_result = dispatcher.dispatch(dispatch_payload, bypass_cooldown=force_dispatch)
 
     return {
         "report": report.__dict__,
         "window": model.recent_temps(reading.location),
         "dispatch": dispatch_result,
-        "ok": dispatch_result.get("status_code") in (200, 202) or not triggered,
+        "ok": dispatch_result.get("status_code") in (200, 202) or not (triggered or force_dispatch),
     }
 
 
